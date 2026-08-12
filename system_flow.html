@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skill Gap Analyzer - System Flow</title>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true, theme: 'default' });
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f8fafc;
+        }
+        .mermaid-container {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            max-width: 900px;
+            width: 100%;
+            text-align: center;
+        }
+        h2 {
+            color: #1e293b;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="mermaid-container">
+        <h2>System Flow: Skill Gap Analyzer</h2>
+        <div class="mermaid">
+            graph TD
+                A[Web Scraper <br> LinkedIn, JobStreet] -->|Raw Data| B(Data Processing & ETL)
+                B -->|Cleaned Data| C[(Database Utama)]
+                
+                D[Input Profil User / Kurikulum] --> C
+                
+                C --> E{Analysis Engine <br> Skill Gap Matching}
+                
+                E --> F[Backend API]
+                F --> G[Dashboard Output]
+                
+                G --> H((Visualisasi Tren))
+                G --> I((Rekomendasi Belajar))
+                G --> J((Laporan Kesenjangan))
+        </div>
+    </div>
+</body>
+</html>
