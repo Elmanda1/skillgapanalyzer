@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAuth, DEMO_USERS } from '../context/AuthContext';
+import { Link, useForm } from '@inertiajs/react';
 
 const ROLE_CARDS = [
   {
@@ -9,6 +9,7 @@ const ROLE_CARDS = [
     icon: 'school',
     iconBg: 'bg-brand text-white',
     description: 'Kelola kurikulum, analisis gap skill, dan ekspor laporan akreditasi.',
+    email: 'admin@pnj.ac.id',
   },
   {
     role: 'dosen',
@@ -17,6 +18,7 @@ const ROLE_CARDS = [
     icon: 'person_book',
     iconBg: 'bg-brand text-white',
     description: 'Pantau gap per mata kuliah yang diampu dan terima usulan materi baru.',
+    email: 'dosen1@pnj.ac.id',
   },
   {
     role: 'mahasiswa',
@@ -25,45 +27,34 @@ const ROLE_CARDS = [
     icon: 'menu_book',
     iconBg: 'bg-brand text-white',
     description: 'Lihat profil skill, rekomendasi karier, dan rencana belajar personalmu.',
+    email: 'mahasiswa1@pnj.ac.id',
   },
 ];
 
+const DEMO_PASSWORD = 'password';
+
 export default function LoginPage({ onBack }) {
-  const { login } = useAuth();
+  const { data, setData, post, processing, errors, reset } = useForm({
+    email: '',
+    password: '',
+  });
   const [selectedRole, setSelectedRole] = useState(null);
-  const [email, setEmail]     = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError]     = useState('');
-  const [loading, setLoading] = useState(false);
   const [showPw, setShowPw]   = useState(false);
 
-  const demoUser = selectedRole
-    ? DEMO_USERS.find(u => u.role === selectedRole)
-    : null;
-
   const handleRoleSelect = (role) => {
-    const demo = DEMO_USERS.find(u => u.role === role);
+    const demo = ROLE_CARDS.find(r => r.role === role);
     setSelectedRole(role);
-    setEmail(demo?.email ?? '');
-    setPassword(demo?.password ?? '');
-    setError('');
+    setData({ email: demo?.email ?? '', password: DEMO_PASSWORD });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    if (!email || !password) { setError('Email dan password wajib diisi.'); return; }
-    setLoading(true);
-    setError('');
-    await new Promise(r => setTimeout(r, 600)); // simulate network
-    const result = login(email, password);
-    setLoading(false);
-    if (!result.success) setError(result.error);
+    post('/login', {
+      onSuccess: () => reset(),
+    });
   };
 
-  const quickLogin = (role) => {
-    const demo = DEMO_USERS.find(u => u.role === role);
-    if (demo) login(demo.email, demo.password);
-  };
+  const formError = errors.email ?? errors.password;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-page-bg via-white to-brand/5 flex items-center justify-center p-4 relative overflow-hidden">
@@ -140,8 +131,8 @@ export default function LoginPage({ onBack }) {
                 <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors text-[20px]">mail</span>
                 <input
                   type="email"
-                  value={email}
-                  onChange={e => { setEmail(e.target.value); setError(''); }}
+                  value={data.email}
+                  onChange={e => setData('email', e.target.value)}
                   placeholder="Masukkan email..."
                   className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/10 transition-all bg-gray-50/50 hover:bg-white focus:bg-white"
                   required
@@ -154,8 +145,8 @@ export default function LoginPage({ onBack }) {
                 <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors text-[20px]">lock</span>
                 <input
                   type={showPw ? 'text' : 'password'}
-                  value={password}
-                  onChange={e => { setPassword(e.target.value); setError(''); }}
+                  value={data.password}
+                  onChange={e => setData('password', e.target.value)}
                   placeholder="••••••••"
                   className="w-full pl-11 pr-12 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/10 transition-all bg-gray-50/50 hover:bg-white focus:bg-white"
                   required
@@ -167,19 +158,19 @@ export default function LoginPage({ onBack }) {
               </div>
             </div>
 
-            {error && (
+            {formError && (
               <div className="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-600">
                 <span className="material-symbols-outlined text-[14px]">error</span>
-                {error}
+                {formError}
               </div>
             )}
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={processing}
               className="w-full py-3 bg-brand hover:bg-brand-dark text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 mt-4 shadow-lg shadow-brand/30 hover:shadow-brand/40 transition-all transform hover:-translate-y-0.5 disabled:transform-none disabled:opacity-70 disabled:cursor-wait"
             >
-              {loading ? (
+              {processing ? (
                 <>
                   <span className="material-symbols-outlined text-[16px] animate-spin">progress_activity</span>
                   Masuk...
@@ -193,20 +184,15 @@ export default function LoginPage({ onBack }) {
             </button>
           </form>
 
-          {/* Demo quick-login */}
-          <div className="mt-5 pt-4 border-t border-border">
-            <p className="text-[11px] text-text-muted text-center mb-3">Demo — klik untuk login instan:</p>
-            <div className="flex gap-2">
-              {ROLE_CARDS.map(rc => (
-                <button
-                  key={rc.role}
-                  onClick={() => quickLogin(rc.role)}
-                  className="flex-1 py-2 rounded-lg border border-border text-[11px] font-semibold text-text-secondary hover:bg-gray-50 hover:border-gray-300 transition-all"
-                >
-                  {rc.label}
-                </button>
-              ))}
-            </div>
+          {/* Register link */}
+          <div className="text-center mt-5">
+            <Link
+              href="/register"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand hover:text-brand-dark transition-colors"
+            >
+              <span className="material-symbols-outlined text-[16px]">person_add</span>
+              Daftar sebagai Mahasiswa
+            </Link>
           </div>
         </div>
 
