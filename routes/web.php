@@ -1,6 +1,11 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Models\Course;
+use App\Models\GapAnalysis;
+use App\Models\Skill;
+use App\Models\StudyProgram;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -22,5 +27,35 @@ Route::get('/register', function () {
 Route::post('/register', [AuthController::class, 'registerStudent']);
 
 Route::get('/dashboard', function () {
-    return inertia('Dashboard');
+    $user = request()->user();
+    $role = $user->roles->first()?->name;
+
+    $stats = match ($role) {
+        'super_admin' => [
+            'totalSkills' => Skill::count(),
+            'totalCourses' => Course::count(),
+            'totalGaps' => GapAnalysis::count(),
+            'mismatchGaps' => GapAnalysis::where('tipe_mismatch', '!=', 'aligned')->count(),
+            'totalStudyPrograms' => StudyProgram::count(),
+        ],
+        'kaprodi' => [
+            'studyProgram' => $user->studyProgram?->only(['id', 'nama_institusi', 'nama_prodi', 'jenjang']),
+            'totalCourses' => Course::where('study_program_id', $user->study_program_id)->count(),
+            'totalGaps' => GapAnalysis::where('study_program_id', $user->study_program_id)->count(),
+            'mismatchGaps' => GapAnalysis::where('study_program_id', $user->study_program_id)
+                ->where('tipe_mismatch', '!=', 'aligned')
+                ->count(),
+            'gapByType' => GapAnalysis::where('study_program_id', $user->study_program_id)
+                ->select('tipe_mismatch', DB::raw('count(*) as total'))
+                ->groupBy('tipe_mismatch')
+                ->get(),
+        ],
+        'dosen' => [
+            'courses' => $user->courses()->get(['courses.id', 'courses.code', 'courses.name', 'courses.semester', 'courses.credits']),
+            'totalGaps' => GapAnalysis::where('study_program_id', $user->study_program_id)->count(),
+        ],
+        default => [],
+    };
+
+    return inertia('Dashboard/Dashboard', ['stats' => $stats]);
 })->middleware('auth')->name('dashboard');

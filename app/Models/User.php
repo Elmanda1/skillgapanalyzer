@@ -23,6 +23,11 @@ class User extends Authenticatable
         return $this->belongsTo(StudyProgram::class);
     }
 
+    public function courses()
+    {
+        return $this->belongsToMany(Course::class);
+    }
+
     /**
      * Get the attributes that should be cast.
      *
