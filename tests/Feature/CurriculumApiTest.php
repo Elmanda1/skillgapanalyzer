@@ -42,6 +42,19 @@ class CurriculumApiTest extends TestCase
         return $user;
     }
 
+    private function actingAsSuperAdmin(?StudyProgram $program = null): User
+    {
+        $user = User::factory()->create();
+        if ($program) {
+            $user->update(['study_program_id' => $program->id]);
+        }
+        $user->assignRole(Role::create(['name' => 'super-admin']));
+
+        $this->actingAs($user);
+
+        return $user;
+    }
+
     private function createSkill(): Skill
     {
         return Skill::create([
@@ -108,9 +121,30 @@ class CurriculumApiTest extends TestCase
         ]);
     }
 
-    public function test_can_create_course_with_explicit_study_program()
+    public function test_non_super_admin_cannot_override_study_program_when_creating_course()
     {
-        $this->actingAsKaprodi();
+        $ownProgram = $this->createStudyProgram();
+        $this->actingAsKaprodi($ownProgram);
+        $otherProgram = $this->createStudyProgram();
+
+        $response = $this->post('/curriculum/courses', [
+            'study_program_id' => $otherProgram->id,
+            'code' => 'TI-403',
+            'name' => 'Sistem Terdistribusi',
+            'semester' => 6,
+            'credits' => 3,
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('courses', [
+            'study_program_id' => $ownProgram->id,
+            'code' => 'TI-403',
+        ]);
+    }
+
+    public function test_super_admin_can_create_course_for_other_study_program()
+    {
+        $this->actingAsSuperAdmin();
         $program = $this->createStudyProgram();
 
         $response = $this->post('/curriculum/courses', [
@@ -178,5 +212,45 @@ class CurriculumApiTest extends TestCase
             'text' => 'Mahasiswa mampu menganalisis algoritma pembelajaran mesin.',
             'source_doc' => 'RPS-TI-401.pdf',
         ]);
+    }
+
+    public function test_non_super_admin_cannot_access_course_from_other_study_program()
+    {
+        $program = $this->createStudyProgram();
+        $this->actingAsKaprodi($program);
+        $course = Course::factory()->create();
+
+        $response = $this->get("/curriculum/courses/{$course->id}");
+
+        $response->assertForbidden();
+    }
+
+    public function test_super_admin_can_access_course_from_other_study_program()
+    {
+        $this->actingAsSuperAdmin();
+        $course = Course::factory()->create();
+
+        $response = $this->get("/curriculum/courses/{$course->id}");
+
+        $response->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Curriculum/Show', false)
+                ->where('course.id', $course->id));
+    }
+
+    public function test_user_without_allowed_role_cannot_access_curriculum_index()
+    {
+        $user = User::factory()->create();
+        $user->assignRole(Role::create(['name' => 'mahasiswa']));
+        $this->actingAs($user);
+
+        $this->get('/curriculum')->assertForbidden();
+    }
+
+    public function test_super_admin_can_access_curriculum_index()
+    {
+        $this->actingAsSuperAdmin();
+
+        $this->get('/curriculum')->assertOk();
     }
 }

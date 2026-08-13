@@ -16,8 +16,10 @@ class CurriculumController extends Controller
         return inertia('Curriculum/Index', ['courses' => $courses]);
     }
 
-    public function show(Course $course)
+    public function show(Request $request, Course $course)
     {
+        $this->ensureCourseAccess($request, $course);
+
         $course->load('studyProgram', 'skills', 'learningOutcomes');
 
         return inertia('Curriculum/Show', ['course' => $course]);
@@ -35,7 +37,11 @@ class CurriculumController extends Controller
             'status_verifikasi_ekstraksi' => ['nullable', 'boolean'],
         ]);
 
-        $studyProgramId = $validated['study_program_id'] ?? $request->user()?->study_program_id;
+        $user = $request->user();
+
+        $studyProgramId = $user->hasRole('super-admin') && isset($validated['study_program_id'])
+            ? $validated['study_program_id']
+            : $user->study_program_id;
 
         if (! $studyProgramId) {
             throw ValidationException::withMessages([
@@ -58,6 +64,8 @@ class CurriculumController extends Controller
 
     public function syncSkills(Request $request, Course $course)
     {
+        $this->ensureCourseAccess($request, $course);
+
         $validated = $request->validate([
             'skill_ids' => ['required', 'array'],
             'skill_ids.*' => ['exists:skills,id'],
@@ -70,6 +78,8 @@ class CurriculumController extends Controller
 
     public function storeLearningOutcome(Request $request, Course $course)
     {
+        $this->ensureCourseAccess($request, $course);
+
         $validated = $request->validate([
             'text' => ['required', 'string'],
             'source_doc' => ['nullable', 'string'],
@@ -82,5 +92,12 @@ class CurriculumController extends Controller
         ]);
 
         return back();
+    }
+
+    private function ensureCourseAccess(Request $request, Course $course): void
+    {
+        if (! $request->user()->hasRole('super-admin') && $course->study_program_id !== $request->user()->study_program_id) {
+            abort(403);
+        }
     }
 }
