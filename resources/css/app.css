@@ -1,0 +1,176 @@
+@import "tailwindcss";
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+/* ============================================
+   TAILWIND v4 THEME — CLEAN MODERN SaaS
+   Skill Gap Analyzer
+   ============================================ */
+
+@theme {
+  /* ── Brand Greens ── */
+  --color-brand:             #064e3b;
+  --color-brand-hover:       #065f46;
+  --color-brand-light:       #ecfdf5;
+  --color-brand-border:      #a7f3d0;
+  --color-brand-muted:       #d1fae5;
+
+  /* ── Neutrals ── */
+  --color-page-bg:           #f9fafb;
+  --color-surface:           #ffffff;
+  --color-border:            #e5e7eb;
+  --color-border-focus:      #064e3b;
+
+  /* ── Text ── */
+  --color-text:              #111827;
+  --color-text-secondary:    #6b7280;
+  --color-text-muted:        #9ca3af;
+  --color-text-brand:        #064e3b;
+
+  /* ── Status colours ── */
+  --color-status-green-bg:   #d1fae5;
+  --color-status-green-text: #065f46;
+  --color-status-green-dot:  #10b981;
+
+  --color-status-yellow-bg:  #fef3c7;
+  --color-status-yellow-text:#92400e;
+  --color-status-yellow-dot: #f59e0b;
+
+  --color-status-red-bg:     #fee2e2;
+  --color-status-red-text:   #991b1b;
+  --color-status-red-dot:    #ef4444;
+
+  --color-status-blue-bg:    #dbeafe;
+  --color-status-blue-text:  #1e40af;
+  --color-status-blue-dot:   #3b82f6;
+
+  /* ── Typography ── */
+  --font-sans:    "Inter", ui-sans-serif, sans-serif;
+  --font-display: "Outfit", ui-sans-serif, sans-serif;
+  --font-mono:    ui-monospace, "Cascadia Code", monospace;
+
+  /* ── Border Radius — Rounded & Modern ── */
+  --radius:     0.5rem;
+  --radius-sm:  0.375rem;
+  --radius-md:  0.5rem;
+  --radius-lg:  0.75rem;
+  --radius-xl:  1rem;
+  --radius-2xl: 1.25rem;
+  --radius-full: 9999px;
+
+  /* ── Shadows ── */
+  --shadow-card: 0 1px 3px 0 rgba(0,0,0,0.08), 0 1px 2px -1px rgba(0,0,0,0.06);
+  --shadow-md:   0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -2px rgba(0,0,0,0.06);
+}
+
+/* ============================================
+   GLOBAL BASE
+   ============================================ */
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+
+  body {
+    background-color: #f9fafb;
+    color: #111827;
+    font-family: "Inter", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #root { min-height: 100vh; }
+}
+
+/* ============================================
+   DESIGN SYSTEM UTILITIES
+   ============================================ */
+@layer utilities {
+  /* Card — white, rounded, subtle shadow */
+  .card {
+    background-color: #ffffff;
+    border-radius: 0.75rem;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px 0 rgba(0,0,0,0.07), 0 1px 2px -1px rgba(0,0,0,0.05);
+  }
+
+  /* Primary button */
+  .btn-primary {
+    background-color: #064e3b;
+    color: #ffffff;
+    border-radius: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: background-color 150ms;
+  }
+  .btn-primary:hover { background-color: #065f46; }
+
+  /* Ghost / outline button */
+  .btn-outline {
+    background-color: #ffffff;
+    color: #374151;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: border-color 150ms, background-color 150ms;
+  }
+  .btn-outline:hover {
+    border-color: #9ca3af;
+    background-color: #f9fafb;
+  }
+
+  /* Status pill */
+  .badge { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.25rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+  .badge-green  { background-color: #d1fae5; color: #065f46; }
+  .badge-yellow { background-color: #fef3c7; color: #92400e; }
+  .badge-red    { background-color: #fee2e2; color: #991b1b; }
+  .badge-blue   { background-color: #dbeafe; color: #1e40af; }
+  .badge-gray   { background-color: #f3f4f6; color: #374151; }
+
+  /* Progress bar track */
+  .progress-track { background-color: #e5e7eb; border-radius: 9999px; height: 8px; width: 100%; }
+  .progress-fill  { background-color: #064e3b; border-radius: 9999px; height: 100%; transition: width 0.5s ease; }
+
+  /* Custom scrollbar */
+  .custom-scrollbar::-webkit-scrollbar       { width: 6px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: #f3f4f6; border-radius: 9999px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 9999px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+@keyframes slideInRight {
+  from { transform: translateX(120%); opacity: 0; }
+  to   { transform: translateX(0);   opacity: 1; }
+}
+@keyframes shrink {
+  from { width: 100%; }
+  to   { width: 0; }
+}
+@keyframes fadeInUp {
+  from { transform: translateY(24px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+.delay-100 { animation-delay: 0.1s; opacity: 0; }
+.delay-200 { animation-delay: 0.2s; opacity: 0; }
+.delay-300 { animation-delay: 0.3s; opacity: 0; }
+.delay-400 { animation-delay: 0.4s; opacity: 0; }
+.delay-500 { animation-delay: 0.5s; opacity: 0; }

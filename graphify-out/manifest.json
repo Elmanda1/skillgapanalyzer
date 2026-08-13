@@ -1,0 +1,162 @@
+{
+  ".oxlintrc.json": {
+    "mtime": 1786590677.8585813,
+    "ast_hash": "5e6e3cea3e89137071c142dd7835b0ef",
+    "semantic_hash": ""
+  },
+  "package.json": {
+    "mtime": 1786590677.8585813,
+    "ast_hash": "16af6b5edbcd896b0658faf3d5a20edb",
+    "semantic_hash": ""
+  },
+  "postcss.config.js": {
+    "mtime": 1786590677.8585813,
+    "ast_hash": "c1ee9ce6a4fe04105dbf8e619390df5e",
+    "semantic_hash": ""
+  },
+  "src/App.jsx": {
+    "mtime": 1786590677.859774,
+    "ast_hash": "bb1a3e42cb5ddd98d23df88ed89f318f",
+    "semantic_hash": ""
+  },
+  "src/components/AIAnalysis.jsx": {
+    "mtime": 1786590677.8598566,
+    "ast_hash": "42cea2c4990d8bf01d154e02e6a515e2",
+    "semantic_hash": ""
+  },
+  "src/components/CampusManagement.jsx": {
+    "mtime": 1786590677.8599663,
+    "ast_hash": "95208c9b4d8715d725d15483832ea50b",
+    "semantic_hash": ""
+  },
+  "src/components/CompetencyMap.jsx": {
+    "mtime": 1786590677.8599663,
+    "ast_hash": "d961849fbb14a7e5cb5dce0b6e12542f",
+    "semantic_hash": ""
+  },
+  "src/components/Dashboard.jsx": {
+    "mtime": 1786590677.8599663,
+    "ast_hash": "aa342a261e0cb8bf146ce535520a66d1",
+    "semantic_hash": ""
+  },
+  "src/components/DosenDashboard.jsx": {
+    "mtime": 1786590677.8599663,
+    "ast_hash": "e3ca2277b0c871f96d64aacff3477504",
+    "semantic_hash": ""
+  },
+  "src/components/Help.jsx": {
+    "mtime": 1786590677.8599663,
+    "ast_hash": "616ba676f535d3680843e3fc1720ba6a",
+    "semantic_hash": ""
+  },
+  "src/components/JobBrowser.jsx": {
+    "mtime": 1786590677.8599663,
+    "ast_hash": "07ed5f42e1c1b35ab1bf11a1232767b2",
+    "semantic_hash": ""
+  },
+  "src/components/MahasiswaDashboard.jsx": {
+    "mtime": 1786590677.8599663,
+    "ast_hash": "c291917f188611ce370af613a99ce7e1",
+    "semantic_hash": ""
+  },
+  "src/components/ScrapingAgents.jsx": {
+    "mtime": 1786590677.8599663,
+    "ast_hash": "a6c408136cbc92bdd282661c5fd527e0",
+    "semantic_hash": ""
+  },
+  "src/components/Settings.jsx": {
+    "mtime": 1786590677.8599663,
+    "ast_hash": "be7557e6d3667da9a1a3b879f65a4f4d",
+    "semantic_hash": ""
+  },
+  "src/components/SkillManager.jsx": {
+    "mtime": 1786590677.8599663,
+    "ast_hash": "135b082346e382b1fa57b5164540766e",
+    "semantic_hash": ""
+  },
+  "src/context/AuthContext.jsx": {
+    "mtime": 1786590677.8599663,
+    "ast_hash": "2132a08539a3129d228c5953cb54df8f",
+    "semantic_hash": ""
+  },
+  "src/context/SkillContext.jsx": {
+    "mtime": 1786590677.8602931,
+    "ast_hash": "f0c9690c9c5b205ade468c81cf0ee287",
+    "semantic_hash": ""
+  },
+  "src/context/ToastContext.jsx": {
+    "mtime": 1786590677.8602931,
+    "ast_hash": "8a5f9beb5d322ccc2b67983241c85a1b",
+    "semantic_hash": ""
+  },
+  "src/main.jsx": {
+    "mtime": 1786590677.8602931,
+    "ast_hash": "1e8b2daba32804d0076729140d352d37",
+    "semantic_hash": ""
+  },
+  "src/pages/LandingPage.jsx": {
+    "mtime": 1786590677.8602931,
+    "ast_hash": "56fa87a9b29bbf8dcc82ae10a2b3d024",
+    "semantic_hash": ""
+  },
+  "src/pages/LoginPage.jsx": {
+    "mtime": 1786590677.8604374,
+    "ast_hash": "2ad7671402578bd04b88afdba859b79b",
+    "semantic_hash": ""
+  },
+  "vite.config.js": {
+    "mtime": 1786590677.8604374,
+    "ast_hash": "88439104b3c207f17d33ef3160e3b080",
+    "semantic_hash": ""
+  },
+  "DESIGN.md": {
+    "mtime": 1786590677.8585813,
+    "ast_hash": "446a61b3078292f2f1a211a85dbb28d9",
+    "semantic_hash": ""
+  },
+  "PRD_Skill_Gap_Analyzer.md": {
+    "mtime": 1786590677.8585813,
+    "ast_hash": "61a69dd6d0d1cb2e4df6e0544153420b",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1786590677.8585813,
+    "ast_hash": "75eb386f17caf77fd6fe3ce1d90968ee",
+    "semantic_hash": ""
+  },
+  "index.html": {
+    "mtime": 1786590677.8585813,
+    "ast_hash": "3426c5748852eb1a3b71dbe5dd1faf25",
+    "semantic_hash": ""
+  },
+  "system_flow.html": {
+    "mtime": 1786590677.8604374,
+    "ast_hash": "5536989e13f3e79d2499cb748426ca48",
+    "semantic_hash": ""
+  },
+  "public/favicon.svg": {
+    "mtime": 1786590677.8585813,
+    "ast_hash": "7e840862161341271697daa99a40d76b",
+    "semantic_hash": ""
+  },
+  "public/icons.svg": {
+    "mtime": 1786590677.8597128,
+    "ast_hash": "3b4fcfcf393eca4d264dca4a4663bc37",
+    "semantic_hash": ""
+  },
+  "src/assets/hero.png": {
+    "mtime": 1786590677.859774,
+    "ast_hash": "aead493361b27e7510691c5d7072dfc1",
+    "semantic_hash": ""
+  },
+  "src/assets/react.svg": {
+    "mtime": 1786590677.8598566,
+    "ast_hash": "f0402b67b6ce880f65666bb49e841696",
+    "semantic_hash": ""
+  },
+  "src/assets/vite.svg": {
+    "mtime": 1786590677.8598566,
+    "ast_hash": "9960a24288958394ac50e57ff638b036",
+    "semantic_hash": ""
+  }
+}
