@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Course;
 use App\Models\LearningOutcome;
+use App\Models\Skill;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
@@ -22,7 +23,10 @@ class CurriculumController extends Controller
 
         $course->load('studyProgram', 'skills', 'learningOutcomes');
 
-        return inertia('Curriculum/Show', ['course' => $course]);
+        return inertia('Curriculum/Show', [
+            'course' => $course,
+            'skills' => Skill::orderBy('nama')->get(),
+        ]);
     }
 
     public function storeCourse(Request $request)
