@@ -1,0 +1,182 @@
+<?php
+
+use App\Models\Course;
+use App\Models\Skill;
+use App\Models\StudyProgram;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
+use Spatie\Permission\Models\Role;
+use Tests\TestCase;
+
+class CurriculumApiTest extends TestCase
+{
+    use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->withoutVite();
+    }
+
+    private function createStudyProgram(): StudyProgram
+    {
+        return StudyProgram::create([
+            'nama_institusi' => 'Politeknik Negeri Jakarta',
+            'jenjang' => 'D4',
+            'nama_prodi' => 'Teknik Informatika',
+        ]);
+    }
+
+    private function actingAsKaprodi(?StudyProgram $program = null): User
+    {
+        $user = User::factory()->create();
+        if ($program) {
+            $user->update(['study_program_id' => $program->id]);
+        }
+        $user->assignRole(Role::create(['name' => 'kaprodi']));
+
+        $this->actingAs($user);
+
+        return $user;
+    }
+
+    private function createSkill(): Skill
+    {
+        return Skill::create([
+            'nama' => 'Machine Learning',
+            'kategori' => 'Kecerdasan Buatan',
+            'sektor_industri_terkait' => 'Teknologi Informasi',
+        ]);
+    }
+
+    public function test_guest_cannot_access_curriculum_index()
+    {
+        $this->get('/curriculum')->assertRedirect('/login');
+    }
+
+    public function test_index_returns_curriculum_page_with_courses()
+    {
+        $program = $this->createStudyProgram();
+        $this->actingAsKaprodi($program);
+        Course::factory()->count(2)->create(['study_program_id' => $program->id]);
+
+        $response = $this->get('/curriculum');
+
+        $response->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Curriculum/Index', false)
+                ->has('courses', 2));
+    }
+
+    public function test_show_returns_curriculum_show_page()
+    {
+        $program = $this->createStudyProgram();
+        $this->actingAsKaprodi($program);
+        $course = Course::factory()->create(['study_program_id' => $program->id]);
+
+        $response = $this->get("/curriculum/courses/{$course->id}");
+
+        $response->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Curriculum/Show', false)
+                ->where('course.id', $course->id));
+    }
+
+    public function test_can_create_course_using_study_program_from_user()
+    {
+        $program = $this->createStudyProgram();
+        $this->actingAsKaprodi($program);
+
+        $response = $this->post('/curriculum/courses', [
+            'code' => 'TI-402',
+            'name' => 'Pengolahan Bahasa Alami',
+            'semester' => 6,
+            'credits' => 3,
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('courses', [
+            'study_program_id' => $program->id,
+            'code' => 'TI-402',
+            'name' => 'Pengolahan Bahasa Alami',
+            'semester' => 6,
+            'credits' => 3,
+            'versi' => 'v1',
+            'status_verifikasi_ekstraksi' => false,
+        ]);
+    }
+
+    public function test_can_create_course_with_explicit_study_program()
+    {
+        $this->actingAsKaprodi();
+        $program = $this->createStudyProgram();
+
+        $response = $this->post('/curriculum/courses', [
+            'study_program_id' => $program->id,
+            'code' => 'TI-403',
+            'name' => 'Sistem Terdistribusi',
+            'semester' => 6,
+            'credits' => 3,
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('courses', [
+            'study_program_id' => $program->id,
+            'code' => 'TI-403',
+        ]);
+    }
+
+    public function test_cannot_create_course_without_study_program()
+    {
+        $this->actingAsKaprodi();
+
+        $response = $this->post('/curriculum/courses', [
+            'code' => 'TI-404',
+            'name' => 'Keamanan Informasi',
+            'semester' => 7,
+            'credits' => 2,
+        ]);
+
+        $response->assertSessionHasErrors('study_program_id');
+        $this->assertDatabaseCount('courses', 0);
+    }
+
+    public function test_can_sync_skills_to_course()
+    {
+        $program = $this->createStudyProgram();
+        $this->actingAsKaprodi($program);
+        $course = Course::factory()->create(['study_program_id' => $program->id]);
+        $skill = $this->createSkill();
+
+        $response = $this->post("/curriculum/courses/{$course->id}/skills", [
+            'skill_ids' => [$skill->id],
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('course_skill', [
+            'course_id' => $course->id,
+            'skill_id' => $skill->id,
+        ]);
+    }
+
+    public function test_can_create_learning_outcome_for_course()
+    {
+        $program = $this->createStudyProgram();
+        $this->actingAsKaprodi($program);
+        $course = Course::factory()->create(['study_program_id' => $program->id]);
+
+        $response = $this->post("/curriculum/courses/{$course->id}/learning-outcomes", [
+            'text' => 'Mahasiswa mampu menganalisis algoritma pembelajaran mesin.',
+            'source_doc' => 'RPS-TI-401.pdf',
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('learning_outcomes', [
+            'course_id' => $course->id,
+            'text' => 'Mahasiswa mampu menganalisis algoritma pembelajaran mesin.',
+            'source_doc' => 'RPS-TI-401.pdf',
+        ]);
+    }
+}
