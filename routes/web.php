@@ -17,7 +17,7 @@ Route::get('/login', function () {
     return inertia('LoginPage');
 })->name('login');
 
-Route::middleware(['auth', 'role:kaprodi|super-admin|dosen'])->prefix('curriculum')->name('curriculum.')->group(function () {
+Route::middleware(['auth', 'role:kaprodi|super_admin|dosen'])->prefix('curriculum')->name('curriculum.')->group(function () {
     Route::get('/', [CurriculumController::class, 'index'])->name('index');
     Route::get('/courses/{course}', [CurriculumController::class, 'show'])->name('courses.show');
     Route::post('/courses', [CurriculumController::class, 'storeCourse'])->name('courses.store');

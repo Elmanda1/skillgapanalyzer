@@ -14,7 +14,7 @@ class CurriculumController extends Controller
     {
         $query = Course::with('studyProgram');
 
-        if (! $request->user()->hasRole('super-admin')) {
+        if (! $request->user()->hasRole('super_admin')) {
             $query->where('study_program_id', $request->user()->study_program_id);
         }
 
@@ -46,7 +46,7 @@ class CurriculumController extends Controller
 
         $user = $request->user();
 
-        $studyProgramId = $user->hasRole('super-admin') && isset($validated['study_program_id'])
+        $studyProgramId = $user->hasRole('super_admin') && isset($validated['study_program_id'])
             ? $validated['study_program_id']
             : $user->study_program_id;
 
@@ -103,7 +103,7 @@ class CurriculumController extends Controller
 
     private function ensureCourseAccess(Request $request, Course $course): void
     {
-        if (! $request->user()->hasRole('super-admin') && $course->study_program_id !== $request->user()->study_program_id) {
+        if (! $request->user()->hasRole('super_admin') && $course->study_program_id !== $request->user()->study_program_id) {
             abort(403);
         }
     }

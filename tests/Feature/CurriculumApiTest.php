@@ -48,7 +48,7 @@ class CurriculumApiTest extends TestCase
         if ($program) {
             $user->update(['study_program_id' => $program->id]);
         }
-        $user->assignRole(Role::create(['name' => 'super-admin']));
+        $user->assignRole(Role::create(['name' => 'super_admin']));
 
         $this->actingAs($user);
 
