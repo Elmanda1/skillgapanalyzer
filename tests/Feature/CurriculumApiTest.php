@@ -165,6 +165,155 @@ class CurriculumApiTest extends TestCase
         ]);
     }
 
+    public function test_index_scopes_courses_to_kaprodi_study_program()
+    {
+        $ownProgram = $this->createStudyProgram();
+        $this->actingAsKaprodi($ownProgram);
+        $otherProgram = $this->createStudyProgram();
+
+        $ownCourses = Course::factory()->count(2)->create(['study_program_id' => $ownProgram->id]);
+        Course::factory()->count(2)->create(['study_program_id' => $otherProgram->id]);
+
+        $response = $this->get('/curriculum');
+
+        $response->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Curriculum/Index', false)
+                ->has('courses', 2));
+
+        $returnedIds = collect($response->viewData('page')['props']['courses'])->pluck('id')->all();
+
+        $this->assertEqualsCanonicalizing($ownCourses->pluck('id')->all(), $returnedIds);
+    }
+
+    public function test_cannot_set_status_verifikasi_ekstraksi_when_creating_course()
+    {
+        $program = $this->createStudyProgram();
+        $this->actingAsKaprodi($program);
+
+        $this->post('/curriculum/courses', [
+            'code' => 'TI-405',
+            'name' => 'Pemrograman Web Lanjut',
+            'semester' => 6,
+            'credits' => 3,
+            'status_verifikasi_ekstraksi' => true,
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('courses', [
+            'code' => 'TI-405',
+            'status_verifikasi_ekstraksi' => false,
+        ]);
+    }
+
+    public function test_cannot_create_course_with_semester_below_one()
+    {
+        $program = $this->createStudyProgram();
+        $this->actingAsKaprodi($program);
+
+        $response = $this->post('/curriculum/courses', [
+            'code' => 'TI-406',
+            'name' => 'Kursus Semester',
+            'semester' => 0,
+            'credits' => 3,
+        ]);
+
+        $response->assertSessionHasErrors('semester');
+        $this->assertDatabaseCount('courses', 0);
+    }
+
+    public function test_cannot_create_course_with_semester_above_twelve()
+    {
+        $program = $this->createStudyProgram();
+        $this->actingAsKaprodi($program);
+
+        $response = $this->post('/curriculum/courses', [
+            'code' => 'TI-407',
+            'name' => 'Kursus Semester',
+            'semester' => 13,
+            'credits' => 3,
+        ]);
+
+        $response->assertSessionHasErrors('semester');
+        $this->assertDatabaseCount('courses', 0);
+    }
+
+    public function test_cannot_create_course_with_credits_below_one()
+    {
+        $program = $this->createStudyProgram();
+        $this->actingAsKaprodi($program);
+
+        $response = $this->post('/curriculum/courses', [
+            'code' => 'TI-408',
+            'name' => 'Kursus SKS',
+            'semester' => 3,
+            'credits' => 0,
+        ]);
+
+        $response->assertSessionHasErrors('credits');
+        $this->assertDatabaseCount('courses', 0);
+    }
+
+    public function test_cannot_create_course_with_code_longer_than_255()
+    {
+        $program = $this->createStudyProgram();
+        $this->actingAsKaprodi($program);
+
+        $response = $this->post('/curriculum/courses', [
+            'code' => str_repeat('A', 256),
+            'name' => 'Kursus Kode Panjang',
+            'semester' => 3,
+            'credits' => 3,
+        ]);
+
+        $response->assertSessionHasErrors('code');
+        $this->assertDatabaseCount('courses', 0);
+    }
+
+    public function test_cannot_create_course_with_name_longer_than_255()
+    {
+        $program = $this->createStudyProgram();
+        $this->actingAsKaprodi($program);
+
+        $response = $this->post('/curriculum/courses', [
+            'code' => 'TI-409',
+            'name' => str_repeat('A', 256),
+            'semester' => 3,
+            'credits' => 3,
+        ]);
+
+        $response->assertSessionHasErrors('name');
+        $this->assertDatabaseCount('courses', 0);
+    }
+
+    public function test_cannot_create_learning_outcome_with_text_longer_than_2000()
+    {
+        $program = $this->createStudyProgram();
+        $this->actingAsKaprodi($program);
+        $course = Course::factory()->create(['study_program_id' => $program->id]);
+
+        $response = $this->post("/curriculum/courses/{$course->id}/learning-outcomes", [
+            'text' => str_repeat('A', 2001),
+        ]);
+
+        $response->assertSessionHasErrors('text');
+        $this->assertDatabaseCount('learning_outcomes', 0);
+    }
+
+    public function test_cannot_create_learning_outcome_with_source_doc_longer_than_255()
+    {
+        $program = $this->createStudyProgram();
+        $this->actingAsKaprodi($program);
+        $course = Course::factory()->create(['study_program_id' => $program->id]);
+
+        $response = $this->post("/curriculum/courses/{$course->id}/learning-outcomes", [
+            'text' => 'Mahasiswa mampu menguasai materi.',
+            'source_doc' => str_repeat('A', 256),
+        ]);
+
+        $response->assertSessionHasErrors('source_doc');
+        $this->assertDatabaseCount('learning_outcomes', 0);
+    }
+
     public function test_cannot_create_course_without_study_program()
     {
         $this->actingAsKaprodi();

@@ -10,11 +10,15 @@ use Illuminate\Validation\ValidationException;
 
 class CurriculumController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $courses = Course::with('studyProgram')->get();
+        $query = Course::with('studyProgram');
 
-        return inertia('Curriculum/Index', ['courses' => $courses]);
+        if (! $request->user()->hasRole('super-admin')) {
+            $query->where('study_program_id', $request->user()->study_program_id);
+        }
+
+        return inertia('Curriculum/Index', ['courses' => $query->get()]);
     }
 
     public function show(Request $request, Course $course)
@@ -33,12 +37,11 @@ class CurriculumController extends Controller
     {
         $validated = $request->validate([
             'study_program_id' => ['nullable', 'exists:study_programs,id'],
-            'code' => ['required', 'string'],
-            'name' => ['required', 'string'],
-            'semester' => ['required', 'integer'],
-            'credits' => ['required', 'integer'],
+            'code' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
+            'semester' => ['required', 'integer', 'min:1', 'max:12'],
+            'credits' => ['required', 'integer', 'min:1'],
             'versi' => ['nullable', 'string'],
-            'status_verifikasi_ekstraksi' => ['nullable', 'boolean'],
         ]);
 
         $user = $request->user();
@@ -60,7 +63,7 @@ class CurriculumController extends Controller
             'semester' => $validated['semester'],
             'credits' => $validated['credits'],
             'versi' => $validated['versi'] ?? 'v1',
-            'status_verifikasi_ekstraksi' => $validated['status_verifikasi_ekstraksi'] ?? false,
+            'status_verifikasi_ekstraksi' => false,
         ]);
 
         return back();
@@ -85,8 +88,8 @@ class CurriculumController extends Controller
         $this->ensureCourseAccess($request, $course);
 
         $validated = $request->validate([
-            'text' => ['required', 'string'],
-            'source_doc' => ['nullable', 'string'],
+            'text' => ['required', 'string', 'max:2000'],
+            'source_doc' => ['nullable', 'string', 'max:255'],
         ]);
 
         LearningOutcome::create([
