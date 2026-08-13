@@ -88,13 +88,16 @@ class CurriculumApiTest extends TestCase
         $program = $this->createStudyProgram();
         $this->actingAsKaprodi($program);
         $course = Course::factory()->create(['study_program_id' => $program->id]);
+        $this->createSkill();
+        $this->createSkill();
 
         $response = $this->get("/curriculum/courses/{$course->id}");
 
         $response->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Curriculum/Show', false)
-                ->where('course.id', $course->id));
+                ->where('course.id', $course->id)
+                ->has('skills', 2));
     }
 
     public function test_can_create_course_using_study_program_from_user()
@@ -190,6 +193,25 @@ class CurriculumApiTest extends TestCase
 
         $response->assertRedirect();
         $this->assertDatabaseHas('course_skill', [
+            'course_id' => $course->id,
+            'skill_id' => $skill->id,
+        ]);
+    }
+
+    public function test_can_clear_all_skills_from_course()
+    {
+        $program = $this->createStudyProgram();
+        $this->actingAsKaprodi($program);
+        $course = Course::factory()->create(['study_program_id' => $program->id]);
+        $skill = $this->createSkill();
+        $course->skills()->sync([$skill->id]);
+
+        $response = $this->post("/curriculum/courses/{$course->id}/skills", [
+            'skill_ids' => [],
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseMissing('course_skill', [
             'course_id' => $course->id,
             'skill_id' => $skill->id,
         ]);

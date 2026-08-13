@@ -41,10 +41,10 @@ function CourseCard({ course }) {
 }
 
 // ─── Field helper ──────────────────────────────────────────────────────────
-function Field({ label, error, children }) {
+function Field({ id, label, error, children }) {
   return (
     <div>
-      <label className="block text-xs font-bold text-text-secondary mb-1.5">{label}</label>
+      <label htmlFor={id} className="block text-xs font-bold text-text-secondary mb-1.5">{label}</label>
       {children}
       {error && <p className="mt-1.5 text-xs text-status-red-text">{error}</p>}
     </div>
@@ -90,8 +90,9 @@ export default function CurriculumIndex({ courses }) {
           <h2 className="font-display text-base font-bold text-text mb-1">Tambah Mata Kuliah</h2>
           <p className="text-xs text-text-muted mb-5">Lengkapi data dasar mata kuliah baru.</p>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <Field label="Kode MK" error={form.errors.code}>
+            <Field id="code" label="Kode MK" error={form.errors.code}>
               <input
+                id="code"
                 type="text"
                 value={form.data.code}
                 onChange={(e) => form.setData('code', e.target.value)}
@@ -99,8 +100,9 @@ export default function CurriculumIndex({ courses }) {
                 className={INPUT_CLASS}
               />
             </Field>
-            <Field label="Nama Mata Kuliah" error={form.errors.name}>
+            <Field id="name" label="Nama Mata Kuliah" error={form.errors.name}>
               <input
+                id="name"
                 type="text"
                 value={form.data.name}
                 onChange={(e) => form.setData('name', e.target.value)}
@@ -109,8 +111,9 @@ export default function CurriculumIndex({ courses }) {
               />
             </Field>
             <div className="grid grid-cols-2 gap-4">
-              <Field label="Semester" error={form.errors.semester}>
+              <Field id="semester" label="Semester" error={form.errors.semester}>
                 <input
+                  id="semester"
                   type="number"
                   min="1"
                   value={form.data.semester}
@@ -119,8 +122,9 @@ export default function CurriculumIndex({ courses }) {
                   className={INPUT_CLASS}
                 />
               </Field>
-              <Field label="SKS" error={form.errors.credits}>
+              <Field id="credits" label="SKS" error={form.errors.credits}>
                 <input
+                  id="credits"
                   type="number"
                   min="1"
                   max="12"

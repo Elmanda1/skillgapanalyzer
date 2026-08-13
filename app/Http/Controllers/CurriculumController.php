@@ -71,7 +71,7 @@ class CurriculumController extends Controller
         $this->ensureCourseAccess($request, $course);
 
         $validated = $request->validate([
-            'skill_ids' => ['required', 'array'],
+            'skill_ids' => ['array'],
             'skill_ids.*' => ['exists:skills,id'],
         ]);
 
