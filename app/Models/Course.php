@@ -3,11 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 #[Fillable(['study_program_id', 'code', 'name', 'semester', 'credits', 'versi', 'status_verifikasi_ekstraksi'])]
 class Course extends Model
 {
+    use HasFactory;
+
     public function studyProgram()
     {
         return $this->belongsTo(StudyProgram::class);
@@ -21,6 +24,11 @@ class Course extends Model
     public function users()
     {
         return $this->belongsToMany(User::class);
+    }
+
+    public function learningOutcomes()
+    {
+        return $this->hasMany(LearningOutcome::class);
     }
 
     /**
