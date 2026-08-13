@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { Link } from '@inertiajs/react';
 
 // ─── Animated counter hook ─────────────────────────────────────────────────
 function useCountUp(target, duration = 1800) {
@@ -182,7 +183,7 @@ function RoleCard({ icon, color, role, label, points, delay }) {
 }
 
 // ─── Main LandingPage ──────────────────────────────────────────────────────
-export default function LandingPage({ onLogin }) {
+export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -209,13 +210,13 @@ export default function LandingPage({ onLogin }) {
               <a key={l} href={`#${l.toLowerCase()}`} className="hover:text-text transition-colors">{l}</a>
             ))}
           </div>
-          <button
-            onClick={onLogin}
+          <Link
+            href="/login"
             className="btn-primary px-5 py-2 text-sm flex items-center gap-2"
           >
             Masuk ke Sistem
             <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-          </button>
+          </Link>
         </div>
       </nav>
 
@@ -238,10 +239,10 @@ export default function LandingPage({ onLogin }) {
               Platform analitik berbasis AI yang membandingkan Learning Outcome kurikulum vokasi secara otomatis dengan ribuan lowongan kerja — dan menghasilkan rekomendasi konkret untuk revisi.
             </p>
             <div className="flex flex-wrap gap-3">
-              <button onClick={onLogin} className="btn-primary px-7 py-3 text-base flex items-center gap-2">
+              <Link href="/login" className="btn-primary px-7 py-3 text-base flex items-center gap-2">
                 Mulai Analisis Gratis
                 <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-              </button>
+              </Link>
               <button
                 onClick={() => document.getElementById('modul')?.scrollIntoView({ behavior: 'smooth' })}
                 className="btn-outline px-7 py-3 text-base flex items-center gap-2"
@@ -442,13 +443,13 @@ export default function LandingPage({ onLogin }) {
           <p className="text-green-200 mb-8 text-base">
             Bergabunglah dengan 42+ institusi vokasi yang sudah menggunakan Skill Gap Analyzer untuk membuat keputusan kurikulum berbasis data.
           </p>
-          <button
-            onClick={onLogin}
+          <Link
+            href="/login"
             className="bg-white text-brand font-semibold px-8 py-3.5 rounded-xl hover:bg-green-50 transition-colors text-base inline-flex items-center gap-2 shadow-lg"
           >
             Masuk & Coba Sekarang — Gratis
             <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-          </button>
+          </Link>
           <p className="text-green-300 text-xs mt-4">Demo tersedia · Tanpa instalasi · Langsung pakai</p>
         </div>
       </section>
