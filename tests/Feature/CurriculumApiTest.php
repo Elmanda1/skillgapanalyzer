@@ -424,4 +424,17 @@ class CurriculumApiTest extends TestCase
 
         $this->get('/curriculum')->assertOk();
     }
+
+    public function test_super_admin_index_receives_study_programs_prop()
+    {
+        $this->actingAsSuperAdmin();
+        $this->createStudyProgram();
+
+        $response = $this->get('/curriculum');
+
+        $response->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Curriculum/Index', false)
+                ->has('studyPrograms', 1));
+    }
 }

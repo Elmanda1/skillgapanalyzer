@@ -18,7 +18,12 @@ class CurriculumController extends Controller
             $query->where('study_program_id', $request->user()->study_program_id);
         }
 
-        return inertia('Curriculum/Index', ['courses' => $query->get()]);
+        $studyPrograms = \App\Models\StudyProgram::orderBy('nama_prodi')->get();
+
+        return inertia('Curriculum/Index', [
+            'courses' => $query->get(),
+            'studyPrograms' => $studyPrograms,
+        ]);
     }
 
     public function show(Request $request, Course $course)
@@ -64,6 +69,42 @@ class CurriculumController extends Controller
             'credits' => $validated['credits'],
             'versi' => $validated['versi'] ?? 'v1',
             'status_verifikasi_ekstraksi' => false,
+        ]);
+
+        return back();
+    }
+
+    public function updateCourse(Request $request, Course $course)
+    {
+        $this->ensureCourseAccess($request, $course);
+
+        $validated = $request->validate([
+            'study_program_id' => ['nullable', 'exists:study_programs,id'],
+            'code' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
+            'semester' => ['required', 'integer', 'min:1', 'max:12'],
+            'credits' => ['required', 'integer', 'min:1'],
+            'versi' => ['nullable', 'string'],
+        ]);
+
+        $user = $request->user();
+        $studyProgramId = $user->hasRole('super_admin') && isset($validated['study_program_id'])
+            ? $validated['study_program_id']
+            : $user->study_program_id;
+
+        if (! $studyProgramId) {
+            throw ValidationException::withMessages([
+                'study_program_id' => 'Program studi wajib diisi.',
+            ]);
+        }
+
+        $course->update([
+            'study_program_id' => $studyProgramId,
+            'code' => $validated['code'],
+            'name' => $validated['name'],
+            'semester' => $validated['semester'],
+            'credits' => $validated['credits'],
+            'versi' => $validated['versi'] ?? 'v1',
         ]);
 
         return back();
