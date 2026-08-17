@@ -127,6 +127,10 @@
   .badge-red    { background-color: #fee2e2; color: #991b1b; }
   .badge-blue   { background-color: #dbeafe; color: #1e40af; }
   .badge-gray   { background-color: #f3f4f6; color: #374151; }
+  .badge-purple { background-color: #f3e8ff; color: #6b21a8; }
+  .badge-orange { background-color: #ffedd5; color: #c2410c; }
+  .badge-amber  { background-color: #fffbeb; color: #b45309; }
+  .badge-pink   { background-color: #fce7f3; color: #be185d; }
 
   /* Progress bar track */
   .progress-track { background-color: #e5e7eb; border-radius: 9999px; height: 8px; width: 100%; }
