@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CurriculumController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\JobController;
 use App\Http\Controllers\TaxonomyController;
 use App\Models\Course;
 use App\Models\GapAnalysis;
@@ -441,9 +442,7 @@ Route::middleware(['auth'])->group(function () {
         return inertia('SkillManager');
     })->name('skills');
 
-    Route::get('/jobs', function () {
-        return inertia('JobBrowser');
-    })->name('jobs');
+    Route::get('/jobs', [JobController::class, 'index'])->name('jobs');
 
     Route::middleware(['role:kaprodi|super_admin|dosen'])->prefix('curriculum')->name('curriculum.')->group(function () {
         Route::get('/', [CurriculumController::class, 'index'])->name('index');
