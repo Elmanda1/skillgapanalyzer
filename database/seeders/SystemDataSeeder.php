@@ -21,9 +21,15 @@ class SystemDataSeeder extends Seeder
             ['nama' => 'AWS Cloud', 'kategori' => 'Cloud & DevOps', 'sektor_industri_terkait' => 'Teknologi & TI'],
             ['nama' => 'LLM Fine-tuning', 'kategori' => 'AI & Data Science', 'sektor_industri_terkait' => 'Teknologi & TI'],
             ['nama' => 'React.js', 'kategori' => 'Frontend Dev', 'sektor_industri_terkait' => 'Teknologi & TI'],
+            ['nama' => 'Next.js', 'kategori' => 'Frontend Dev', 'sektor_industri_terkait' => 'Teknologi & TI'],
+            ['nama' => 'Flutter', 'kategori' => 'Mobile Dev', 'sektor_industri_terkait' => 'Teknologi & TI'],
+            ['nama' => 'Laravel', 'kategori' => 'Backend Dev', 'sektor_industri_terkait' => 'Teknologi & TI'],
+            ['nama' => 'GraphQL APIs', 'kategori' => 'Backend Dev', 'sektor_industri_terkait' => 'Teknologi & TI'],
             ['nama' => 'Zero Trust Architecture', 'kategori' => 'Cybersecurity', 'sektor_industri_terkait' => 'Keuangan'],
             ['nama' => 'Snowflake', 'kategori' => 'Data Science', 'sektor_industri_terkait' => 'Kesehatan'],
-            ['nama' => 'GraphQL APIs', 'kategori' => 'Backend Dev', 'sektor_industri_terkait' => 'Teknologi & TI'],
+            ['nama' => 'Computer Vision', 'kategori' => 'AI & Data Science', 'sektor_industri_terkait' => 'Manufaktur'],
+            ['nama' => 'CI/CD Pipelines', 'kategori' => 'Cloud & DevOps', 'sektor_industri_terkait' => 'Teknologi & TI'],
+            ['nama' => 'PostgreSQL', 'kategori' => 'Database', 'sektor_industri_terkait' => 'Keuangan'],
         ];
 
         $skills = [];
@@ -31,131 +37,129 @@ class SystemDataSeeder extends Seeder
             $skills[$sd['nama']] = Skill::create($sd);
         }
 
-        // 2. Fetch Study Programs and Users
-        $prodiTI = StudyProgram::where('nama_prodi', 'Teknik Informatika')->first();
-        $prodiTE = StudyProgram::where('nama_prodi', 'Teknik Elektronika')->first();
-
-        $dosenTI = User::role('dosen')->where('study_program_id', $prodiTI?->id)->get();
-        $dosenTE = User::role('dosen')->where('study_program_id', $prodiTE?->id)->get();
-
-        // 3. Seed Courses and link to Study Programs
-        $courses = [];
-
-        if ($prodiTI) {
-            $courses[] = Course::create([
-                'study_program_id' => $prodiTI->id,
-                'code' => 'IF-301',
+        // 2. Course templates per field
+        $courseTemplates = [
+            [
+                'code' => 'TI-301',
                 'name' => 'Pemrograman Web Enterprise',
                 'semester' => 3,
                 'credits' => 4,
-                'versi' => 'v1',
-                'status_verifikasi_ekstraksi' => true,
-            ]);
-
-            $courses[] = Course::create([
-                'study_program_id' => $prodiTI->id,
-                'code' => 'IF-402',
+                'skills' => ['React.js', 'Laravel', 'GraphQL APIs'],
+                'gap' => [
+                    ['skill' => 'React.js', 'type' => 'aligned', 'urgency' => 0, 'match' => 95.0, 'count' => 45],
+                    ['skill' => 'Laravel', 'type' => 'aligned', 'urgency' => 2, 'match' => 90.0, 'count' => 38],
+                ]
+            ],
+            [
+                'code' => 'TI-402',
                 'name' => 'Teknologi Cloud & DevOps',
                 'semester' => 4,
                 'credits' => 3,
-                'versi' => 'v1',
-                'status_verifikasi_ekstraksi' => true,
-            ]);
-
-            $courses[] = Course::create([
-                'study_program_id' => $prodiTI->id,
-                'code' => 'IF-501',
+                'skills' => ['Docker', 'Kubernetes', 'AWS Cloud', 'CI/CD Pipelines'],
+                'gap' => [
+                    ['skill' => 'Docker', 'type' => 'under_skill', 'urgency' => 8, 'match' => 55.0, 'count' => 28],
+                    ['skill' => 'Kubernetes', 'type' => 'under_skill', 'urgency' => 9, 'match' => 35.0, 'count' => 22],
+                    ['skill' => 'AWS Cloud', 'type' => 'under_skill', 'urgency' => 7, 'match' => 60.0, 'count' => 19],
+                ]
+            ],
+            [
+                'code' => 'TI-501',
                 'name' => 'Kecerdasan Buatan & Machine Learning',
                 'semester' => 5,
                 'credits' => 3,
-                'versi' => 'v1',
-                'status_verifikasi_ekstraksi' => false,
-            ]);
-        }
-
-        if ($prodiTE) {
-            $courses[] = Course::create([
-                'study_program_id' => $prodiTE->id,
-                'code' => 'EL-301',
-                'name' => 'Mikroelektronika & Embedded Systems',
+                'skills' => ['LLM Fine-tuning', 'Snowflake', 'Computer Vision'],
+                'gap' => [
+                    ['skill' => 'LLM Fine-tuning', 'type' => 'under_skill', 'urgency' => 10, 'match' => 20.0, 'count' => 18],
+                    ['skill' => 'Computer Vision', 'type' => 'under_skill', 'urgency' => 7, 'match' => 65.0, 'count' => 14],
+                ]
+            ],
+            [
+                'code' => 'TI-403',
+                'name' => 'Pengembangan Aplikasi Mobile Terapan',
+                'semester' => 4,
+                'credits' => 3,
+                'skills' => ['Flutter', 'GraphQL APIs'],
+                'gap' => [
+                    ['skill' => 'Flutter', 'type' => 'aligned', 'urgency' => 1, 'match' => 88.0, 'count' => 32],
+                ]
+            ],
+            [
+                'code' => 'TI-302',
+                'name' => 'Keamanan Siber & Arsitektur Jaringan',
                 'semester' => 3,
-                'credits' => 4,
-                'versi' => 'v1',
-                'status_verifikasi_ekstraksi' => true,
-            ]);
-        }
+                'credits' => 3,
+                'skills' => ['Zero Trust Architecture', 'PostgreSQL'],
+                'gap' => [
+                    ['skill' => 'Zero Trust Architecture', 'type' => 'under_skill', 'urgency' => 9, 'match' => 30.0, 'count' => 15],
+                ]
+            ],
+        ];
 
-        // 4. Link Courses to Skills
-        foreach ($courses as $course) {
-            if ($course->code === 'IF-301') {
-                $course->skills()->sync([$skills['React.js']->id, $skills['GraphQL APIs']->id]);
-            } elseif ($course->code === 'IF-402') {
-                $course->skills()->sync([$skills['Docker']->id, $skills['Kubernetes']->id, $skills['AWS Cloud']->id]);
-            } elseif ($course->code === 'IF-501') {
-                $course->skills()->sync([$skills['LLM Fine-tuning']->id, $skills['Snowflake']->id]);
+        // 3. Seed Courses & Gap Analysis for all study programs
+        $allStudyPrograms = StudyProgram::all();
+
+        foreach ($allStudyPrograms as $sp) {
+            $dosens = User::role('dosen')->where('study_program_id', $sp->id)->get();
+
+            foreach ($courseTemplates as $index => $tmpl) {
+                // Course Code prefix based on institution code
+                $prefix = match (true) {
+                    str_contains($sp->nama_institusi, 'Jakarta') => 'PNJ',
+                    str_contains($sp->nama_institusi, 'Bandung') || str_contains($sp->nama_institusi, 'POLBAN') => 'PLB',
+                    str_contains($sp->nama_institusi, 'Surabaya') || str_contains($sp->nama_institusi, 'PENS') => 'PNS',
+                    str_contains($sp->nama_institusi, 'Malang') || str_contains($sp->nama_institusi, 'POLINEMA') => 'PLM',
+                    str_contains($sp->nama_institusi, 'Semarang') || str_contains($sp->nama_institusi, 'POLINES') => 'PLS',
+                    str_contains($sp->nama_institusi, 'Bali') || str_contains($sp->nama_institusi, 'PNB') => 'PNB',
+                    default => 'MK',
+                };
+
+                $course = Course::create([
+                    'study_program_id' => $sp->id,
+                    'code' => "{$prefix}-" . (300 + $index * 10),
+                    'name' => $tmpl['name'],
+                    'semester' => $tmpl['semester'],
+                    'credits' => $tmpl['credits'],
+                    'versi' => 'v1',
+                    'status_verifikasi_ekstraksi' => true,
+                ]);
+
+                // Link Skills
+                $skillIds = [];
+                foreach ($tmpl['skills'] as $sName) {
+                    if (isset($skills[$sName])) {
+                        $skillIds[] = $skills[$sName]->id;
+                    }
+                }
+                if (!empty($skillIds)) {
+                    $course->skills()->sync($skillIds);
+                }
+
+                // Link to a Lecturer if available
+                if ($dosens->isNotEmpty()) {
+                    $assignedDosen = $dosens[$index % $dosens->count()];
+                    $assignedDosen->courses()->syncWithoutDetaching([$course->id]);
+                }
+
+                // Gap Analysis for this prodi
+                foreach ($tmpl['gap'] as $gapData) {
+                    if (isset($skills[$gapData['skill']])) {
+                        GapAnalysis::create([
+                            'study_program_id' => $sp->id,
+                            'skill_id' => $skills[$gapData['skill']]->id,
+                            'tipe_mismatch' => $gapData['type'],
+                            'skor_urgensi' => $gapData['urgency'],
+                            'match_rate' => $gapData['match'],
+                            'periode_data' => '2026-08',
+                            'evidence_count' => $gapData['count'],
+                        ]);
+                    }
+                }
             }
         }
 
-        // 5. Link Courses to Dosens
-        if ($dosenTI->count() > 0) {
-            // Dosen 1 teaches Web Enterprise and Cloud
-            $dosenTI[0]->courses()->sync([$courses[0]->id, $courses[1]->id]);
-            if ($dosenTI->count() > 1) {
-                // Dosen 2 teaches AI
-                $dosenTI[1]->courses()->sync([$courses[2]->id]);
-            }
-        }
-
-        if ($dosenTE->count() > 0 && isset($courses[3])) {
-            $dosenTE[0]->courses()->sync([$courses[3]->id]);
-        }
-
-        // 6. Seed GapAnalysis Records
-        if ($prodiTI) {
-            GapAnalysis::create([
-                'study_program_id' => $prodiTI->id,
-                'skill_id' => $skills['Docker']->id,
-                'tipe_mismatch' => 'under_skill',
-                'skor_urgensi' => 8,
-                'match_rate' => 65.0,
-                'periode_data' => '2026-08',
-                'evidence_count' => 14,
-            ]);
-
-            GapAnalysis::create([
-                'study_program_id' => $prodiTI->id,
-                'skill_id' => $skills['Kubernetes']->id,
-                'tipe_mismatch' => 'under_skill',
-                'skor_urgensi' => 9,
-                'match_rate' => 40.0,
-                'periode_data' => '2026-08',
-                'evidence_count' => 22,
-            ]);
-
-            GapAnalysis::create([
-                'study_program_id' => $prodiTI->id,
-                'skill_id' => $skills['LLM Fine-tuning']->id,
-                'tipe_mismatch' => 'under_skill',
-                'skor_urgensi' => 10,
-                'match_rate' => 10.0,
-                'periode_data' => '2026-08',
-                'evidence_count' => 8,
-            ]);
-
-            GapAnalysis::create([
-                'study_program_id' => $prodiTI->id,
-                'skill_id' => $skills['React.js']->id,
-                'tipe_mismatch' => 'aligned',
-                'skor_urgensi' => 0,
-                'match_rate' => 95.0,
-                'periode_data' => '2026-08',
-                'evidence_count' => 45,
-            ]);
-        }
-
-        // 7. Seed Scraping Agents
+        // 4. Seed Scraping Agents
         ScrapingAgent::create([
-            'wilayah' => 'JKT-Node-01 (Jakarta)',
+            'wilayah' => 'JKT-Node-01 (DKI Jakarta & Banten)',
             'status' => 'Aktif',
             'uptime' => 99.98,
             'volume_data' => 4.2,
@@ -163,18 +167,34 @@ class SystemDataSeeder extends Seeder
         ]);
 
         ScrapingAgent::create([
-            'wilayah' => 'SUB-Node-02 (Surabaya)',
+            'wilayah' => 'JBR-Node-02 (Jawa Barat & Bandung)',
             'status' => 'Aktif',
-            'uptime' => 99.95,
-            'volume_data' => 2.8,
+            'uptime' => 99.91,
+            'volume_data' => 3.5,
             'last_sync' => now(),
         ]);
 
         ScrapingAgent::create([
-            'wilayah' => 'BDO-Node-03 (Bandung)',
+            'wilayah' => 'JTM-Node-03 (Jawa Timur & Surabaya/Malang)',
+            'status' => 'Aktif',
+            'uptime' => 99.95,
+            'volume_data' => 3.8,
+            'last_sync' => now(),
+        ]);
+
+        ScrapingAgent::create([
+            'wilayah' => 'JTG-Node-04 (Jawa Tengah & Semarang)',
+            'status' => 'Aktif',
+            'uptime' => 99.80,
+            'volume_data' => 2.4,
+            'last_sync' => now(),
+        ]);
+
+        ScrapingAgent::create([
+            'wilayah' => 'DPS-Node-05 (Bali & Nusa Tenggara)',
             'status' => 'Sinkronisasi',
-            'uptime' => 98.50,
-            'volume_data' => 1.1,
+            'uptime' => 98.65,
+            'volume_data' => 1.7,
             'last_sync' => now(),
         ]);
     }
