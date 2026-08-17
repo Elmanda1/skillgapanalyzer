@@ -26,7 +26,7 @@ export default function JobBrowser() {
   };
 
   return (
-    <div className="p-6 max-w-[1400px] mx-auto animate-fade-in-up">
+    <div className="w-full p-6 md:p-8 animate-fade-in-up">
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
         <div>
           <h1 className="font-display text-2xl font-bold text-text flex items-center gap-2">

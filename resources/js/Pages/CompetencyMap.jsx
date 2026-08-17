@@ -86,7 +86,7 @@ export default function CompetencyMap() {
   const displayed = showAll ? filtered : filtered.slice(0, 5);
 
   return (
-    <div className="p-6 max-w-[1400px] mx-auto">
+    <div className="w-full p-6 md:p-8 animate-fade-in-up">
 
       {/* ── Header ── */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">

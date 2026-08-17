@@ -93,7 +93,7 @@ export default function MahasiswaDashboard({ user }) {
   }, [mySkills]);
 
   return (
-    <div className="p-6 max-w-[1400px] mx-auto">
+    <div className="w-full p-6 md:p-8 animate-fade-in-up">
 
       {/* Header */}
       <div className="flex justify-between items-start mb-6">

@@ -55,7 +55,7 @@ export default function CampusManagement() {
   };
 
   return (
-    <div className="p-6 max-w-[1400px] mx-auto animate-fade-in-up">
+    <div className="w-full p-6 md:p-8 animate-fade-in-up">
       <div className="mb-8">
         <h1 className="font-display text-2xl font-bold text-text flex items-center gap-2">
           <span className="material-symbols-outlined text-[28px] text-brand">domain</span>

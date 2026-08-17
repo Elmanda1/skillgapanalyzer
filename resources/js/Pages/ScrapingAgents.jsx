@@ -82,7 +82,7 @@ export default function ScrapingAgents() {
   AGENTS.forEach(a => { if (statCounts[a.status] !== undefined) statCounts[a.status]++; });
 
   return (
-    <div className="p-6 max-w-[1400px] mx-auto">
+    <div className="w-full p-6 md:p-8 animate-fade-in-up">
 
       {/* ── Header ── */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">

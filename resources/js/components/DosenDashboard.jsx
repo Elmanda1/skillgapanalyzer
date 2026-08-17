@@ -107,7 +107,7 @@ export default function DosenDashboard({ user }) {
   );
 
   return (
-    <div className="p-6 max-w-[1400px] mx-auto">
+    <div className="w-full p-6 md:p-8 animate-fade-in-up">
 
       {/* Header */}
       <div className="mb-6">
