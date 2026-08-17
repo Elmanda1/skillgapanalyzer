@@ -30,7 +30,7 @@ class TaxonomyTest extends TestCase
 
         $response = $this->actingAs($user)->get('/taxonomy');
         $response->assertOk();
-        $response->assertInertia(fn ($page) => $page->component('Taxonomy/Reference', false));
+        $response->assertInertia(fn ($page) => $page->component('Taxonomy/Reference', false)->has('skills'));
     }
 
     public function test_kaprodi_can_create_skill_with_aliases(): void
@@ -66,8 +66,8 @@ class TaxonomyTest extends TestCase
 
     public function test_skill_alias_must_be_unique(): void
     {
-        Skill::create(['nama' => 'A', 'kategori' => 'X', 'sektor_industri_terkait' => 'Y']);
-        SkillAlias::create(['skill_id' => 1, 'alias_name' => 'k8s']);
+        $aliasSkill = Skill::create(['nama' => 'A', 'kategori' => 'X', 'sektor_industri_terkait' => 'Y']);
+        SkillAlias::create(['skill_id' => $aliasSkill->id, 'alias_name' => 'k8s']);
 
         $user = $this->makeUser('kaprodi');
 
@@ -81,7 +81,7 @@ class TaxonomyTest extends TestCase
         $response->assertSessionHasErrors('aliases.0');
     }
 
-    public function test_deleting_skill_cascades_aliases(): void
+    public function test_deleting_skill_removes_aliases(): void
     {
         $skill = Skill::create(['nama' => 'B', 'kategori' => 'X', 'sektor_industri_terkait' => 'Y']);
         SkillAlias::create(['skill_id' => $skill->id, 'alias_name' => 'be']);
@@ -90,5 +90,97 @@ class TaxonomyTest extends TestCase
         $this->actingAs($user)->delete("/taxonomy/manage/{$skill->id}");
 
         $this->assertDatabaseMissing('skill_aliases', ['skill_id' => $skill->id]);
+    }
+
+    public function test_kaprodi_can_update_skill_aliases(): void
+    {
+        $skill = Skill::create(['nama' => 'K8s', 'kategori' => 'Cloud & DevOps', 'sektor_industri_terkait' => 'TI', 'dimension' => 'hard_technical']);
+        $keep = SkillAlias::create(['skill_id' => $skill->id, 'alias_name' => 'k8s']);
+
+        $user = $this->makeUser('kaprodi');
+
+        $response = $this->actingAs($user)->put("/taxonomy/manage/{$skill->id}", [
+            'nama' => 'Kubernetes',
+            'kategori' => 'Cloud & DevOps',
+            'sektor_industri_terkait' => 'TI',
+            'dimension' => 'hard_technical',
+            'is_hard_skill' => true,
+            'aliases' => ['kubernetes', 'k8s'],   // keep 'k8s' + add new
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('skill_aliases', ['skill_id' => $skill->id, 'alias_name' => 'kubernetes']);
+        $this->assertDatabaseHas('skill_aliases', ['skill_id' => $skill->id, 'alias_name' => 'k8s']);
+    }
+
+    public function test_update_skill_alias_conflicts_with_another_skill(): void
+    {
+        $aliasSkill = Skill::create(['nama' => 'A', 'kategori' => 'X', 'sektor_industri_terkait' => 'Y']);
+        SkillAlias::create(['skill_id' => $aliasSkill->id, 'alias_name' => 'k8s']);
+        $skill = Skill::create(['nama' => 'Kubernetes', 'kategori' => 'Cloud & DevOps', 'sektor_industri_terkait' => 'TI']);
+
+        $user = $this->makeUser('kaprodi');
+
+        $response = $this->actingAs($user)->put("/taxonomy/manage/{$skill->id}", [
+            'nama' => 'Kubernetes',
+            'kategori' => 'Cloud & DevOps',
+            'sektor_industri_terkait' => 'TI',
+            'aliases' => ['k8s'],
+        ]);
+
+        $response->assertSessionHasErrors('aliases.0');
+    }
+
+    public function test_update_skill_can_clear_all_aliases(): void
+    {
+        $skill = Skill::create(['nama' => 'B', 'kategori' => 'X', 'sektor_industri_terkait' => 'Y']);
+        SkillAlias::create(['skill_id' => $skill->id, 'alias_name' => 'be']);
+
+        $user = $this->makeUser('kaprodi');
+
+        $response = $this->actingAs($user)->put("/taxonomy/manage/{$skill->id}", [
+            'nama' => 'B',
+            'kategori' => 'X',
+            'sektor_industri_terkait' => 'Y',
+            'aliases' => [],
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseMissing('skill_aliases', ['skill_id' => $skill->id]);
+    }
+
+    public function test_update_skill_padded_alias_conflicts_with_another_skill(): void
+    {
+        $aliasSkill = Skill::create(['nama' => 'A', 'kategori' => 'X', 'sektor_industri_terkait' => 'Y']);
+        SkillAlias::create(['skill_id' => $aliasSkill->id, 'alias_name' => 'k8s']);
+        $skill = Skill::create(['nama' => 'Kubernetes', 'kategori' => 'Cloud & DevOps', 'sektor_industri_terkait' => 'TI']);
+
+        $user = $this->makeUser('kaprodi');
+
+        $response = $this->actingAs($user)->put("/taxonomy/manage/{$skill->id}", [
+            'nama' => 'Kubernetes',
+            'kategori' => 'Cloud & DevOps',
+            'sektor_industri_terkait' => 'TI',
+            'aliases' => [' k8s '],
+        ]);
+
+        $response->assertSessionHasErrors('aliases.0');
+    }
+
+    public function test_update_skill_rejects_whitespace_only_alias(): void
+    {
+        $skill = Skill::create(['nama' => 'C', 'kategori' => 'X', 'sektor_industri_terkait' => 'Y']);
+
+        $user = $this->makeUser('kaprodi');
+
+        $response = $this->actingAs($user)->put("/taxonomy/manage/{$skill->id}", [
+            'nama' => 'C',
+            'kategori' => 'X',
+            'sektor_industri_terkait' => 'Y',
+            'aliases' => ['   '],
+        ]);
+
+        $response->assertSessionHasErrors('aliases.0');
+        $this->assertDatabaseCount('skill_aliases', 0);
     }
 }

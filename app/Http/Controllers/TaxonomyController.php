@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Skill;
 use App\Models\SkillAlias;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class TaxonomyController extends Controller
 {
@@ -30,6 +31,12 @@ class TaxonomyController extends Controller
 
     public function store(Request $request)
     {
+        if (is_array($request->input('aliases'))) {
+            $request->merge([
+                'aliases' => array_map('trim', $request->input('aliases')),
+            ]);
+        }
+
         $validated = $request->validate([
             'nama' => ['required', 'string', 'max:255', 'unique:skills,nama'],
             'kategori' => ['required', 'string', 'max:100'],
@@ -37,7 +44,7 @@ class TaxonomyController extends Controller
             'dimension' => ['nullable', 'string', 'in:hard_technical,task_management,contingency_management,knowledge_information,social_situational'],
             'is_hard_skill' => ['boolean'],
             'aliases' => ['array'],
-            'aliases.*' => ['string', 'max:100', 'distinct', 'unique:skill_aliases,alias_name'],
+            'aliases.*' => ['required', 'string', 'min:1', 'max:100', 'distinct', Rule::unique('skill_aliases', 'alias_name')],
         ]);
 
         $skill = Skill::create($validated);
@@ -56,6 +63,12 @@ class TaxonomyController extends Controller
 
     public function update(Request $request, Skill $skill)
     {
+        if (is_array($request->input('aliases'))) {
+            $request->merge([
+                'aliases' => array_map('trim', $request->input('aliases')),
+            ]);
+        }
+
         $validated = $request->validate([
             'nama' => ['required', 'string', 'max:255', "unique:skills,nama,{$skill->id}"],
             'kategori' => ['required', 'string', 'max:100'],
@@ -63,7 +76,11 @@ class TaxonomyController extends Controller
             'dimension' => ['nullable', 'string', 'in:hard_technical,task_management,contingency_management,knowledge_information,social_situational'],
             'is_hard_skill' => ['boolean'],
             'aliases' => ['array'],
-            'aliases.*' => ['string', 'max:100', 'distinct', "unique:skill_aliases,alias_name,NULL,id,skill_id,{$skill->id}"],
+            'aliases.*' => [
+                'required', 'string', 'min:1', 'max:100', 'distinct',
+                Rule::unique('skill_aliases', 'alias_name')
+                    ->where(fn ($query) => $query->where('skill_id', '!=', $skill->id)),
+            ],
         ]);
 
         $skill->update($validated);
