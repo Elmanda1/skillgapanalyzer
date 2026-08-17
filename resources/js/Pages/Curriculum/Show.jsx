@@ -76,25 +76,15 @@ export default function CurriculumShow({ course, skills }) {
   };
 
   return (
-    <div className="min-h-screen bg-page-bg font-sans">
+    <div className="w-full p-6 md:p-8 animate-fade-in-up">
+      <div className="mb-4">
+        <Link href="/curriculum" className="btn-outline inline-flex items-center gap-2">
+          <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+          Kembali ke Daftar Kurikulum
+        </Link>
+      </div>
 
-      {/* ── Top bar ── */}
-      <nav className="bg-surface border-b border-border sticky top-0 z-40">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-brand flex items-center justify-center">
-              <span className="material-symbols-outlined text-white text-[18px]">insights</span>
-            </div>
-            <span className="font-display font-bold text-text">Skill Gap Analyzer</span>
-          </div>
-          <Link href="/curriculum" className="btn-outline flex items-center gap-2">
-            <span className="material-symbols-outlined text-[16px]">arrow_back</span>
-            Kembali
-          </Link>
-        </div>
-      </nav>
-
-      <main className="max-w-6xl mx-auto px-6 py-10">
+      <main className="py-4">
         {/* ── Header ── */}
         <header className="mb-6">
           <div className="flex items-center gap-2 mb-2">

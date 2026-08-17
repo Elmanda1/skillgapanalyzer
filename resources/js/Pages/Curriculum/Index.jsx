@@ -1,5 +1,5 @@
 import React from 'react';
-import { useForm, Link } from '@inertiajs/react';
+import { useForm, Link, usePage } from '@inertiajs/react';
 
 // ─── Course row card ───────────────────────────────────────────────────────
 function CourseCard({ course }) {
@@ -54,8 +54,18 @@ function Field({ id, label, error, children }) {
 const INPUT_CLASS = 'w-full px-3.5 py-2.5 border border-border rounded-lg text-sm bg-white focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/10 transition-all';
 
 // ─── Main Curriculum Index ─────────────────────────────────────────────────
-export default function CurriculumIndex({ courses }) {
-  const form = useForm({ code: '', name: '', semester: '', credits: '' });
+export default function CurriculumIndex({ courses, studyPrograms = [] }) {
+  const { auth } = usePage().props;
+  const isSuperAdmin = auth?.role === 'super_admin';
+  const userProdi = auth?.user?.study_program || studyPrograms.find(sp => sp.id === auth?.user?.study_program_id);
+
+  const form = useForm({
+    study_program_id: '',
+    code: '',
+    name: '',
+    semester: '',
+    credits: '',
+  });
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -63,33 +73,54 @@ export default function CurriculumIndex({ courses }) {
   };
 
   return (
-    <div className="min-h-screen bg-page-bg font-sans">
-
-      {/* ── Navbar ── */}
-      <nav className="bg-surface border-b border-border sticky top-0 z-40">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-brand flex items-center justify-center">
-              <span className="material-symbols-outlined text-white text-[18px]">insights</span>
-            </div>
-            <span className="font-display font-bold text-text">Skill Gap Analyzer</span>
-          </div>
-          <span className="badge badge-green">Kurikulum</span>
-        </div>
-      </nav>
+    <div className="w-full p-6 md:p-8 animate-fade-in-up">
 
       {/* ── Page header ── */}
-      <header className="max-w-6xl mx-auto px-6 pt-10 pb-6">
+      <header className="mb-6">
         <h1 className="font-display text-2xl font-bold text-text">Daftar Mata Kuliah</h1>
         <p className="text-sm text-text-secondary mt-1">Kelola mata kuliah kurikulum, capaian pembelajaran, dan pemetaan skill.</p>
       </header>
 
-      <main className="max-w-6xl mx-auto px-6 pb-16 grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+      <main className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         {/* ── Tambah Mata Kuliah ── */}
         <section className="card p-6 lg:sticky lg:top-24">
           <h2 className="font-display text-base font-bold text-text mb-1">Tambah Mata Kuliah</h2>
           <p className="text-xs text-text-muted mb-5">Lengkapi data dasar mata kuliah baru.</p>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {isSuperAdmin ? (
+              <Field id="study_program_id" label={`Program Studi (${studyPrograms.length} Tersedia di DB)`} error={form.errors.study_program_id}>
+                <select
+                  id="study_program_id"
+                  required
+                  value={form.data.study_program_id}
+                  onChange={(e) => form.setData('study_program_id', e.target.value)}
+                  className={INPUT_CLASS}
+                >
+                  <option value="">-- Pilih Program Studi --</option>
+                  {studyPrograms.map((sp) => (
+                    <option key={sp.id} value={sp.id}>
+                      {sp.jenjang} {sp.nama_prodi} - {sp.nama_institusi}
+                    </option>
+                  ))}
+                </select>
+                {studyPrograms.length === 0 && (
+                  <p className="text-[11px] text-amber-600 mt-1">Belum ada program studi di database.</p>
+                )}
+              </Field>
+            ) : (
+              <div className="bg-brand/5 border border-brand/20 rounded-xl p-3.5">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] font-bold text-brand uppercase tracking-wider">Program Studi Terkait</span>
+                  <span className="material-symbols-outlined text-brand text-[16px]">domain</span>
+                </div>
+                <p className="text-sm font-bold text-text">
+                  {userProdi ? `${userProdi.jenjang} ${userProdi.nama_prodi}` : 'Teknik Informatika'}
+                </p>
+                <p className="text-xs text-text-muted mt-0.5">
+                  {userProdi?.nama_institusi || 'Politeknik Negeri Jakarta'}
+                </p>
+              </div>
+            )}
             <Field id="code" label="Kode MK" error={form.errors.code}>
               <input
                 id="code"
