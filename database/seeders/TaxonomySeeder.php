@@ -5,10 +5,9 @@ namespace Database\Seeders;
 use App\Models\Skill;
 use App\Models\SkillAlias;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 
 /**
- * Taxonomy seed: ~80 IT skills across 5 competence dimensions and 6 categories,
+ * Taxonomy seed: 73 IT skills across 5 competence dimensions and 8 categories,
  * with synonym aliases. Spec §6 / Q10 resolution (ESCO/O*NET-style subset).
  *
  * Idempotent: upserts by skill name, aliases by unique alias_name.
@@ -73,17 +72,17 @@ class TaxonomySeeder extends Seeder
             ['GraphQL APIs', 'Backend Dev', $dim['hard'], true, ['graphql', 'gql', 'graph ql']],
             ['REST APIs', 'Backend Dev', $dim['hard'], true, ['rest', 'restful api', 'restful']],
             ['Microservices', 'Backend Dev', $dim['cont'], false, ['microservice', 'services architecture', 'soa']],
-            ['PostgreSQL', 'Database', $dim['know'], true, ['postgres', 'pg', 'postgresql db']],
-            ['MySQL', 'Database', $dim['know'], true, ['maria', 'mariadb', 'mysql db']],
-            ['MongoDB', 'Database', $dim['know'], true, ['mongo', 'mongodb nosql']],
-            ['Redis', 'Database', $dim['know'], true, ['redis cache', 'redis store']],
-            ['Elasticsearch', 'Database', $dim['know'], true, ['elastic', 'elk search']],
+            ['PostgreSQL', 'Database', $dim['hard'], true, ['postgres', 'pg', 'postgresql db']],
+            ['MySQL', 'Database', $dim['hard'], true, ['maria', 'mariadb', 'mysql db']],
+            ['MongoDB', 'Database', $dim['hard'], true, ['mongo', 'mongodb nosql']],
+            ['Redis', 'Database', $dim['hard'], true, ['redis cache', 'redis store']],
+            ['Elasticsearch', 'Database', $dim['hard'], true, ['elastic', 'elk search']],
 
             // ── Cybersecurity (hard) ──
             ['Zero Trust Architecture', 'Cybersecurity', $dim['hard'], true, ['zero trust', 'ztna', 'zero trust network']],
             ['Penetration Testing', 'Cybersecurity', $dim['hard'], true, ['pentest', 'pen testing', 'ethical hacking']],
             ['Network Security', 'Cybersecurity', $dim['hard'], true, ['cyber security network', 'netsec']],
-            ['SIEM', 'Cybersecurity', $dim['know'], true, ['security info event mgmt', 'splunk siem']],
+            ['SIEM', 'Cybersecurity', $dim['hard'], true, ['security info event mgmt', 'splunk siem']],
             ['ISO 27001', 'Cybersecurity', $dim['know'], false, ['iso27001', '27001 certification']],
 
             // ── Mobile Dev (hard) ──
@@ -99,15 +98,15 @@ class TaxonomySeeder extends Seeder
             ['Stakeholder Communication', 'Soft Skills', $dim['soc'], false, ['communication skills', 'stakeholder mgmt']],
             ['Technical Writing', 'Soft Skills', $dim['know'], false, ['documentation', 'tech writing']],
             ['Requirements Analysis', 'Soft Skills', $dim['cont'], false, ['requirement gathering', 'business analysis']],
-            [' Incident Response', 'Soft Skills', $dim['cont'], false, ['incident mgmt', 'oncall response']],
+            ['Incident Response', 'Soft Skills', $dim['cont'], false, ['incident mgmt', 'oncall response']],
             ['Team Leadership', 'Soft Skills', $dim['soc'], false, ['leadership', 'team lead']],
             ['Problem Solving', 'Soft Skills', $dim['cont'], false, ['analytical thinking', 'troubleshooting']],
             ['Time Management', 'Soft Skills', $dim['task'], false, ['task prioritization']],
             ['Continuous Learning', 'Soft Skills', $dim['know'], false, ['self learning', 'upskilling']],
-            ['Debugging', 'Backend Dev', $dim['cont'], true, ['debug', 'bug fixing']],
+            ['Debugging', 'Backend Dev', $dim['hard'], true, ['debug', 'bug fixing']],
             ['Code Review', 'Backend Dev', $dim['cont'], false, ['peer review', 'review pr']],
             ['Git Version Control', 'Backend Dev', $dim['hard'], true, ['git', 'github', 'gitlab']],
-            ['Unit Testing', 'Backend Dev', $dim['cont'], true, ['tests', 'tdd', 'unit tests']],
+            ['Unit Testing', 'Backend Dev', $dim['hard'], true, ['tests', 'tdd', 'unit tests']],
         ];
 
         foreach ($rows as $row) {
