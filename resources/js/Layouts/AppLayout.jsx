@@ -6,18 +6,21 @@ const NAV_BY_ROLE = {
   super_admin: [
     { id: 'dashboard',   label: 'Dasbor',          icon: 'grid_view', href: '/dashboard' },
     { id: 'management',  label: 'Manajemen Kampus', icon: 'domain', href: '/management' },
+    { id: 'curriculum',  label: 'Data Kurikulum',   icon: 'menu_book', href: '/curriculum' },
     { id: 'competency',  label: 'Peta Kompetensi',  icon: 'book_2', href: '/competency' },
     { id: 'ai_analysis', label: 'Analisis AI',       icon: 'auto_awesome', href: '/ai-analysis' },
     { id: 'scraping',    label: 'Agen Scraping',     icon: 'dns', href: '/scraping' },
   ],
   kaprodi: [
-    { id: 'dashboard',   label: 'Dasbor',          icon: 'grid_view', href: '/dashboard' },
-    { id: 'management',  label: 'Manajemen Kampus', icon: 'domain', href: '/management' },
+    { id: 'dashboard',   label: 'Dasbor Institusi', icon: 'grid_view', href: '/dashboard' },
+    { id: 'management',  label: 'Manajemen Institusi', icon: 'domain', href: '/management' },
+    { id: 'curriculum',  label: 'Data Kurikulum',   icon: 'menu_book', href: '/curriculum' },
     { id: 'competency',  label: 'Peta Kompetensi',  icon: 'book_2', href: '/competency' },
     { id: 'ai_analysis', label: 'Analisis AI',       icon: 'auto_awesome', href: '/ai-analysis' },
   ],
   dosen: [
     { id: 'dashboard',   label: 'Dasbor Dosen',     icon: 'grid_view', href: '/dashboard' },
+    { id: 'curriculum',  label: 'Data Kurikulum',   icon: 'menu_book', href: '/curriculum' },
     { id: 'ai_analysis', label: 'Analisis AI',       icon: 'auto_awesome', href: '/ai-analysis' },
     { id: 'competency',  label: 'Peta Kompetensi',   icon: 'book_2', href: '/competency' },
   ],
@@ -36,9 +39,9 @@ const BOTTOM_NAV = [
 
 const ROLE_META = {
   super_admin: { label: 'Super Admin', color: 'bg-brand' },
-  kaprodi: { label: 'Kaprodi', color: 'bg-brand' },
-  dosen:     { label: 'Dosen',           color: 'bg-brand' },
-  mahasiswa: { label: 'Mahasiswa',       color: 'bg-brand' },
+  kaprodi:     { label: 'Admin Institusi', color: 'bg-brand' },
+  dosen:       { label: 'Dosen',           color: 'bg-brand' },
+  mahasiswa:   { label: 'Mahasiswa',       color: 'bg-brand' },
 };
 
 function NavButton({ item, isActive }) {
@@ -108,6 +111,17 @@ export default function AppLayout({ children }) {
         <div className="px-4 py-3 border-b border-border">
           <p className="text-xs font-semibold text-text truncate">{user?.name || 'User'}</p>
           <p className="text-[11px] text-text-muted truncate mt-0.5">{user?.email}</p>
+          {user?.study_program && (
+            <div className="mt-1.5 pt-1.5 border-t border-dashed border-gray-200">
+              <p className="text-[10px] text-brand font-semibold truncate flex items-center gap-1">
+                <span className="material-symbols-outlined text-[13px]">domain</span>
+                {user.study_program.nama_institusi}
+              </p>
+              <p className="text-[10px] text-text-secondary truncate mt-0.5">
+                {user.study_program.jenjang} {user.study_program.nama_prodi}
+              </p>
+            </div>
+          )}
         </div>
 
         <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">

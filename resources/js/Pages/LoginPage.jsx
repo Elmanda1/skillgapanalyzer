@@ -3,30 +3,39 @@ import { Link, useForm } from '@inertiajs/react';
 
 const ROLE_CARDS = [
   {
-    role: 'institusi',
+    role: 'super_admin',
+    label: 'Super Admin',
+    sublabel: 'Administrator Sistem Nasional',
+    icon: 'shield_person',
+    iconBg: 'bg-brand text-white',
+    description: 'Akses penuh tata kelola sistem nasional, pantau seluruh 6 politeknik, dan pipeline data industri.',
+    email: 'admin@skillgap.id',
+  },
+  {
+    role: 'kaprodi',
     label: 'Admin Institusi',
     sublabel: 'Kaprodi / Pimpinan Kampus',
-    icon: 'school',
+    icon: 'domain',
     iconBg: 'bg-brand text-white',
-    description: 'Kelola kurikulum, analisis gap skill, dan ekspor laporan akreditasi.',
-    email: 'admin@pnj.ac.id',
+    description: 'Kelola kurikulum prodi, review usulan dosen, analisis gap skill, dan akreditasi.',
+    email: 'kaprodi1@pnj.ac.id',
   },
   {
     role: 'dosen',
     label: 'Dosen',
     sublabel: 'Pengajar / Koordinator MK',
-    icon: 'person_book',
+    icon: 'school',
     iconBg: 'bg-brand text-white',
-    description: 'Pantau gap per mata kuliah yang diampu dan terima usulan materi baru.',
+    description: 'Pantau gap per mata kuliah yang diampu dan terima usulan materi/silabus baru.',
     email: 'dosen1@pnj.ac.id',
   },
   {
     role: 'mahasiswa',
     label: 'Mahasiswa',
     sublabel: 'Mahasiswa / Calon Lulusan',
-    icon: 'menu_book',
+    icon: 'psychology',
     iconBg: 'bg-brand text-white',
-    description: 'Lihat profil skill, rekomendasi karier, dan rencana belajar personalmu.',
+    description: 'Lihat profil skill mandiri, rekomendasi karier, dan rencana belajar personal.',
     email: 'mahasiswa1@pnj.ac.id',
   },
 ];
@@ -77,7 +86,7 @@ export default function LoginPage({ onBack }) {
         </button>
       )}
 
-      <div className="w-full max-w-lg relative z-10">
+      <div className="w-full max-w-2xl relative z-10">
         {/* Brand */}
         <div className="text-center mb-8">
           <div className="w-14 h-14 rounded-2xl bg-brand flex items-center justify-center mx-auto mb-4 shadow-md">
@@ -89,10 +98,10 @@ export default function LoginPage({ onBack }) {
 
         <div className="bg-white/90 backdrop-blur-xl border border-white/50 p-8 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative">
           <h2 className="font-display text-lg font-bold text-text mb-1">Masuk ke Sistem</h2>
-          <p className="text-sm text-text-secondary mb-6">Pilih peran Anda, lalu masuk dengan kredensial.</p>
+          <p className="text-sm text-text-secondary mb-6">Pilih peran Anda, lalu masuk dengan kredensial yang tersedia.</p>
 
           {/* Role selector */}
-          <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
             {ROLE_CARDS.map(rc => (
               <button
                 key={rc.role}
