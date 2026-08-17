@@ -6,7 +6,9 @@ const NAV_BY_ROLE = {
   super_admin: [
     { id: 'dashboard',   label: 'Dasbor',          icon: 'grid_view', href: '/dashboard' },
     { id: 'management',  label: 'Manajemen Kampus', icon: 'domain', href: '/management' },
+    { id: 'taxonomy',    label: 'Manajemen Taksonomi', icon: 'category', href: '/taxonomy/manage' },
     { id: 'curriculum',  label: 'Data Kurikulum',   icon: 'menu_book', href: '/curriculum' },
+    { id: 'taxonomy_ref', label: 'Referensi Taksonomi', icon: 'menu_book', href: '/taxonomy' },
     { id: 'competency',  label: 'Peta Kompetensi',  icon: 'book_2', href: '/competency' },
     { id: 'ai_analysis', label: 'Analisis AI',       icon: 'auto_awesome', href: '/ai-analysis' },
     { id: 'scraping',    label: 'Agen Scraping',     icon: 'dns', href: '/scraping' },
@@ -14,7 +16,9 @@ const NAV_BY_ROLE = {
   kaprodi: [
     { id: 'dashboard',   label: 'Dasbor Institusi', icon: 'grid_view', href: '/dashboard' },
     { id: 'management',  label: 'Manajemen Institusi', icon: 'domain', href: '/management' },
+    { id: 'taxonomy',    label: 'Manajemen Taksonomi', icon: 'category', href: '/taxonomy/manage' },
     { id: 'curriculum',  label: 'Data Kurikulum',   icon: 'menu_book', href: '/curriculum' },
+    { id: 'taxonomy_ref', label: 'Referensi Taksonomi', icon: 'menu_book', href: '/taxonomy' },
     { id: 'competency',  label: 'Peta Kompetensi',  icon: 'book_2', href: '/competency' },
     { id: 'ai_analysis', label: 'Analisis AI',       icon: 'auto_awesome', href: '/ai-analysis' },
   ],
@@ -23,12 +27,14 @@ const NAV_BY_ROLE = {
     { id: 'curriculum',  label: 'Data Kurikulum',   icon: 'menu_book', href: '/curriculum' },
     { id: 'ai_analysis', label: 'Analisis AI',       icon: 'auto_awesome', href: '/ai-analysis' },
     { id: 'competency',  label: 'Peta Kompetensi',   icon: 'book_2', href: '/competency' },
+    { id: 'taxonomy_ref', label: 'Referensi Taksonomi', icon: 'menu_book', href: '/taxonomy' },
   ],
   mahasiswa: [
     { id: 'dashboard',   label: 'Profil Skill',      icon: 'person', href: '/dashboard' },
     { id: 'skills',      label: 'Manajemen Keahlian',icon: 'psychology', href: '/skills' },
     { id: 'competency',  label: 'Tren Industri',     icon: 'trending_up', href: '/competency' },
     { id: 'jobs',        label: 'Lowongan Kerja',    icon: 'work', href: '/jobs' },
+    { id: 'taxonomy_ref', label: 'Referensi Taksonomi', icon: 'menu_book', href: '/taxonomy' },
   ],
 };
 
