@@ -88,6 +88,34 @@ export default function Dashboard() {
   const chartInstance = useRef(null);
   const [isSyncing, setIsSyncing] = useState(false);
 
+  // ─── Mahasiswa State ───
+  const careerRoles = stats.careerRoles || [];
+  const [selectedRoleIdx, setSelectedRoleIdx] = useState(0);
+  const activeRoleData = careerRoles[selectedRoleIdx] || careerRoles[0] || {
+    name: 'Backend & Cloud Engineer',
+    match: 78,
+    salary: 'Rp 9.000.000 – Rp 15.000.000/bln',
+    demand: 'Sangat Tinggi',
+    description: 'Membangun arsitektur server terdistribusi, API, dan cloud.',
+    requiredSkills: [
+      { name: 'Node.js / Express', userLevel: 85, targetLevel: 90, status: 'aligned' },
+      { name: 'PostgreSQL', userLevel: 75, targetLevel: 85, status: 'minor_gap' },
+      { name: 'Docker & Containers', userLevel: 40, targetLevel: 85, status: 'critical_gap' },
+      { name: 'CI/CD Pipelines', userLevel: 50, targetLevel: 80, status: 'critical_gap' },
+    ],
+  };
+
+  const [completedSteps, setCompletedSteps] = useState(new Set(['LR01']));
+
+  // ─── Dosen State ───
+  const dosenCourses = stats.courses || [];
+  const [activeCourseIdx, setActiveCourseIdx] = useState(0);
+  const activeDosenCourse = dosenCourses[activeCourseIdx] || dosenCourses[0] || null;
+  const [dosenProposals, setDosenProposals] = useState(stats.curriculumProposals || []);
+  const [showProposalModal, setShowProposalModal] = useState(false);
+  const [proposalForm, setProposalForm] = useState({ mk: '', usulan: '', dampak: '+20% Keselarasan' });
+
+  // Radar chart update for Mahasiswa and Line chart for Super Admin
   useEffect(() => {
     if (!chartRef.current) return;
     if (chartInstance.current) chartInstance.current.destroy();
@@ -99,6 +127,9 @@ export default function Dashboard() {
       gradient.addColorStop(0, 'rgba(6,78,59,0.18)');
       gradient.addColorStop(1, 'rgba(6,78,59,0)');
 
+      const chartRates = stats.throughputRates || [40, 65, 80, 142.8, 90, 70, 85];
+      const chartDelays = chartRates.map(r => Math.max(20, Math.round(150 - r * 0.4)));
+
       chartInstance.current = new Chart(ctx, {
         type: 'line',
         data: {
@@ -106,7 +137,7 @@ export default function Dashboard() {
           datasets: [
             {
               label: 'Laju (GB/s)',
-              data: [40, 65, 80, 142.8, 90, 70, 85],
+              data: chartRates,
               borderColor: '#064e3b',
               backgroundColor: gradient,
               borderWidth: 2,
@@ -119,7 +150,7 @@ export default function Dashboard() {
             },
             {
               label: 'Delay (ms)',
-              data: [120,115,110,150,125,118,122],
+              data: chartDelays,
               borderColor: '#d1d5db',
               borderWidth: 2,
               borderDash: [5,5],
@@ -156,29 +187,33 @@ export default function Dashboard() {
           },
         },
       });
-    } else if (role === 'mahasiswa' && mySkills.length > 0) {
+    } else if (role === 'mahasiswa' && activeRoleData?.requiredSkills?.length > 0) {
+      const skills = activeRoleData.requiredSkills;
       chartInstance.current = new Chart(ctx, {
         type: 'radar',
         data: {
-          labels: mySkills.map(s => s.name),
+          labels: skills.map(s => s.name),
           datasets: [
             {
-              label: 'Skill Saya',
-              data: mySkills.map(s => s.levelValue),
-              backgroundColor: 'rgba(6,78,59,0.12)',
+              label: 'Skill Saya Saat Ini',
+              data: skills.map(s => s.userLevel),
+              backgroundColor: 'rgba(6,78,59,0.18)',
               borderColor: '#064e3b',
-              borderWidth: 2,
+              borderWidth: 2.5,
               pointBackgroundColor: '#064e3b',
-              pointRadius: 3,
+              pointBorderColor: '#fff',
+              pointHoverRadius: 6,
+              pointRadius: 4,
             },
             {
-              label: 'Kebutuhan Industri',
-              data: mySkills.map(s => s.required),
-              backgroundColor: 'rgba(209,213,219,0.1)',
-              borderColor: '#9ca3af',
-              borderWidth: 1,
-              borderDash: [3,3],
-              pointRadius: 0,
+              label: 'Standar Industri (Scraped)',
+              data: skills.map(s => s.targetLevel),
+              backgroundColor: 'rgba(59,130,246,0.08)',
+              borderColor: '#3b82f6',
+              borderWidth: 2,
+              borderDash: [4,4],
+              pointBackgroundColor: '#3b82f6',
+              pointRadius: 3,
             }
           ]
         },
@@ -186,15 +221,20 @@ export default function Dashboard() {
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
-            legend: { display: false },
+            legend: { 
+              position: 'bottom',
+              labels: { font: { family: 'Inter', size: 11, weight: 'bold' }, padding: 15, boxWidth: 12 }
+            },
             tooltip: { backgroundColor: '#1f2937', cornerRadius: 8 },
           },
           scales: {
             r: {
-              min: 0, max: 100,
-              ticks: { display: false },
+              min: 0,
+              max: 100,
+              ticks: { display: false, stepSize: 25 },
               grid: { color: '#e5e7eb' },
-              pointLabels: { font: { family: 'Inter', size: 11 }, color: '#6b7280' },
+              angleLines: { color: '#e5e7eb' },
+              pointLabels: { font: { family: 'Outfit', size: 11, weight: '600' }, color: '#374151' },
             }
           }
         }
@@ -202,7 +242,7 @@ export default function Dashboard() {
     }
 
     return () => { if (chartInstance.current) chartInstance.current.destroy(); };
-  }, [role, mySkills]);
+  }, [role, selectedRoleIdx, activeRoleData]);
 
   const handleSync = () => {
     setIsSyncing(true);
@@ -234,7 +274,7 @@ export default function Dashboard() {
   }[role] ?? '';
 
   return (
-    <div className="p-6 max-w-[1400px] mx-auto">
+    <div className="w-full p-6 md:p-8 space-y-6">
       {/* ── Page Header ── */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
@@ -278,23 +318,40 @@ export default function Dashboard() {
       {/* ─── Super Admin Layout ─── */}
       {role === 'super_admin' && (
         <div className="space-y-6">
-          {/* ── Campus Management Banner ── */}
-          <div className="bg-gradient-to-r from-brand to-brand-hover text-white rounded-2xl p-6 flex flex-col md:flex-row justify-between items-center gap-4 shadow-lg shadow-brand/10">
-            <div>
-              <h2 className="font-display text-lg font-bold flex items-center gap-2">
-                <span className="material-symbols-outlined text-[24px]">domain</span>
-                Pusat Manajemen Kampus Aktif
-              </h2>
-              <p className="text-sm text-brand-light mt-1 max-w-2xl">
-                Sistem sekarang memiliki pusat kendali terintegrasi. Anda dapat mengelola akun pengguna, mereview usulan kurikulum dari dosen, dan mencetak laporan akreditasi.
-              </p>
+          {/* ── National Management Banner ── */}
+          <div className="bg-gradient-to-r from-brand-dark via-brand to-emerald-800 text-white rounded-2xl p-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 shadow-xl shadow-brand/10 border border-brand/20">
+            <div className="flex items-start gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center flex-shrink-0 text-white shadow-inner">
+                <span className="material-symbols-outlined text-[32px]">shield</span>
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="bg-white/20 text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full backdrop-blur-sm">
+                    Pusat Analitik Vokasi Nasional
+                  </span>
+                  <span className="bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                    {stats.totalCampuses || 6} Kampus Terintegrasi
+                  </span>
+                </div>
+                <h2 className="font-display text-xl md:text-2xl font-bold">
+                  Dashboard Kendali Nasional & Multi-Institusi
+                </h2>
+                <p className="text-xs text-brand-light mt-1 max-w-2xl leading-relaxed">
+                  Pemantauan makro keselarasan kurikulum politeknik vokasi se-Indonesia, ekstraksi taksonomi skill industri, dan infrastruktur agen data crawling real-time.
+                </p>
+              </div>
             </div>
-            <Link
-              href="/management"
-              className="px-5 py-2.5 bg-white text-brand rounded-lg text-sm font-bold shadow hover:bg-gray-50 transition-colors whitespace-nowrap"
-            >
-              Buka Manajemen Kampus
-            </Link>
+
+            <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+              <Link
+                href="/management"
+                className="px-5 py-2.5 bg-white text-brand rounded-xl text-sm font-bold shadow-md hover:bg-gray-50 transition-all flex items-center gap-2 flex-1 lg:flex-initial justify-center"
+              >
+                <span className="material-symbols-outlined text-[18px]">domain</span>
+                Kelola Seluruh Kampus
+              </Link>
+            </div>
           </div>
 
           {/* ── Metric Cards ── */}
@@ -304,48 +361,48 @@ export default function Dashboard() {
               value={stats.totalSkills?.toLocaleString() || '0'}
               change="+12.5%"
               changeType="up"
-              note="vs minggu lalu"
+              note="di taksonomi nasional"
               icon="data_object"
               iconBg="bg-cyan-50 text-cyan-600"
             />
             <MetricCard
               title="Mata Kuliah Sinkron"
               value={stats.totalCourses?.toLocaleString() || '0'}
-              change="+5.2%"
+              change={`+${stats.totalStudyPrograms || 0} Prodi`}
               changeType="up"
-              note="vs minggu lalu"
+              note="di 6 politeknik"
               icon="menu_book"
               iconBg="bg-brand-light text-brand"
             />
             <MetricCard
-              title="Permintaan HTTP (24J)"
-              value="1.2M"
-              change="-2.1%"
-              changeType="down"
-              note="vs minggu lalu"
+              title="Permintaan Pipeline (24J)"
+              value={stats.totalHttpRequests || '1.2M'}
+              change={`${stats.totalDataProcessed || 0} TB`}
+              changeType="up"
+              note="Volume data crawling"
               icon="swap_vert"
               iconBg="bg-blue-50 text-blue-600"
             />
             <MetricCard
               title="Gap Skill Kritis"
               value={stats.mismatchGaps?.toString() || '0'}
-              note="Membutuhkan perhatian segera"
+              note="Perlu review kurikulum"
               icon="warning"
               iconBg="bg-red-50 text-red-500"
             />
           </div>
 
           {/* ── Middle Row: Chart + Distribution ── */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Line Chart */}
-            <div className="card p-5 lg:col-span-2 flex flex-col bg-white">
+            <div className="card p-6 lg:col-span-2 flex flex-col bg-white">
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <h2 className="font-display text-base font-semibold text-text">
                     Laju Ingesti vs Intelligent Delay
                   </h2>
                   <p className="text-xs text-text-secondary mt-0.5">
-                    Throughput data pipeline selama 12 jam terakhir.
+                    Throughput data pipeline pengumpulan lowongan industri 12 jam terakhir.
                   </p>
                 </div>
                 <div className="flex items-center gap-4 text-xs text-text-secondary">
@@ -362,18 +419,18 @@ export default function Dashboard() {
               <div className="relative flex-1 min-h-[260px]">
                 <canvas ref={chartRef} />
                 <div className="absolute top-6 right-[28%] bg-white border border-border rounded-lg px-3 py-1.5 text-xs font-semibold text-brand shadow-md">
-                  Peak: 142.8 GB/s
+                  Peak: {stats.throughputPeak || '142.8 GB/s'}
                   <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-white border-b border-r border-border rotate-45 z-[-1]" />
                 </div>
               </div>
             </div>
 
             {/* Competency Distribution */}
-            <div className="card p-5 flex flex-col bg-white">
+            <div className="card p-6 flex flex-col bg-white">
               <div className="mb-4">
                 <h2 className="font-display text-base font-semibold text-text">Peta Kompetensi Industri</h2>
                 <p className="text-xs text-text-secondary mt-0.5">
-                  Distribusi skill berdasarkan sektor.
+                  Distribusi taksonomi skill berdasarkan sektor.
                 </p>
               </div>
               <div className="space-y-4 flex-1 flex flex-col justify-center">
@@ -396,12 +453,70 @@ export default function Dashboard() {
             </div>
           </div>
 
+          {/* ── Multi-Campus Monitoring Matrix Table ── */}
+          {stats.campusSummaries?.length > 0 && (
+            <div className="card overflow-hidden bg-white">
+              <div className="px-5 py-4 border-b border-border flex justify-between items-center bg-gray-50/50">
+                <div>
+                  <h2 className="font-display text-base font-semibold text-text flex items-center gap-2">
+                    <span className="material-symbols-outlined text-brand text-[20px]">school</span>
+                    Matriks Pemantauan 6 Politeknik Terhubung
+                  </h2>
+                  <p className="text-xs text-text-secondary mt-0.5">Ringkasan kurikulum, gap kompetensi, dan civitas akademika tiap institusi.</p>
+                </div>
+                <Link
+                  href="/management"
+                  className="text-xs font-bold text-brand hover:underline"
+                >
+                  Detail Manajemen Kampus →
+                </Link>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="bg-white border-b border-border">
+                      {['INSTITUSI / KAMPUS', 'PRODI', 'TOTAL MK', 'GAP KRITIS', 'DOSEN / MAHASISWA', 'STATUS'].map(h => (
+                        <th key={h} className="px-5 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wide">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {stats.campusSummaries.map((camp, idx) => (
+                      <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-5 py-3.5 font-semibold text-text flex items-center gap-2">
+                          <span className="material-symbols-outlined text-brand text-[18px]">domain</span>
+                          {camp.name}
+                        </td>
+                        <td className="px-5 py-3.5 text-text-secondary">{camp.prodiCount} Program Studi</td>
+                        <td className="px-5 py-3.5 font-semibold text-text">{camp.courseCount} Mata Kuliah</td>
+                        <td className="px-5 py-3.5">
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${camp.gapCount > 5 ? 'bg-red-50 text-red-700 border-red-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'}`}>
+                            {camp.gapCount} Mismatch
+                          </span>
+                        </td>
+                        <td className="px-5 py-3.5 text-xs text-text-secondary">
+                          {camp.dosenCount} Dosen · {camp.mhsCount} Mahasiswa
+                        </td>
+                        <td className="px-5 py-3.5">
+                          <span className="badge badge-green text-[10px] py-0.5 px-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1" />
+                            Tersinkron
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
           {/* ── Scraping Nodes Table ── */}
           <div className="card overflow-hidden bg-white">
             <div className="px-5 py-4 border-b border-border flex justify-between items-center">
               <div>
-                <h2 className="font-display text-base font-semibold text-text">Infrastruktur Agen Scraping</h2>
-                <p className="text-xs text-text-secondary mt-0.5">Status node pengumpulan data regional.</p>
+                <h2 className="font-display text-base font-semibold text-text">Infrastruktur Agen Scraping Regional</h2>
+                <p className="text-xs text-text-secondary mt-0.5">Status operasional node crawling data lowongan kerja di berbagai wilayah.</p>
               </div>
               <Link
                 href="/scraping"
@@ -454,214 +569,916 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ─── Kaprodi Layout ─── */}
+      {/* ─── Kaprodi / Admin Institusi Layout ─── */}
       {role === 'kaprodi' && (
-        <div className="space-y-4">
-          <div className="bg-white border border-border rounded-2xl shadow-sm p-5 flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-brand-light text-brand flex items-center justify-center flex-shrink-0">
-              <span className="material-symbols-outlined text-[22px]">school</span>
-            </div>
-            <div>
-              <p className="font-display font-bold text-text">
-                {stats.studyProgram ? `${stats.studyProgram.nama_prodi} — ${stats.studyProgram.jenjang}` : 'Program Studi belum ditetapkan'}
-              </p>
-              <p className="text-xs text-text-secondary mt-0.5">
-                {stats.studyProgram?.nama_institusi ?? 'Hubungi administrator untuk mengatur program studi Anda.'}
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <StatCard icon="menu_book" label="Mata Kuliah Program" value={stats.totalCourses} />
-            <StatCard icon="insights" label="Total Analisis Gap" value={stats.totalGaps} />
-            <StatCard icon="warning" label="Gap Mismatch" value={stats.mismatchGaps} tone="amber" />
-          </div>
-
-          {stats.gapByType?.length > 0 && (
-            <div className="bg-white border border-border rounded-2xl shadow-sm p-5">
-              <p className="text-sm font-bold text-text mb-3">Rincian Tipe Gap</p>
-              <div className="flex flex-wrap gap-2">
-                {stats.gapByType.map(g => (
-                  <span
-                    key={g.tipe_mismatch}
-                    className="px-3 py-1.5 rounded-full text-xs font-semibold bg-brand-light text-brand"
-                  >
-                    {MISMATCH_LABELS[g.tipe_mismatch] ?? g.tipe_mismatch} · {g.total}
+        <div className="space-y-6">
+          {/* ── Campus & Prodi Hero Banner ── */}
+          <div className="bg-gradient-to-r from-brand to-brand-dark text-white rounded-2xl p-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 shadow-lg shadow-brand/10">
+            <div className="flex items-start gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center flex-shrink-0 text-white shadow-inner">
+                <span className="material-symbols-outlined text-[32px]">school</span>
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="bg-white/20 text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full backdrop-blur-sm">
+                    {stats.studyProgram?.nama_institusi || 'Politeknik Negeri Jakarta'}
                   </span>
-                ))}
+                  <span className="bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                    Prodi Aktif
+                  </span>
+                </div>
+                <h2 className="font-display text-xl md:text-2xl font-bold">
+                  {stats.studyProgram ? `${stats.studyProgram.jenjang} ${stats.studyProgram.nama_prodi}` : 'Program Studi Belum Ditetapkan'}
+                </h2>
+                <p className="text-xs text-brand-light mt-1 max-w-2xl leading-relaxed">
+                  Pusat analitik dan pemantauan keselarasan kurikulum prodi terhadap kebutuhan skill industri terkini secara terintegrasi.
+                </p>
               </div>
             </div>
-          )}
+
+            <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+              <Link
+                href="/curriculum"
+                className="px-4 py-2.5 bg-white text-brand rounded-xl text-sm font-bold shadow hover:bg-gray-50 transition-all flex items-center gap-2 flex-1 lg:flex-initial justify-center"
+              >
+                <span className="material-symbols-outlined text-[18px]">menu_book</span>
+                Kurikulum Prodi
+              </Link>
+              <Link
+                href="/management"
+                className="px-4 py-2.5 bg-white/15 hover:bg-white/25 border border-white/20 text-white rounded-xl text-sm font-semibold transition-all flex items-center gap-2 flex-1 lg:flex-initial justify-center backdrop-blur-sm"
+              >
+                <span className="material-symbols-outlined text-[18px]">domain</span>
+                Manajemen Institusi
+              </Link>
+            </div>
+          </div>
+
+          {/* ── Metric Cards Grid ── */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <MetricCard
+              title="Mata Kuliah Program"
+              value={stats.totalCourses?.toString() || '0'}
+              change="+1 MK"
+              changeType="up"
+              note="di prodi ini"
+              icon="menu_book"
+              iconBg="bg-brand-light text-brand"
+            />
+            <MetricCard
+              title="Total Analisis Gap"
+              value={stats.totalGaps?.toString() || '0'}
+              note="Capaian kompetensi"
+              icon="insights"
+              iconBg="bg-cyan-50 text-cyan-600"
+            />
+            <MetricCard
+              title="Gap Mismatch (Kritis)"
+              value={stats.mismatchGaps?.toString() || '0'}
+              note="Memerlukan revisi materi"
+              icon="warning"
+              iconBg="bg-red-50 text-red-500"
+            />
+            <MetricCard
+              title="Civitas Prodi"
+              value={`${stats.totalDosen || 0} Dosen`}
+              note={`${stats.totalMahasiswa || 0} Mahasiswa Terdaftar`}
+              icon="groups"
+              iconBg="bg-purple-50 text-purple-600"
+            />
+          </div>
+
+          {/* ── Middle Row: Gap Breakdown & Quick Insights ── */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Gap Distribution */}
+            <div className="card p-6 bg-white flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="font-display text-base font-bold text-text">Distribusi Kategori Gap</h3>
+                    <p className="text-xs text-text-secondary mt-0.5">Status keselarasan kompetensi dengan industri.</p>
+                  </div>
+                  <span className="material-symbols-outlined text-brand text-[22px]">pie_chart</span>
+                </div>
+
+                <div className="space-y-4 my-4">
+                  {stats.gapByType?.length > 0 ? (
+                    stats.gapByType.map(g => {
+                      const label = MISMATCH_LABELS[g.tipe_mismatch] ?? g.tipe_mismatch;
+                      const total = stats.totalGaps || 1;
+                      const pct = Math.round((g.total / total) * 100);
+                      const colorClass = g.tipe_mismatch === 'aligned' 
+                        ? 'bg-emerald-500' 
+                        : g.tipe_mismatch === 'under_skill' 
+                        ? 'bg-red-500' 
+                        : 'bg-blue-500';
+
+                      return (
+                        <div key={g.tipe_mismatch}>
+                          <div className="flex justify-between items-center text-xs mb-1.5">
+                            <span className="font-semibold text-text flex items-center gap-1.5">
+                              <span className={`w-2.5 h-2.5 rounded-full ${colorClass}`} />
+                              {label}
+                            </span>
+                            <span className="text-text-muted font-mono font-semibold">{g.total} ({pct}%)</span>
+                          </div>
+                          <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                            <div className={`h-full ${colorClass} rounded-full transition-all duration-500`} style={{ width: `${pct}%` }} />
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <p className="text-xs text-text-muted text-center py-6">Belum ada data analisis gap.</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-border mt-4 flex items-center justify-between text-xs">
+                <span className="text-text-muted">Rekomendasi Tindakan:</span>
+                <Link href="/ai-analysis" className="font-semibold text-brand hover:underline flex items-center gap-1">
+                  Analisis AI
+                  <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                </Link>
+              </div>
+            </div>
+
+            {/* Program Priority Courses */}
+            <div className="card p-0 bg-white lg:col-span-2 overflow-hidden flex flex-col">
+              <div className="p-5 border-b border-border flex justify-between items-center bg-gray-50/50">
+                <div>
+                  <h3 className="font-display text-base font-bold text-text flex items-center gap-2">
+                    <span className="material-symbols-outlined text-brand text-[20px]">fact_check</span>
+                    Mata Kuliah Prioritas Evaluasi
+                  </h3>
+                  <p className="text-xs text-text-secondary mt-0.5">Mata kuliah kurikulum prodi dengan tingkat kesenjangan tertinggi.</p>
+                </div>
+                <Link href="/curriculum" className="text-xs font-bold text-brand hover:underline">
+                  Lihat Semua MK →
+                </Link>
+              </div>
+
+              <div className="overflow-x-auto flex-1">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="bg-white border-b border-border">
+                      {['KODE', 'MATA KULIAH', 'SEMESTER / SKS', 'GAP SCORE', 'AKSI'].map(h => (
+                        <th key={h} className="px-5 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wide">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {stats.courses?.map(c => (
+                      <tr key={c.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-5 py-3.5 font-mono text-xs font-semibold text-brand">{c.code}</td>
+                        <td className="px-5 py-3.5 font-medium text-text">{c.name}</td>
+                        <td className="px-5 py-3.5 text-xs text-text-secondary">Semester {c.semester} · {c.credits} SKS</td>
+                        <td className="px-5 py-3.5">
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${c.gap >= 70 ? 'bg-red-50 text-red-700 border-red-200' : c.gap >= 40 ? 'bg-yellow-50 text-yellow-700 border-yellow-200' : 'bg-green-50 text-green-700 border-green-200'}`}>
+                            Gap: {c.gap}%
+                          </span>
+                        </td>
+                        <td className="px-5 py-3.5">
+                          <Link
+                            href={`/curriculum/courses/${c.id}`}
+                            className="text-xs font-semibold text-brand hover:underline inline-flex items-center gap-1"
+                          >
+                            Detail
+                            <span className="material-symbols-outlined text-[14px]">chevron_right</span>
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                    {(!stats.courses || stats.courses.length === 0) && (
+                      <tr>
+                        <td colSpan="5" className="px-5 py-8 text-center text-xs text-text-muted">
+                          Belum ada mata kuliah terdaftar di program studi ini.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
       {/* ─── Dosen Layout ─── */}
       {role === 'dosen' && (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <StatCard icon="menu_book" label="Mata Kuliah Diampu" value={stats.courses?.length ?? 0} />
-            <StatCard icon="insights" label="Total Gap Program" value={stats.totalGaps} />
-            <StatCard icon="person_book" label="Role" value={ROLE_LABELS[role]} />
-          </div>
-
-          <div className="bg-white border border-border rounded-2xl shadow-sm overflow-hidden">
-            <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px] text-brand">library_books</span>
-              <p className="text-sm font-bold text-text">Mata Kuliah yang Diampu</p>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-[11px] uppercase tracking-wide text-text-muted border-b border-gray-100">
-                    <th className="px-5 py-3 font-semibold">Kode</th>
-                    <th className="px-5 py-3 font-semibold">Nama</th>
-                    <th className="px-5 py-3 font-semibold">Semester</th>
-                    <th className="px-5 py-3 font-semibold">SKS</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {stats.courses?.map(course => (
-                    <tr key={course.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
-                      <td className="px-5 py-3 font-mono text-xs text-brand">{course.code}</td>
-                      <td className="px-5 py-3 font-medium text-text">{course.name}</td>
-                      <td className="px-5 py-3 text-text-secondary">Semester {course.semester}</td>
-                      <td className="px-5 py-3 text-text-secondary">{course.credits} SKS</td>
-                    </tr>
-                  ))}
-                  {(!stats.courses || stats.courses.length === 0) && (
-                    <tr>
-                      <td colSpan="4" className="px-5 py-8 text-center text-xs text-text-muted">
-                        Belum ada mata kuliah yang diampu.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ─── Mahasiswa Layout ─── */}
-      {role === 'mahasiswa' && (
         <div className="space-y-6">
-          {/* Stats Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[
-              { label: 'IPK',              val: user.ipk || '3.62',   icon: 'grade',        iconBg: 'bg-amber-50 text-amber-600' },
-              { label: 'Skill Dikuasai',   val: mySkills.length.toString(), icon: 'psychology',   iconBg: 'bg-brand-light text-brand' },
-              { label: 'Skill Gap Kritis', val: mySkills.filter(s => s.required - s.levelValue > 10).length.toString(), icon: 'warning',      iconBg: 'bg-red-50 text-red-500' },
-              { label: 'Lowongan Cocok',   val: `${JOB_RECS.length}`, icon: 'work_alert', iconBg: 'bg-blue-50 text-blue-600' },
-            ].map(m => (
-              <div key={m.label} className="bg-white border border-border rounded-2xl p-4 flex items-center gap-4 shadow-sm">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${m.iconBg}`}>
-                  <span className="material-symbols-outlined text-[20px]">{m.icon}</span>
-                </div>
-                <div>
-                  <p className="font-display text-xl font-bold text-text">{m.val}</p>
-                  <p className="text-xs text-text-secondary">{m.label}</p>
-                </div>
+          {/* ── Hero Banner ── */}
+          <div className="bg-gradient-to-r from-brand to-brand-dark text-white rounded-2xl p-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 shadow-lg shadow-brand/10">
+            <div className="flex items-start gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center flex-shrink-0 text-white shadow-inner">
+                <span className="material-symbols-outlined text-[32px]">cast_for_education</span>
               </div>
-            ))}
-          </div>
-
-          {/* Chart + Skills Gaps */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {/* Radar chart */}
-            <div className="card p-5 bg-white flex flex-col">
-              <h2 className="font-display text-base font-semibold text-text mb-1">Profil Skill Saya</h2>
-              <p className="text-xs text-text-secondary mb-4">Dibandingkan kebutuhan industri sebagai Backend Engineer.</p>
-              <div className="relative flex-1 min-h-[260px]">
-                <canvas ref={chartRef} />
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="bg-white/20 text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full backdrop-blur-sm">
+                    {stats.studyProgram?.nama_institusi || 'Politeknik Negeri Jakarta'}
+                  </span>
+                  <span className="bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                    Dosen Pengampu Aktif
+                  </span>
+                </div>
+                <h2 className="font-display text-xl md:text-2xl font-bold">
+                  Selamat Bertugas, {user.name}
+                </h2>
+                <p className="text-xs text-brand-light mt-1 max-w-2xl leading-relaxed">
+                  Pantau keselarasan materi ajar terhadap kebutuhan industri, analisa gap kompetensi berbasis AI scraper, dan ajukan pembaruan silabus ke Kaprodi.
+                </p>
               </div>
             </div>
 
-            {/* Gaps List */}
-            <div className="card p-5 lg:col-span-2 bg-white">
-              <h2 className="font-display text-base font-semibold text-text mb-1">Skill Gap yang Perlu Ditutup</h2>
-              <p className="text-xs text-text-secondary mb-4">Skill berikut sangat dibutuhkan industri tapi masih lemah di profilmu.</p>
-              <div className="space-y-4">
-                {mySkills.map(sk => {
-                  const gap = sk.required - sk.levelValue;
+            <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+              <button
+                onClick={() => {
+                  setProposalForm({
+                    mk: activeDosenCourse?.name || 'Cloud Computing',
+                    usulan: 'Integrasi materi praktikum Docker & Cloud deployment terkini',
+                    dampak: '+20% Keselarasan'
+                  });
+                  setShowProposalModal(true);
+                }}
+                className="px-4 py-2.5 bg-white text-brand rounded-xl text-sm font-bold shadow hover:bg-gray-50 transition-all flex items-center gap-2 flex-1 lg:flex-initial justify-center"
+              >
+                <span className="material-symbols-outlined text-[18px]">add_task</span>
+                Ajukan Usulan Silabus
+              </button>
+              <Link
+                href="/ai-analysis"
+                className="px-4 py-2.5 bg-white/15 hover:bg-white/25 border border-white/20 text-white rounded-xl text-sm font-semibold transition-all flex items-center gap-2 flex-1 lg:flex-initial justify-center backdrop-blur-sm"
+              >
+                <span className="material-symbols-outlined text-[18px]">auto_awesome</span>
+                Analisis AI Kurikulum
+              </Link>
+            </div>
+          </div>
+
+          {/* ── Key Metrics Grid ── */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <MetricCard
+              title="Mata Kuliah Diampu"
+              value={dosenCourses.length.toString()}
+              note="di program studi ini"
+              icon="menu_book"
+              iconBg="bg-brand-light text-brand"
+            />
+            <MetricCard
+              title="Rata-rata Gap Score"
+              value={dosenCourses.length > 0 ? `${Math.round(dosenCourses.reduce((acc, c) => acc + (c.gap || 0), 0) / dosenCourses.length)}%` : '0%'}
+              note="Kesenjangan silabus vs pasar"
+              icon="insights"
+              iconBg="bg-amber-50 text-amber-600"
+            />
+            <MetricCard
+              title="Sinyal Lowongan Industri"
+              value="1.240+"
+              change="+34%"
+              changeType="up"
+              note="Terdeteksi AI Scraper"
+              icon="radar"
+              iconBg="bg-blue-50 text-blue-600"
+            />
+            <MetricCard
+              title="Usulan Silabus Aktif"
+              value={dosenProposals.length.toString()}
+              note="1 disetujui, 1 menunggu"
+              icon="assignment_turned_in"
+              iconBg="bg-purple-50 text-purple-600"
+            />
+          </div>
+
+          {/* ── Interactive Course Evaluator & AI Diff Assistant ── */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Course Selector List */}
+            <div className="card p-0 bg-white overflow-hidden flex flex-col">
+              <div className="p-4 border-b border-border bg-gray-50/80 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-brand text-[20px]">library_books</span>
+                  <h3 className="font-display text-sm font-bold text-text">Daftar Mata Kuliah Diampu</h3>
+                </div>
+                <span className="text-xs text-text-muted">{dosenCourses.length} MK</span>
+              </div>
+              <div className="divide-y divide-border overflow-y-auto max-h-[420px]">
+                {dosenCourses.map((c, idx) => {
+                  const isSelected = activeCourseIdx === idx;
                   return (
-                    <div key={sk.id}>
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-sm font-medium text-text">{sk.name}</span>
-                        <div className="flex items-center gap-2 text-xs">
-                          <span className="text-brand font-semibold">{sk.levelValue}%</span>
-                          <span className="text-text-muted">/ {sk.required}% target</span>
-                          {gap > 0 && <span className="badge badge-red text-[10px]">-{gap}%</span>}
-                          {gap <= 0 && <span className="badge badge-green text-[10px]">✓</span>}
+                    <button
+                      key={c.id}
+                      onClick={() => setActiveCourseIdx(idx)}
+                      className={`w-full text-left p-4 transition-all flex items-start justify-between gap-3 ${
+                        isSelected ? 'bg-brand/5 border-l-4 border-brand' : 'hover:bg-gray-50'
+                      }`}
+                    >
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-mono text-xs font-bold text-brand">{c.code}</span>
+                          <span className="text-[10px] text-text-muted">· Smt {c.semester} ({c.credits} SKS)</span>
+                        </div>
+                        <p className="font-semibold text-text text-sm">{c.name}</p>
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {c.skills?.slice(0, 3).map(sk => (
+                            <span key={sk} className="text-[10px] bg-gray-100 text-text-secondary px-2 py-0.5 rounded">
+                              {sk}
+                            </span>
+                          ))}
                         </div>
                       </div>
-                      <div className="relative w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                        <div className="absolute inset-y-0 left-0 rounded-full bg-gray-200" style={{ width: `${sk.required}%` }}/>
-                        <div className="absolute inset-y-0 left-0 rounded-full bg-brand transition-all" style={{ width: `${sk.levelValue}%` }}/>
+                      <div className="text-right flex flex-col items-end gap-1 flex-shrink-0">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${c.gap >= 70 ? 'bg-red-50 text-red-700 border-red-200' : c.gap >= 40 ? 'bg-yellow-50 text-yellow-700 border-yellow-200' : 'bg-green-50 text-green-700 border-green-200'}`}>
+                          Gap: {c.gap}%
+                        </span>
+                        <span className="text-[10px] text-text-muted">{c.status}</span>
                       </div>
-                    </div>
+                    </button>
                   );
                 })}
               </div>
             </div>
+
+            {/* AI Syllabus Diff & Upgrade Assistant */}
+            <div className="card p-6 bg-white lg:col-span-2 flex flex-col justify-between space-y-5">
+              {activeDosenCourse ? (
+                <>
+                  <div>
+                    <div className="flex items-start justify-between pb-4 border-b border-border">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="badge badge-brand text-xs font-mono">{activeDosenCourse.code}</span>
+                          <span className="text-xs text-text-muted">Semester {activeDosenCourse.semester} · {activeDosenCourse.credits} SKS</span>
+                        </div>
+                        <h3 className="font-display text-lg font-bold text-text">
+                          Evaluasi Silabus: {activeDosenCourse.name}
+                        </h3>
+                        <p className="text-xs text-text-secondary mt-0.5">
+                          Hasil perbandingan materi aktif dengan tren kata kunci lowongan industri (Scraper Engine).
+                        </p>
+                      </div>
+                      <Link
+                        href={`/curriculum/courses/${activeDosenCourse.id}`}
+                        className="text-xs font-bold text-brand hover:underline flex items-center gap-1"
+                      >
+                        Detail MK <span className="material-symbols-outlined text-[14px]">open_in_new</span>
+                      </Link>
+                    </div>
+
+                    {/* Diff Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
+                      {/* Current Syllabus */}
+                      <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="material-symbols-outlined text-gray-600 text-[18px]">history_edu</span>
+                          <h4 className="text-xs font-bold text-text uppercase tracking-wider">Silabus Berjalan Saat Ini</h4>
+                        </div>
+                        <div className="space-y-2">
+                          {activeDosenCourse.skills && activeDosenCourse.skills.length > 0 ? (
+                            activeDosenCourse.skills.map(s => (
+                              <div key={s} className="flex items-center justify-between text-xs bg-white p-2 rounded-lg border border-gray-100">
+                                <span className="font-medium text-text">{s}</span>
+                                <span className="text-[10px] text-gray-500 font-medium">Dasar / Konseptual</span>
+                              </div>
+                            ))
+                          ) : (
+                            <p className="text-xs text-text-muted py-2">Belum ada rincian kompetensi.</p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* AI Scraper Recommendation */}
+                      <div className="bg-emerald-50/50 border border-emerald-200 rounded-xl p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="material-symbols-outlined text-brand text-[18px]">auto_awesome</span>
+                          <h4 className="text-xs font-bold text-brand uppercase tracking-wider">Rekomendasi AI Scraper (2026)</h4>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="text-xs bg-white p-2.5 rounded-lg border border-emerald-100 shadow-2xs">
+                            <p className="font-bold text-text flex items-center gap-1">
+                              <span className="text-emerald-600 font-bold">+</span> Tambahkan Praktikum Docker & Microservices
+                            </p>
+                            <p className="text-[11px] text-text-muted mt-0.5">Permintaan industri naik +34% pada posisi Junior & Middle Engineer.</p>
+                          </div>
+                          <div className="text-xs bg-white p-2.5 rounded-lg border border-emerald-100 shadow-2xs">
+                            <p className="font-bold text-text flex items-center gap-1">
+                              <span className="text-emerald-600 font-bold">+</span> Integrasi REST API Performance & Redis Caching
+                            </p>
+                            <p className="text-[11px] text-text-muted mt-0.5">85% lowongan backend mensyaratkan pemahaman memory caching.</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Banner */}
+                  <div className="bg-brand/5 border border-brand/20 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-bold text-text">Tingkatkan Relevansi Mata Kuliah Ini</p>
+                      <p className="text-[11px] text-text-muted">Usulan silabus akan langsung masuk ke antrean review Kaprodi.</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setProposalForm({
+                          mk: activeDosenCourse.name,
+                          usulan: `Pembaruan silabus ${activeDosenCourse.name}: Integrasi modul Docker, Redis & Studi Kasus Industri`,
+                          dampak: '+25% Keselarasan'
+                        });
+                        setShowProposalModal(true);
+                      }}
+                      className="btn-primary px-4 py-2 text-xs rounded-xl flex items-center gap-1.5 whitespace-nowrap shadow-sm"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">send</span>
+                      Ajukan Pembaruan ke Kaprodi
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="py-12 text-center text-text-muted text-xs">
+                  Pilih mata kuliah di sebelah kiri untuk melihat evaluasi silabus.
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Job recs + Learning path */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Job recommendations */}
-            <div className="card overflow-hidden bg-white">
-              <div className="px-5 py-4 border-b border-border">
-                <h2 className="font-display text-base font-semibold text-text">Lowongan yang Cocok Untukmu</h2>
-                <p className="text-xs text-text-secondary mt-0.5">Berdasarkan profil skill saat ini.</p>
+          {/* ── Market Trends Feed & Proposals Table ── */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Live Market Scraped Trends */}
+            <div className="card p-0 bg-white overflow-hidden">
+              <div className="p-4 border-b border-border bg-gray-50 flex items-center justify-between">
+                <div>
+                  <h3 className="font-display text-sm font-bold text-text flex items-center gap-2">
+                    <span className="material-symbols-outlined text-brand text-[18px]">trending_up</span>
+                    Tren Skill Industri Terkini (AI Scraper Feed)
+                  </h3>
+                  <p className="text-xs text-text-secondary mt-0.5">Sinyal kompetensi yang paling sering dicari perusahaan di Indonesia.</p>
+                </div>
+                <span className="badge badge-green text-[10px]">Live Data</span>
               </div>
               <div className="divide-y divide-border">
-                {JOB_RECS.map(job => (
-                  <div key={job.title} className="px-5 py-3.5 hover:bg-gray-50 transition-colors flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-xl flex-shrink-0">
-                      {job.logo}
+                {stats.marketTrends?.map(item => (
+                  <div key={item.skill} className="p-4 hover:bg-gray-50 transition-colors flex items-center justify-between gap-4">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold text-text text-sm">{item.skill}</p>
+                        <span className={`text-[10px] font-bold px-2 py-0.2 rounded ${item.urgency === 'Tinggi' ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-700'}`}>
+                          {item.urgency}
+                        </span>
+                      </div>
+                      <p className="text-xs text-text-muted mt-0.5">
+                        {item.jobCount} lowongan · Sumber: {item.source}
+                      </p>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-text truncate">{job.title}</p>
-                      <p className="text-xs text-text-secondary">{job.company} &nbsp;·&nbsp; {job.location}</p>
-                      <p className="text-xs text-brand font-medium mt-0.5">{job.salary}</p>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <span className={`badge text-xs ${job.match >= 80 ? 'badge-green' : job.match >= 70 ? 'badge-yellow' : 'badge-gray'}`}>
-                        {job.match}% cocok
+                    <div className="text-right flex items-center gap-2">
+                      <span className="badge badge-green text-xs font-mono font-bold">
+                        {item.demand}
                       </span>
+                      <button
+                        onClick={() => {
+                          setProposalForm({
+                            mk: activeDosenCourse?.name || 'Mata Kuliah Pilihan',
+                            usulan: `Penyisipan materi ${item.skill} ke dalam silabus aktif`,
+                            dampak: '+18% Keselarasan'
+                          });
+                          setShowProposalModal(true);
+                        }}
+                        className="px-2.5 py-1 text-xs text-brand hover:bg-brand-light font-bold rounded-lg border border-brand/20 transition-all"
+                      >
+                        + Silabus
+                      </button>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Learning path */}
-            <div className="card overflow-hidden bg-white">
-              <div className="px-5 py-4 border-b border-border">
-                <h2 className="font-display text-base font-semibold text-text">Rencana Belajar AI</h2>
-                <p className="text-xs text-text-secondary mt-0.5">Langkah prioritas menuju {user.target_role || 'Backend Engineer'}.</p>
+            {/* Dosen Submitted Proposals */}
+            <div className="card p-0 bg-white overflow-hidden">
+              <div className="p-4 border-b border-border bg-gray-50 flex items-center justify-between">
+                <div>
+                  <h3 className="font-display text-sm font-bold text-text flex items-center gap-2">
+                    <span className="material-symbols-outlined text-brand text-[18px]">history</span>
+                    Status Usulan Pembaruan Silabus
+                  </h3>
+                  <p className="text-xs text-text-secondary mt-0.5">Riwayat proposal kurikulum yang diajukan ke Kaprodi.</p>
+                </div>
               </div>
-              <div className="px-5 py-4 space-y-3">
-                {LEARNING_PATH.map(step => (
-                  <div key={step.step} className={`flex items-start gap-3 p-3 rounded-xl border transition-all ${step.done ? 'bg-brand-light border-brand-border' : 'bg-white border-border'}`}>
-                    <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold ${step.done ? 'bg-brand text-white' : 'bg-gray-100 text-text-secondary'}`}>
-                      {step.done ? <span className="material-symbols-outlined text-[14px]">check</span> : step.step}
+              <div className="divide-y divide-border">
+                {dosenProposals.map(p => (
+                  <div key={p.id} className="p-4 hover:bg-gray-50 transition-colors">
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <p className="font-semibold text-text text-sm">{p.mk}</p>
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${p.status.includes('Disetujui') ? 'bg-green-50 text-green-700 border-green-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'}`}>
+                        {p.status}
+                      </span>
                     </div>
-                    <div className="flex-1">
-                      <p className={`text-sm font-semibold ${step.done ? 'text-brand line-through' : 'text-text'}`}>{step.title}</p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-xs text-text-muted">{step.platform}</span>
-                        <span className="text-text-muted">·</span>
-                        <span className="text-xs text-text-muted">{step.duration}</span>
+                    <p className="text-xs text-text-secondary leading-relaxed">{p.usulan}</p>
+                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100 text-[11px] text-text-muted">
+                      <span>Diajukan: {p.tanggal}</span>
+                      <span className="font-bold text-emerald-600">Estimasi Dampak: {p.dampak}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* ── Proposal Modal ── */}
+          {showProposalModal && (
+            <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+              <div className="bg-white rounded-2xl border border-border shadow-2xl max-w-lg w-full p-6 animate-fade-in-up">
+                <div className="flex items-center justify-between pb-4 border-b border-border mb-4">
+                  <h3 className="font-display text-base font-bold text-text flex items-center gap-2">
+                    <span className="material-symbols-outlined text-brand text-[20px]">post_add</span>
+                    Ajukan Usulan Pembaruan Silabus
+                  </h3>
+                  <button onClick={() => setShowProposalModal(false)} className="text-text-muted hover:text-text">
+                    <span className="material-symbols-outlined text-[20px]">close</span>
+                  </button>
+                </div>
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  const newProp = {
+                    id: `P0${dosenProposals.length + 1}`,
+                    mk: proposalForm.mk,
+                    usulan: proposalForm.usulan,
+                    tanggal: new Date().toISOString().split('T')[0],
+                    status: 'Menunggu Review Kaprodi',
+                    dampak: proposalForm.dampak,
+                  };
+                  setDosenProposals([newProp, ...dosenProposals]);
+                  setShowProposalModal(false);
+                  toast.success('Usulan Terkirim', 'Proposal pembaruan silabus telah diteruskan ke dashboard Kaprodi.');
+                }}>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold text-text mb-1">Mata Kuliah</label>
+                      <input
+                        type="text"
+                        value={proposalForm.mk}
+                        onChange={(e) => setProposalForm({ ...proposalForm, mk: e.target.value })}
+                        required
+                        className="w-full px-3 py-2 border border-border rounded-xl text-xs bg-gray-50 focus:bg-white focus:outline-none focus:border-brand"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-text mb-1">Rincian Usulan Pembaruan Silabus / Materi</label>
+                      <textarea
+                        rows={4}
+                        value={proposalForm.usulan}
+                        onChange={(e) => setProposalForm({ ...proposalForm, usulan: e.target.value })}
+                        required
+                        placeholder="Tuliskan topik praktikum atau teknologi baru yang ingin dimasukkan..."
+                        className="w-full px-3 py-2 border border-border rounded-xl text-xs bg-gray-50 focus:bg-white focus:outline-none focus:border-brand"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-text mb-1">Estimasi Peningkatan Keselarasan</label>
+                      <input
+                        type="text"
+                        value={proposalForm.dampak}
+                        onChange={(e) => setProposalForm({ ...proposalForm, dampak: e.target.value })}
+                        className="w-full px-3 py-2 border border-border rounded-xl text-xs bg-gray-50 focus:bg-white focus:outline-none focus:border-brand"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-2 mt-6 pt-4 border-t border-border">
+                    <button
+                      type="button"
+                      onClick={() => setShowProposalModal(false)}
+                      className="px-4 py-2 text-xs font-bold text-text-secondary hover:bg-gray-100 rounded-xl"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn-primary px-4 py-2 text-xs rounded-xl flex items-center gap-1.5"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">send</span>
+                      Kirim ke Kaprodi
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ─── Mahasiswa Layout ─── */}
+      {role === 'mahasiswa' && (
+        <div className="space-y-6">
+          {/* ── Student Profile & Target Career Banner ── */}
+          <div className="bg-gradient-to-r from-brand to-brand-dark text-white rounded-2xl p-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 shadow-lg shadow-brand/10">
+            <div className="flex items-start gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center flex-shrink-0 text-white shadow-inner font-bold text-xl">
+                {user.name?.charAt(0) || 'M'}
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="bg-white/20 text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full backdrop-blur-sm">
+                    {stats.studentProfile?.institusi || 'Politeknik Negeri Jakarta'}
+                  </span>
+                  <span className="bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-semibold px-2 py-0.5 rounded-full">
+                    Semester {stats.studentProfile?.semester || 6} · NIM {stats.studentProfile?.nim || '214172001'}
+                  </span>
+                </div>
+                <h2 className="font-display text-xl md:text-2xl font-bold">
+                  Halo, {user.name}! 👋
+                </h2>
+                <p className="text-xs text-brand-light mt-1 max-w-2xl leading-relaxed">
+                  {stats.studentProfile?.prodi || 'S1 Teknik Informatika'} — Jelajahi jalur karier industri, ukur kesiapan skill, dan selesaikan roadmap untuk menutup gap kompetensi.
+                </p>
+              </div>
+            </div>
+
+            {/* Target Role & Match Gauge */}
+            <div className="bg-white/10 border border-white/20 rounded-2xl p-4 backdrop-blur-md flex items-center gap-4 w-full lg:w-auto">
+              <div className="text-right">
+                <p className="text-[10px] text-brand-light uppercase tracking-wider font-bold">Target Karier Aktif</p>
+                <p className="font-display text-sm font-bold text-white mt-0.5">{activeRoleData.name}</p>
+                <p className="text-[11px] text-emerald-300 font-semibold">{activeRoleData.salary}</p>
+              </div>
+              <div className="w-12 h-12 rounded-full border-3 border-emerald-400 flex items-center justify-center font-display font-bold text-white text-sm bg-white/10 shadow-inner">
+                {activeRoleData.match}%
+              </div>
+            </div>
+          </div>
+
+          {/* ── Key Metrics Cards ── */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <MetricCard
+              title="Kesesuaian Karier"
+              value={`${activeRoleData.match}%`}
+              change="+6%"
+              changeType="up"
+              note="vs bulan lalu"
+              icon="verified"
+              iconBg="bg-brand-light text-brand"
+            />
+            <MetricCard
+              title="Skill Siap Industri"
+              value={`${activeRoleData.requiredSkills.filter(s => s.status === 'aligned').length} Skill`}
+              note="Memenuhi standar"
+              icon="psychology"
+              iconBg="bg-blue-50 text-blue-600"
+            />
+            <MetricCard
+              title="Skill Gap Kritis"
+              value={`${activeRoleData.requiredSkills.filter(s => s.status === 'critical_gap').length} Skill`}
+              note="Perlu ditingkatkan segera"
+              icon="warning"
+              iconBg="bg-red-50 text-red-500"
+            />
+            <MetricCard
+              title="Lowongan Cocok"
+              value={`${stats.scrapedJobs?.length || 4} Rekomendasi`}
+              note="Scraped dari Tech Hubs"
+              icon="work_history"
+              iconBg="bg-purple-50 text-purple-600"
+            />
+          </div>
+
+          {/* ── Career Path Explorer (Pills / Switcher) ── */}
+          <div className="bg-white border border-border rounded-2xl p-5 shadow-sm space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h3 className="font-display text-base font-bold text-text flex items-center gap-2">
+                  <span className="material-symbols-outlined text-brand text-[20px]">explore</span>
+                  Eksplorasi Jalur Karier & Sinkronisasi AI Scraper
+                </h3>
+                <p className="text-xs text-text-secondary mt-0.5">
+                  Pilih target karier untuk menyesuaikan analisis radar skill, roadmap belajar, dan lowongan kerja terkait.
+                </p>
+              </div>
+              <span className="badge badge-green text-xs font-mono font-bold">
+                {activeRoleData.demand}
+              </span>
+            </div>
+
+            {/* Career Pills */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {careerRoles.map((cr, idx) => {
+                const isSelected = selectedRoleIdx === idx;
+                return (
+                  <button
+                    key={cr.id}
+                    onClick={() => {
+                      setSelectedRoleIdx(idx);
+                      toast.info('Target Karier Diubah', `Menampilkan analisis kompetensi untuk ${cr.name}`);
+                    }}
+                    className={`p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between gap-2 ${
+                      isSelected
+                        ? 'bg-brand text-white border-brand shadow-md scale-[1.02]'
+                        : 'bg-gray-50/70 text-text-secondary border-border hover:bg-gray-100 hover:text-text'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="material-symbols-outlined text-[20px]">{cr.icon}</span>
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isSelected ? 'bg-white/20 text-white' : 'bg-brand-light text-brand'}`}>
+                        {cr.match}% Cocok
+                      </span>
+                    </div>
+                    <div>
+                      <p className={`text-xs font-bold ${isSelected ? 'text-white' : 'text-text'}`}>{cr.name}</p>
+                      <p className={`text-[10px] mt-0.5 truncate ${isSelected ? 'text-brand-light' : 'text-text-muted'}`}>{cr.salary}</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ── Radar Chart & Dynamic Skill Matrix ── */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Radar Chart */}
+            <div className="card p-5 bg-white flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-display text-base font-bold text-text">Radar Kompetensi</h3>
+                  <span className="material-symbols-outlined text-brand text-[20px]">radar</span>
+                </div>
+                <p className="text-xs text-text-secondary mb-4">
+                  Perbandingan profil skill Anda terhadap benchmark pasar industri untuk <span className="font-bold text-text">{activeRoleData.name}</span>.
+                </p>
+                <div className="relative min-h-[280px] flex items-center justify-center">
+                  <canvas ref={chartRef} />
+                </div>
+              </div>
+              <div className="pt-3 border-t border-border mt-3 text-center">
+                <span className="text-[11px] text-text-muted">
+                  Hijau: Penguasaan Anda · Biru Putus-putus: Standar Industri
+                </span>
+              </div>
+            </div>
+
+            {/* Detailed Skills Gap Matrix */}
+            <div className="card p-5 lg:col-span-2 bg-white flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <div>
+                    <h3 className="font-display text-base font-bold text-text">Matriks Analisis Gap Skill</h3>
+                    <p className="text-xs text-text-secondary mt-0.5">Rincian penguasaan skill spesifik untuk posisi {activeRoleData.name}.</p>
+                  </div>
+                  <Link href="/competency" className="text-xs font-bold text-brand hover:underline flex items-center gap-1">
+                    Peta Kompetensi <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                  </Link>
+                </div>
+
+                <div className="space-y-4 my-4">
+                  {activeRoleData.requiredSkills.map(sk => {
+                    const diff = sk.targetLevel - sk.userLevel;
+                    return (
+                      <div key={sk.name} className="p-3 rounded-xl bg-gray-50 border border-gray-200/80">
+                        <div className="flex justify-between items-center mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-text text-xs">{sk.name}</span>
+                            <span className={`px-2 py-0.2 rounded text-[10px] font-bold ${sk.status === 'aligned' ? 'bg-emerald-100 text-emerald-800' : sk.status === 'minor_gap' ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800'}`}>
+                              {sk.status === 'aligned' ? '✓ Siap Industri' : sk.status === 'minor_gap' ? 'Gap Ringan' : 'Gap Kritis'}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs">
+                            <span className="font-bold text-brand">{sk.userLevel}%</span>
+                            <span className="text-text-muted">/ {sk.targetLevel}% Target</span>
+                            {diff > 0 ? (
+                              <span className="badge badge-red text-[10px]">-{diff}%</span>
+                            ) : (
+                              <span className="badge badge-green text-[10px]">✓ Terpenuhi</span>
+                            )}
+                          </div>
+                        </div>
+                        {/* Progress Bar */}
+                        <div className="relative w-full h-2.5 bg-gray-200 rounded-full overflow-hidden">
+                          <div className="absolute inset-y-0 left-0 bg-gray-300 rounded-full" style={{ width: `${sk.targetLevel}%` }} />
+                          <div className={`absolute inset-y-0 left-0 rounded-full transition-all duration-500 ${sk.status === 'aligned' ? 'bg-emerald-600' : sk.status === 'minor_gap' ? 'bg-amber-500' : 'bg-red-500'}`} style={{ width: `${sk.userLevel}%` }} />
+                        </div>
                       </div>
-                    </div>
-                    {!step.done && (
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-border flex items-center justify-between text-xs">
+                <span className="text-text-muted">Ingin konsultasi kurikulum dengan dosen?</span>
+                <Link href="/curriculum" className="font-bold text-brand hover:underline">
+                  Lihat Mata Kuliah Penunjang →
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* ── AI Learning Roadmap & Live Scraped Jobs Feed ── */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Actionable Learning Roadmap */}
+            <div className="card p-0 bg-white overflow-hidden">
+              <div className="p-4 border-b border-border bg-gray-50 flex items-center justify-between">
+                <div>
+                  <h3 className="font-display text-sm font-bold text-text flex items-center gap-2">
+                    <span className="material-symbols-outlined text-brand text-[18px]">checklist</span>
+                    Rencana Belajar AI (Tutup Skill Gap)
+                  </h3>
+                  <p className="text-xs text-text-secondary mt-0.5">Langkah prioritas untuk menguasai kompetensi {activeRoleData.name}.</p>
+                </div>
+                <span className="badge badge-brand text-xs font-bold">
+                  {completedSteps.size} dari {stats.learningRoadmap?.length || 4} Selesai
+                </span>
+              </div>
+              <div className="p-4 space-y-3">
+                {stats.learningRoadmap?.map(step => {
+                  const isDone = completedSteps.has(step.id);
+                  return (
+                    <div
+                      key={step.id}
+                      className={`p-3.5 rounded-xl border transition-all flex items-start gap-3.5 ${
+                        isDone ? 'bg-brand-light/60 border-brand-border' : 'bg-white border-border hover:border-brand/40'
+                      }`}
+                    >
                       <button
-                        onClick={() => toast.info('Membuka Modul', `Mengarahkan ke platform ${step.platform}... (Simulasi)`)}
-                        className="text-xs font-semibold text-brand hover:underline flex-shrink-0"
+                        onClick={() => {
+                          const next = new Set(completedSteps);
+                          if (next.has(step.id)) next.delete(step.id);
+                          else next.add(step.id);
+                          setCompletedSteps(next);
+                          toast.success(
+                            isDone ? 'Ditandai Belum Selesai' : 'Langkah Selesai! 🎉',
+                            `Progress modul "${step.skill}" telah diperbarui.`
+                          );
+                        }}
+                        className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold transition-all ${
+                          isDone ? 'bg-brand text-white shadow-sm' : 'bg-gray-100 text-text-secondary border border-gray-300 hover:bg-gray-200'
+                        }`}
                       >
-                        Mulai →
+                        {isDone ? <span className="material-symbols-outlined text-[16px]">check</span> : step.step}
                       </button>
-                    )}
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-[10px] font-bold text-brand uppercase">{step.skill}</span>
+                          {step.campusCourseLink && (
+                            <span className="text-[10px] bg-gray-100 text-text-muted px-1.5 py-0.2 rounded">
+                              📚 {step.campusCourseLink}
+                            </span>
+                          )}
+                        </div>
+                        <p className={`text-xs font-bold mt-0.5 ${isDone ? 'text-brand line-through' : 'text-text'}`}>
+                          {step.title}
+                        </p>
+                        <p className="text-[11px] text-text-muted mt-0.5">
+                          {step.platform} · {step.duration}
+                        </p>
+                      </div>
+
+                      {!isDone && (
+                        <button
+                          onClick={() => toast.info('Membuka Modul', `Mengarahkan ke ${step.platform}... (Simulasi)`)}
+                          className="px-2.5 py-1 text-xs font-bold text-brand hover:bg-brand-light rounded-lg border border-brand/20 transition-all flex-shrink-0"
+                        >
+                          Mulai →
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Live Scraped Jobs Feed */}
+            <div className="card p-0 bg-white overflow-hidden">
+              <div className="p-4 border-b border-border bg-gray-50 flex items-center justify-between">
+                <div>
+                  <h3 className="font-display text-sm font-bold text-text flex items-center gap-2">
+                    <span className="material-symbols-outlined text-brand text-[18px]">work</span>
+                    Lowongan Kerja Terverifikasi (AI Scraper)
+                  </h3>
+                  <p className="text-xs text-text-secondary mt-0.5">Lowongan aktif yang cocok dengan profil vokasi Anda.</p>
+                </div>
+                <span className="badge badge-green text-[10px]">Real-Time Ingestion</span>
+              </div>
+              <div className="divide-y divide-border">
+                {stats.scrapedJobs?.map(job => (
+                  <div key={job.id} className="p-4 hover:bg-gray-50/80 transition-colors flex items-start gap-4">
+                    <div className="w-11 h-11 rounded-2xl bg-gray-100 flex items-center justify-center text-2xl flex-shrink-0 shadow-2xs">
+                      {job.logo}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="font-semibold text-text text-sm truncate">{job.title}</p>
+                        <span className={`badge text-xs font-bold ${job.matchRate >= 80 ? 'badge-green' : 'badge-yellow'}`}>
+                          {job.matchRate}% Cocok
+                        </span>
+                      </div>
+                      <p className="text-xs text-text-secondary mt-0.5 font-medium">{job.company} · {job.location}</p>
+                      <p className="text-xs text-brand font-bold mt-1">{job.salary}</p>
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {job.tags?.map(t => (
+                          <span key={t} className="text-[10px] bg-gray-100 text-text-secondary px-2 py-0.5 rounded font-mono">
+                            {t}
+                          </span>
+                        ))}
+                      </div>
+                      <p className="text-[10px] text-text-muted mt-2">🕒 {job.scrapedAt}</p>
+                    </div>
                   </div>
                 ))}
               </div>
