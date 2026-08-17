@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CurriculumController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\TaxonomyController;
 use App\Models\Course;
 use App\Models\GapAnalysis;
 use App\Models\Skill;
@@ -508,6 +509,15 @@ Route::middleware(['auth'])->group(function () {
             $user->delete();
             return back();
         })->name('management.users.delete');
+    });
+
+    Route::get('/taxonomy', [TaxonomyController::class, 'reference'])->name('taxonomy.reference');
+
+    Route::middleware(['role:kaprodi|super_admin'])->prefix('taxonomy/manage')->name('taxonomy.manage.')->group(function () {
+        Route::get('/', [TaxonomyController::class, 'index'])->name('index');
+        Route::post('/', [TaxonomyController::class, 'store'])->name('store');
+        Route::put('/{skill}', [TaxonomyController::class, 'update'])->name('update');
+        Route::delete('/{skill}', [TaxonomyController::class, 'destroy'])->name('destroy');
     });
 
     Route::get('/management/report', function () {
