@@ -22,10 +22,12 @@ export default function TaxonomyManage({ skills }) {
   const [editing, setEditing] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [search, setSearch] = useState('');
+  const [deletingId, setDeletingId] = useState(null);
   const form = useForm(emptyForm);
 
   const openCreate = () => {
-    form.setData(emptyForm);
+    form.setData({ ...emptyForm });
+    form.clearErrors();
     setEditing(null);
     setShowForm(true);
   };
@@ -39,6 +41,7 @@ export default function TaxonomyManage({ skills }) {
       is_hard_skill: !!skill.is_hard_skill,
       aliases: (skill.aliases || []).map(a => a.alias_name).join(', '),
     });
+    form.clearErrors();
     setEditing(skill);
     setShowForm(true);
   };
@@ -51,10 +54,6 @@ export default function TaxonomyManage({ skills }) {
 
   const submit = (e) => {
     e.preventDefault();
-    const payload = {
-      ...form.data,
-      aliases: form.data.aliases.split(',').map(s => s.trim()).filter(Boolean),
-    };
     const opts = {
       onSuccess: () => {
         toast.success('Berhasil', editing ? 'Skill diperbarui.' : 'Skill ditambahkan.');
@@ -62,17 +61,30 @@ export default function TaxonomyManage({ skills }) {
       },
       onError: (errs) => toast.error('Gagal', Object.values(errs)[0] || 'Validasi gagal'),
     };
+    form.transform((data) => ({
+      ...data,
+      aliases: data.aliases.split(',').map(s => s.trim()).filter(Boolean),
+    }));
     if (editing) {
-      router.put(`/taxonomy/manage/${editing.id}`, payload, opts);
+      form.put(`/taxonomy/manage/${editing.id}`, opts);
     } else {
-      router.post('/taxonomy/manage', payload, opts);
+      form.post('/taxonomy/manage', opts);
     }
   };
 
   const remove = (skill) => {
+    if (deletingId) return;
     if (!confirm(`Hapus "${skill.nama}" dan semua aliasnya?`)) return;
+    setDeletingId(skill.id);
     router.delete(`/taxonomy/manage/${skill.id}`, {
-      onSuccess: () => toast.success('Berhasil', 'Skill dihapus.'),
+      onSuccess: () => {
+        setDeletingId(null);
+        toast.success('Berhasil', 'Skill dihapus.');
+      },
+      onError: () => {
+        setDeletingId(null);
+        toast.error('Gagal', 'Tidak dapat menghapus skill ini.');
+      },
     });
   };
 
@@ -133,44 +145,50 @@ export default function TaxonomyManage({ skills }) {
                 </td>
               </tr>
             )}
-            {filtered.map(sk => (
-              <tr key={sk.id} className="hover:bg-gray-50 transition-colors">
-                <td className="px-5 py-3 font-semibold text-text">{sk.nama}</td>
-                <td className="px-5 py-3 text-text-secondary">{sk.kategori}</td>
-                <td className="px-5 py-3">
-                  <span className="badge badge-gray">
-                    {(COMPETENCE_DIMENSIONS.find(d => d.value === sk.dimension) || {}).labelId || '—'}
-                  </span>
-                </td>
-                <td className="px-5 py-3 text-xs text-text-secondary">
-                  {(sk.aliases || []).length} alias
-                </td>
-                <td className="px-5 py-3">
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => openEdit(sk)}
-                      title="Edit"
-                      className="w-8 h-8 rounded-md hover:bg-brand-light text-text-secondary hover:text-brand flex items-center justify-center transition-colors"
-                    >
-                      <span className="material-symbols-outlined text-[16px]">edit</span>
-                    </button>
-                    <button
-                      onClick={() => remove(sk)}
-                      title="Hapus"
-                      className="w-8 h-8 rounded-md hover:bg-red-50 text-text-secondary hover:text-red-500 flex items-center justify-center transition-colors"
-                    >
-                      <span className="material-symbols-outlined text-[16px]">delete</span>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+            {filtered.map(sk => {
+              const dim = COMPETENCE_DIMENSIONS.find(d => d.value === sk.dimension);
+              return (
+                <tr key={sk.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-5 py-3 font-semibold text-text">{sk.nama}</td>
+                  <td className="px-5 py-3 text-text-secondary">{sk.kategori}</td>
+                  <td className="px-5 py-3">
+                    <span className={`badge ${dim ? dim.color : 'badge-gray'}`}>
+                      {dim ? dim.labelId : '—'}
+                    </span>
+                  </td>
+                  <td className="px-5 py-3 text-xs text-text-secondary">
+                    {(sk.aliases || []).length} alias
+                  </td>
+                  <td className="px-5 py-3">
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => openEdit(sk)}
+                        title="Edit"
+                        aria-label={`Edit ${sk.nama}`}
+                        className="w-8 h-8 rounded-md hover:bg-brand-light text-text-secondary hover:text-brand flex items-center justify-center transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">edit</span>
+                      </button>
+                      <button
+                        onClick={() => remove(sk)}
+                        title="Hapus"
+                        aria-label={`Hapus ${sk.nama}`}
+                        disabled={deletingId === sk.id}
+                        className="w-8 h-8 rounded-md hover:bg-red-50 text-text-secondary hover:text-red-500 flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">delete</span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
 
       {showForm && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={close}>
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999] p-4" onClick={close}>
           <div className="bg-white rounded-xl shadow-xl w-full max-w-lg p-6" onClick={e => e.stopPropagation()}>
             <h3 className="font-display text-lg font-bold text-text mb-4">
               {editing ? 'Edit Skill' : 'Tambah Skill'}
