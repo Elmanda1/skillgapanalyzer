@@ -1,58 +1,102 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Skill Gap Analyzer
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Sistem analisis kesenjangan kompetensi antara kebutuhan industri (lowongan kerja dari loker.id) dengan kurikulum program studi. Dibangun dengan Laravel 12 + React (Inertia) + SQLite, dilengkapi crawler Python di `data-engine/`.
 
-## About Laravel
+## Fitur Utama
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **Job Browser** (`/jobs`) — daftar lowongan dari loker.id dengan pencarian, filter sektor/lokasi, rentang gaji, dan logo perusahaan.
+- **Gap Analysis** — pemetaan skill lowongan terhadap kompetensi program studi, kursus, dan matakuliah.
+- **Scraping Agents** — dashboard monitoring node crawler (demo).
+- **Data Pipeline** — impor streaming data JSON crawler (`jobs:import`), pengunduh logo (`jobs:fetch-logos`), serta dump/restore data (`data:dump`, `data:restore`).
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Persyaratan
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- PHP 8.2+ (direkomendasikan 8.4) dengan ekstensi `pdo_sqlite`, `gd`, `mbstring`.
+- Composer, Node.js (20+), npm.
+- Python 3.11+ untuk crawler (opsional).
 
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Instalasi
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+git clone <repo-url>
+cd skillgapanalyzer
+composer install
+npm install && npm run build
+cp .env.example .env
+php artisan key:generate
+php artisan migrate --seed
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Saat diminta akun admin/akun demo, gunakan `php artisan db:seed --class=UserSeeder`.
 
-## Contributing
+## Menyiapkan Data Lowongan (Member Tim)
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Data lowongan, skills, dan relasinya **tidak disimpan di git** karena ukurannya besar. File tersebut dipaketkan sebagai dump SQL terkompresi yang disimpan di repo:
 
-## Code of Conduct
+| File | Isi |
+| --- | --- |
+| `database/dumps/skillgap-bootstrap.sql.gz` | 8.214 lowongan, 5.228 skills, 17.733 relasi skill–lowongan, 176 alias (≈0,7 MB) |
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Untuk mengisinya setelah `php artisan migrate --seed`:
 
-## Security Vulnerabilities
+```bash
+php artisan data:restore
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Catatan:
 
-## License
+- Perintah ini **idempotent** — aman dijalankan berulang, dan tidak menyentuh data akun, kursus, atau gap analysis.
+- Logo perusahaan (≈7090 file, ±235 MB) **tidak ikut** di dump. Tanpa logo, UI memakai inisial perusahaan sebagai fallback. Untuk mendapatkan logo penuh, jalankan:
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```bash
+php artisan jobs:fetch-logos
+```
+
+- `database/datajson/` (hasil crawler mentah) juga tidak masuk git. Crawler di `data-engine/` dapat membuat ulang data tersebut:
+
+```bash
+cd data-engine
+pip install -r requirements.txt
+python scrape_loker.py --phase all     # enumerate → detail → aggregate
+```
+
+- Jalankan test untuk memastikan data terpasang dengan benar:
+
+```bash
+php artisan test --filter=JobVacancyTest
+```
+
+### Memperbarui Data (Admin)
+
+Jika ada data baru dari crawler, perbarui dump agar member lain mendapatkannya:
+
+```bash
+php artisan jobs:import                       # dari database/datajson/lowongan_loker_id.json
+php artisan jobs:fetch-logos                  # unduh logo baru
+php artisan data:dump                         # regen database/dumps/skillgap-bootstrap.sql.gz
+git add database/dumps/skillgap-bootstrap.sql.gz
+git commit -m "data: refresh job bootstrap from loker.id crawl"
+git push
+```
+
+## Perintah Artisan
+
+| Perintah | Fungsi |
+| --- | --- |
+| `php artisan jobs:import` | Impor streaming JSON lowongan (idempotent via slug) |
+| `php artisan jobs:fetch-logos` | Unduh logo perusahaan yang belum ada |
+| `php artisan data:dump` | Ekspor tabel job-domain ke dump SQL.gz |
+| `php artisan data:restore` | Pulihkan data dari dump SQL.gz (idempotent) |
+
+Opsi tambahan: `--limit=N` untuk smoke test, `--file=path`/`--path=path` untuk sumber/tujuan kustom.
+
+## Pengujian
+
+```bash
+php artisan test            # 66 test, 249 assertions
+cd data-engine && python -m pytest tests/
+```
+
+## Lisensi
+
+Proyek ini dibuat untuk keperluan akademik (KMIPN). Logo perusahaan tetap milik masing-masing pemilik merek.
