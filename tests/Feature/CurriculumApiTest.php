@@ -97,7 +97,8 @@ class CurriculumApiTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Curriculum/Show', false)
                 ->where('course.id', $course->id)
-                ->has('skills', 2));
+                ->where('totalSkills', 2)
+                ->missing('skills'));
     }
 
     public function test_can_create_course_using_study_program_from_user()

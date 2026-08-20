@@ -34,7 +34,7 @@ class CurriculumController extends Controller
 
         return inertia('Curriculum/Show', [
             'course' => $course,
-            'skills' => Skill::orderBy('nama')->get(),
+            'totalSkills' => Skill::count(),
         ]);
     }
 
