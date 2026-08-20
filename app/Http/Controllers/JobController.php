@@ -9,12 +9,20 @@ class JobController extends Controller
 {
     public function index(Request $request)
     {
+        $search = trim((string) $request->input('search', ''));
+
         $query = JobVacancy::query()
-            ->with('skills')
-            ->when($request->filled('search'), function ($q) use ($request) {
-                $q->where(function ($q) use ($request) {
-                    $q->where('title', 'like', '%' . $request->string('search') . '%')
-                        ->orWhere('company_name', 'like', '%' . $request->string('search') . '%');
+            ->with(['skills.aliases'])
+            ->when($search !== '', function ($q) use ($search) {
+                $q->where(function ($sq) use ($search) {
+                    $sq->where('title', 'like', "%{$search}%")
+                        ->orWhere('company_name', 'like', "%{$search}%")
+                        ->orWhereHas('skills', function ($skillQuery) use ($search) {
+                            $skillQuery->where('nama', 'like', "%{$search}%")
+                                ->orWhereHas('aliases', function ($aliasQuery) use ($search) {
+                                    $aliasQuery->where('alias_name', 'like', "%{$search}%");
+                                });
+                        });
                 });
             })
             ->when($request->filled('lokasi'), fn ($q) => $q->where('lokasi', $request->string('lokasi')))
@@ -29,6 +37,7 @@ class JobController extends Controller
         return inertia('JobBrowser', [
             'jobs' => $jobs,
             'filters' => $request->only(['search', 'lokasi', 'sektor', 'is_remote']),
+            'totalDatabaseJobs' => JobVacancy::query()->count(),
             'lokasiOptions' => JobVacancy::query()
                 ->distinct()
                 ->orderBy('lokasi')

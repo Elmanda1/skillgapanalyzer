@@ -157,4 +157,37 @@ class JobVacancyTest extends TestCase
                 ->has('jobs.data.0.skills', 1)
                 ->where('jobs.data.0.skills.0.nama', 'Docker'));
     }
+
+    public function test_jobs_page_searches_by_skill_name_and_skill_alias()
+    {
+        $this->actingAsMahasiswa();
+
+        $vacancy = $this->makeJob(['title' => 'Graphic Designer', 'company_name' => 'PT Creative']);
+        $skill = Skill::create([
+            'nama' => 'Corel Draw',
+            'kategori' => 'Desain Grafis',
+            'sektor_industri_terkait' => 'Kreatif',
+            'dimension' => 'hard_technical',
+        ]);
+        \App\Models\SkillAlias::create([
+            'skill_id' => $skill->id,
+            'alias_name' => 'CorelDraw Suite',
+        ]);
+        $vacancy->skills()->attach($skill);
+
+        // Search by skill name
+        $this->get('/jobs?search=Corel%20Draw')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('jobs.data', 1)
+                ->where('jobs.data.0.title', 'Graphic Designer'));
+
+        // Search by alias name
+        $this->get('/jobs?search=CorelDraw%20Suite')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('jobs.data', 1)
+                ->where('jobs.data.0.title', 'Graphic Designer'));
+    }
 }
+
