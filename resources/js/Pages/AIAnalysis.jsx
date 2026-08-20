@@ -1,332 +1,436 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { router, Link } from '@inertiajs/react';
+import Chart from 'chart.js/auto';
 import { useToast } from '../context/ToastContext';
+import Icon from '../components/Icon.jsx';
 
-const gapSkills = [
-  { name: 'Docker & Containerization', category: 'DevOps',        demand: 85, urgency: 'Kritis' },
-  { name: 'GraphQL API',               category: 'Backend Dev',   demand: 65, urgency: 'Menengah' },
-  { name: 'CI/CD Pipelines',           category: 'DevOps',        demand: 90, urgency: 'Kritis' },
-  { name: 'Kubernetes Orchestration',  category: 'DevOps',        demand: 92, urgency: 'Kritis' },
-  { name: 'LLM Fine-tuning & Vector DBs', category: 'AI Engineering', demand: 78, urgency: 'Menengah' },
-];
 
-const urgencyBadge = (u) =>
-  u === 'Kritis' ? 'badge badge-red' : 'badge badge-yellow';
-
-const generatorSteps = [
-  { label: 'Menganalisis kesenjangan kurikulum...', icon: 'search' },
-  { label: 'Merancang RPS dengan standar KKNI...', icon: 'edit_document' },
-  { label: 'Finalisasi & validasi output AI...',   icon: 'check_circle' },
-];
-
-const aiCards = [
-  {
-    id: 'docker',
-    tag: 'Modul Baru',
-    tagColor: 'badge-blue',
-    icon: 'add',
-    title: 'Integrasi Docker & Kubernetes',
-    body: 'Tambahkan sebagai modul praktikum 4 minggu pada mata kuliah "Cloud Computing" semester 6.',
-    impact: '+5%',
-  },
-  {
-    id: 'react',
-    tag: 'Pembaruan Materi',
-    tagColor: 'badge-green',
-    icon: 'update',
-    title: 'Fokus React.js & Next.js',
-    body: 'Geser bobot materi dari Vanilla JS ke framework modern pada mata kuliah "Pemrograman Web Lanjut".',
-    impact: '+8%',
-  },
-];
-
-export default function AIAnalysis() {
+export default function AIAnalysis({
+  criticalGaps = [],
+  studyPrograms = [],
+  selectedProgramId = 1,
+  selectedPeriod = '2026-08',
+  radarDimensions = [],
+  totalEvaluated = 0,
+  availablePeriods = ['2026-08'],
+}) {
   const toast = useToast();
-  const [activeProdi, setActiveProdi]       = useState('Teknik Informatika');
-  const [searchQuery, setSearchQuery]       = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [generatorState, setGeneratorState] = useState('idle');
-  const [generatorStep, setGeneratorStep]   = useState(0);
-  const [appliedDrafts, setAppliedDrafts]   = useState({});
+  const [generatorStep, setGeneratorStep] = useState(0);
+  const [selectedGapForRps, setSelectedGapForRps] = useState(null);
+  const [generatedSyllabus, setGeneratedSyllabus] = useState(null);
+  const [appliedDrafts, setAppliedDrafts] = useState({});
 
-  const filtered = gapSkills.filter(sk =>
-    sk.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    sk.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const radarRef = useRef(null);
+  const radarChart = useRef(null);
 
-  const startGenerator = () => {
-    toast.info('Memulai AI...', 'Menganalisis data kesenjangan kurikulum untuk prodi ini.');
+  // Render Radar Chart for 5 Dimensions
+  useEffect(() => {
+    if (!radarRef.current || radarDimensions.length === 0) return;
+    if (radarChart.current) radarChart.current.destroy();
+
+    radarChart.current = new Chart(radarRef.current.getContext('2d'), {
+      type: 'radar',
+      data: {
+        labels: radarDimensions.map(d => d.label),
+        datasets: [{
+          label: 'Capaian Kurikulum (%)',
+          data: radarDimensions.map(d => d.score),
+          backgroundColor: 'rgba(13, 148, 136, 0.2)',
+          borderColor: '#0d9488',
+          borderWidth: 2,
+          pointBackgroundColor: '#0d9488',
+          pointBorderColor: '#ffffff',
+          pointHoverRadius: 5,
+        }, {
+          label: 'Target Industri (%)',
+          data: [90, 85, 85, 80, 80],
+          backgroundColor: 'rgba(234, 88, 12, 0.08)',
+          borderColor: '#ea580c',
+          borderWidth: 1.5,
+          borderDash: [4, 4],
+          pointRadius: 0,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          r: {
+            min: 0,
+            max: 100,
+            ticks: { stepSize: 20, font: { size: 9 } },
+            pointLabels: { font: { size: 10, weight: '600' } },
+          },
+        },
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { boxWidth: 12, font: { size: 11 } },
+          },
+        },
+      },
+    });
+
+    return () => {
+      if (radarChart.current) radarChart.current.destroy();
+    };
+  }, [radarDimensions]);
+
+  const handleProgramChange = (e) => {
+    const pId = e.target.value;
+    router.get('/ai-analysis', { program_id: pId, period: selectedPeriod }, { preserveState: true });
+  };
+
+  const handlePeriodChange = (e) => {
+    const per = e.target.value;
+    router.get('/ai-analysis', { program_id: selectedProgramId, period: per }, { preserveState: true });
+  };
+
+  const startGenerator = (gapItem) => {
+    setSelectedGapForRps(gapItem);
     setGeneratorState('generating');
     setGeneratorStep(1);
-    setTimeout(() => { setGeneratorStep(2);
-      setTimeout(() => { setGeneratorStep(3);
+    toast.info('Memulai AI Generator...', `Menganalisis kebutuhan materi untuk ${gapItem.name}.`);
+
+    setTimeout(() => {
+      setGeneratorStep(2);
+      setTimeout(() => {
+        setGeneratorStep(3);
         setTimeout(() => {
           setGeneratorState('finished');
-          toast.success('Selesai', 'RPS berhasil digenerate berdasarkan rekomendasi AI.');
-        }, 1200);
+          setGeneratedSyllabus({
+            title: `Rencana Pembelajaran Semester (RPS): ${gapItem.name}`,
+            course: `Praktikum ${gapItem.name} Terapan`,
+            credits: '3 SKS (1 Teori, 2 Praktikum)',
+            semester: 'Semester 5 / 6',
+            cpmk: [
+              `1. Mahasiswa mampu memahami konsep dasar dan arsitektur ${gapItem.name} dalam ekosistem industri modern.`,
+              `2. Mahasiswa mampu mengimplementasikan dan mengonfigurasi ${gapItem.name} pada proyek berskala riil.`,
+              `3. Mahasiswa mampu melakukan pengujian, troubleshooting, dan deployment berbasis standar industri.`,
+            ],
+            tools: `${gapItem.name}, Git, Docker, Linux Server, Automated Testing`,
+          });
+          toast.success('Selesai', `Draf RPS untuk ${gapItem.name} berhasil digenerate.`);
+        }, 1000);
       }, 1000);
-    }, 1000);
+    }, 900);
   };
 
   const handleApply = (id, title) => {
     setAppliedDrafts(p => ({ ...p, [id]: true }));
-    toast.success('Draft Diterapkan', `RPS "${title}" berhasil diterapkan sebagai draf resmi.`);
+    toast.success('Draf Diterapkan', `RPS "${title}" telah disimpan sebagai draf usulan kurikulum prodi.`);
   };
 
-  return (
-    <div className="w-full p-6 md:p-8 animate-fade-in-up">
+  const filteredGaps = criticalGaps.filter(g =>
+    !searchQuery ||
+    g.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    g.category.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-      {/* ── Header ── */}
-      <div className="flex flex-col md:flex-row justify-between items-start mb-6">
-        <div className="max-w-xl">
-          <h1 className="font-display text-2xl font-bold text-text">Analisis Kesenjangan Keterampilan AI</h1>
+  const selectedProgramObj = studyPrograms.find(p => p.id === Number(selectedProgramId)) || studyPrograms[0];
+
+  return (
+    <div className="w-full p-6 md:p-8 animate-fade-in-up space-y-6">
+
+      {/* ── Header Bar ── */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white p-6 rounded-2xl border border-border shadow-sm">
+        <div>
+          <h1 className="font-display text-2xl md:text-3xl font-bold text-text">Rekomendasi Intervensi Kurikulum</h1>
           <p className="text-sm text-text-secondary mt-1">
-            Perbandingan mendalam antara kurikulum institusi saat ini dan permintaan keterampilan industri terkini, dianalisis secara real-time.
+            Saran penyesuaian materi kuliah dan generator draf RPS otomatis berdasarkan kesenjangan kompetensi industri.
           </p>
         </div>
-        <div className="flex items-center gap-3 mt-4 md:mt-0">
+
+        {/* Filters: Program & Period */}
+        <div className="flex flex-wrap items-center gap-3">
           <div className="relative">
             <select
-              value={activeProdi}
-              onChange={e => setActiveProdi(e.target.value)}
-              className="appearance-none pl-4 pr-8 py-2 border border-border rounded-lg text-sm bg-white focus:outline-none focus:border-brand cursor-pointer text-text"
+              value={selectedProgramId}
+              onChange={handleProgramChange}
+              className="appearance-none pl-3 pr-8 py-2 border border-border rounded-xl text-sm bg-slate-50 font-medium text-text focus:outline-none focus:border-brand cursor-pointer shadow-sm"
             >
-              <option>Program Studi: Teknik Informatika</option>
-              <option>Program Studi: Sistem Informasi</option>
-              <option>Program Studi: Ilmu Komputer</option>
+              {studyPrograms.map(p => (
+                <option key={p.id} value={p.id}>Prodi: {p.nama_prodi} ({p.jenjang})</option>
+              ))}
             </select>
-            <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-text-muted text-[16px] pointer-events-none">expand_more</span>
+            <Icon className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted text-[18px] pointer-events-none" name="expand_more" />
           </div>
-          <button className="btn-outline flex items-center gap-2">
-            <span className="material-symbols-outlined text-[16px]">filter_list</span>
-            Filter Lanjut
+
+          <div className="relative">
+            <select
+              value={selectedPeriod}
+              onChange={handlePeriodChange}
+              className="appearance-none pl-3 pr-8 py-2 border border-border rounded-xl text-sm bg-slate-50 font-medium text-text focus:outline-none focus:border-brand cursor-pointer shadow-sm"
+            >
+              {availablePeriods.map(p => (
+                <option key={p} value={p}>Periode: {p}</option>
+              ))}
+            </select>
+            <Icon className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted text-[18px] pointer-events-none" name="calendar_month" />
+          </div>
+
+          <button
+            onClick={() => {
+              toast.info('Re-Analisis', 'Menjalankan engine kalkulasi ulang kesenjangan kurikulum...');
+              router.post('/analysis/run', { study_program_id: selectedProgramId, period: selectedPeriod }, {
+                preserveScroll: true,
+                onSuccess: () => toast.success('Selesai', 'Data kesenjangan berhasil diperbarui secara live.'),
+              });
+            }}
+            className="btn-outline flex items-center gap-1.5 text-xs py-2 px-3 rounded-xl bg-white hover:bg-slate-50 shadow-sm"
+          >
+            <Icon className="text-[16px]" name="sync" />
+            Re-Analisis
           </button>
         </div>
       </div>
 
-      {/* ── Data Source Context ── */}
-      <div className="card p-5 mb-5 bg-gradient-to-r from-brand to-[#043326] text-white">
-        <h2 className="font-display text-base font-semibold flex items-center gap-2 mb-3">
-          <span className="material-symbols-outlined text-[18px]">info</span>
-          Konteks Analisis Data
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white/10 rounded-xl p-4 border border-white/10">
-            <h3 className="text-sm font-semibold text-green-200 mb-1">Data Kurikulum (Input)</h3>
-            <p className="text-xs text-white/80 leading-relaxed">
-              Sistem telah meng-ekstrak <span className="font-bold text-white">75 skill teknis</span> dari silabus dan Rencana Pembelajaran Semester (RPS) Program Studi Teknik Informatika, khususnya pada konsentrasi rekayasa perangkat lunak dan infrastruktur IT.
-            </p>
+      {/* ── Top Section: Radar Chart & Metrics ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        {/* 5 Dimensions Radar */}
+        <div className="bg-white border border-border rounded-2xl p-5 shadow-sm flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <h3 className="font-display text-base font-semibold text-text">Radar 5 Dimensi Kompetensi</h3>
+              <p className="text-xs text-text-muted">Isnandar et al. (2024)</p>
+            </div>
+            <span className="text-xs font-semibold text-brand bg-brand-light px-2 py-0.5 rounded-md">
+              {selectedProgramObj?.nama_prodi}
+            </span>
           </div>
-          <div className="bg-white/10 rounded-xl p-4 border border-white/10">
-            <h3 className="text-sm font-semibold text-blue-200 mb-1">Data Industri (Target)</h3>
-            <p className="text-xs text-white/80 leading-relaxed">
-              Agen scraping mengumpulkan <span className="font-bold text-white">92 skill prioritas tinggi</span> dari 4,500+ lowongan pekerjaan (Software Engineer, DevOps, Backend) di wilayah Jabodetabek selama 3 bulan terakhir.
-            </p>
+          <div className="h-56 relative my-2">
+            <canvas ref={radarRef} />
+          </div>
+          <p className="text-[11px] text-text-secondary text-center border-t border-slate-100 pt-2">
+            Membandingkan capaian kurikulum saat ini terhadap batas standar industri (Target 80-90%).
+          </p>
+        </div>
+
+        {/* Urgent Gaps Overview */}
+        <div className="bg-white border border-border rounded-2xl p-5 shadow-sm lg:col-span-2 flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h3 className="font-display text-base font-semibold text-text">Kesenjangan Prioritas Tertinggi</h3>
+              <p className="text-xs text-text-secondary">Daftar keahlian dengan urgensi intervensi kurikulum tertinggi.</p>
+            </div>
+            <span className="text-xs bg-rose-50 text-rose-700 font-semibold px-2.5 py-1 rounded-lg border border-rose-200">
+              {criticalGaps.length} Kesenjangan Kritis
+            </span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs text-left">
+              <thead>
+                <tr className="border-b border-slate-100 text-slate-500 font-semibold uppercase">
+                  <th className="py-2.5 px-3">Keahlian & Kategori</th>
+                  <th className="py-2.5 px-2">Mismatch Type</th>
+                  <th className="py-2.5 px-2 text-center">Urgensi</th>
+                  <th className="py-2.5 px-2 text-center">Bukti Lowongan</th>
+                  <th className="py-2.5 px-3 text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {criticalGaps.slice(0, 5).map((gap) => (
+                  <tr key={gap.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="py-2.5 px-3">
+                      <div className="font-bold text-text">{gap.name}</div>
+                      <div className="text-[10px] text-text-muted">{gap.category}</div>
+                    </td>
+                    <td className="py-2.5 px-2">
+                      <span className={`px-2 py-0.5 rounded-md font-semibold text-[10px] ${gap.tipe_mismatch === 'skill_shortages'
+                        ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                        : 'bg-orange-50 text-orange-700 border border-orange-200'
+                        }`}>
+                        {gap.tipe_mismatch === 'skill_shortages' ? 'Skill Shortage' : 'Underskilling'}
+                      </span>
+                    </td>
+                    <td className="py-2.5 px-2 text-center">
+                      <span className="font-bold text-rose-600">{gap.skor_urgensi}/10</span>
+                    </td>
+                    <td className="py-2.5 px-2 text-center font-medium text-slate-700">
+                      {gap.evidence_count} lowongan
+                    </td>
+                    <td className="py-2.5 px-3 text-right">
+                      <button
+                        onClick={() => startGenerator(gap)}
+                        className="btn-outline text-[11px] py-1 px-2 rounded-lg bg-brand-light text-brand border-brand/30 hover:bg-brand hover:text-white transition-all inline-flex items-center gap-1"
+                      >
+                        <Icon className="text-[13px]" name="auto_awesome" />
+                        Generate RPS
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-text-muted">
+            <span>Menampilkan 5 dari {criticalGaps.length} kesenjangan terdeteksi</span>
+            <Link href="/competency" className="text-brand font-medium hover:underline flex items-center gap-1">
+              Buka Seluruh Peta Kesenjangan
+              <Icon className="text-[14px]" name="arrow_forward" />
+            </Link>
           </div>
         </div>
+
       </div>
 
-      {/* ── Match Rate + Venn ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mb-5">
-
-        {/* Match rate gauge */}
-        <div className="card p-5 lg:col-span-4 flex flex-col">
-          <h2 className="font-display text-base font-semibold text-text">Tingkat Kecocokan</h2>
-          <p className="text-xs text-text-secondary mb-4">KURIKULUM VS INDUSTRI</p>
-          <div className="flex-1 flex flex-col items-center justify-center">
-            <div className="relative w-40 h-40 flex items-center justify-center">
-              <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="40" fill="none" stroke="#f3f4f6" strokeWidth="10"/>
-                <circle
-                  cx="50" cy="50" r="40" fill="none"
-                  stroke="#064e3b" strokeWidth="10"
-                  strokeLinecap="round"
-                  strokeDasharray={`${2 * Math.PI * 40 * 0.7} ${2 * Math.PI * 40}`}
-                />
-              </svg>
-              <div className="text-center z-10">
-                <p className="font-display text-3xl font-bold text-text">70%</p>
+      {/* ── RPS Generator Modal / Result Box ── */}
+      {generatorState !== 'idle' && (
+        <div className="bg-white border-2 border-brand/30 rounded-2xl p-6 shadow-md transition-all">
+          <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
+            <div className="flex items-center gap-2">
+              <Icon className="text-brand text-2xl" name="auto_awesome" />
+              <div>
+                <h3 className="font-display text-lg font-bold text-text">
+                  AI RPS Generator: {selectedGapForRps?.name}
+                </h3>
+                <p className="text-xs text-text-secondary">Penyusunan Capaian Pembelajaran berbasis Standar KKNI & Industri</p>
               </div>
             </div>
-            <span className="badge badge-green mt-4 text-sm px-4 py-1.5">Status: Cukup Baik</span>
-            <p className="text-xs text-text-secondary mt-3 text-center">
-              Ditemukan 30% kesenjangan pada keterampilan teknis inti.
-            </p>
-          </div>
-        </div>
-
-        {/* Venn Overlap */}
-        <div className="card p-5 lg:col-span-8 flex flex-col">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="font-display text-base font-semibold text-text">Peta Keterampilan Tumpang Tindih</h2>
-              <p className="text-xs text-text-secondary mt-0.5">AREA KONVERGENSI</p>
-            </div>
-            <button className="w-8 h-8 rounded-md border border-border flex items-center justify-center text-text-secondary hover:bg-gray-50 transition-colors">
-              <span className="material-symbols-outlined text-[16px]">fullscreen</span>
+            <button
+              onClick={() => setGeneratorState('idle')}
+              className="text-slate-400 hover:text-slate-600 text-sm font-medium"
+            >
+              Tutup ✕
             </button>
           </div>
-          {/* SVG Venn Diagram */}
-          <div className="flex-1 flex items-center justify-center min-h-[200px]">
-            <svg width="340" height="200" viewBox="0 0 340 200">
-              <ellipse cx="140" cy="100" rx="110" ry="80" fill="#dbeafe" fillOpacity="0.7"/>
-              <ellipse cx="210" cy="100" rx="110" ry="80" fill="#d1fae5" fillOpacity="0.7"/>
-              <text x="85"  y="105" textAnchor="middle" fontSize="13" fontWeight="600" fill="#1e40af">Kurikulum</text>
-              <text x="85"  y="122" textAnchor="middle" fontSize="12" fill="#1e40af">(75)</text>
-              <text x="267" y="105" textAnchor="middle" fontSize="13" fontWeight="600" fill="#065f46">Industri</text>
-              <text x="267" y="122" textAnchor="middle" fontSize="12" fill="#065f46">(92)</text>
-              <text x="175" y="95" textAnchor="middle" fontSize="18" fontWeight="700" fill="#111827">54</text>
-              <rect x="122" y="108" width="107" height="24" rx="12" fill="white" fillOpacity="0.85"/>
-              <text x="175" y="124" textAnchor="middle" fontSize="10" fontWeight="600" fill="#064e3b">Keterampilan Selaras</text>
-            </svg>
-          </div>
-          <div className="flex items-center justify-center gap-6 mt-2 text-xs">
-            {[
-              { color: '#dbeafe', label: 'Hanya Kurikulum' },
-              { color: '#d1fae5', label: 'Hanya Industri' },
-              { color: '#a7f3d0', label: 'Selaras' },
-            ].map(l => (
-              <span key={l.label} className="flex items-center gap-1.5 text-text-secondary">
-                <span className="w-3 h-3 rounded-sm inline-block" style={{ backgroundColor: l.color, border: '1px solid #e5e7eb' }}/>
-                {l.label}
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
 
-      {/* ── Gap Skills Table ── */}
-      <div className="card overflow-hidden mb-5">
-        <div className="px-5 py-4 border-b border-border flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+          {generatorState === 'generating' ? (
+            <div className="py-8 text-center space-y-4">
+              <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-brand border-t-transparent" />
+              <p className="text-sm font-semibold text-text">
+                {generatorStep === 1 && 'Menganalisis teks kesenjangan kurikulum & profil industri...'}
+                {generatorStep === 2 && 'Merumuskan Capaian Pembelajaran Mata Kuliah (CPMK)...'}
+                {generatorStep === 3 && 'Memvalidasi kesesuaian SKS dan modul praktikum...'}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                <div>
+                  <span className="text-text-muted block">Usulan Mata Kuliah:</span>
+                  <strong className="text-text">{generatedSyllabus?.course}</strong>
+                </div>
+                <div>
+                  <span className="text-text-muted block">Bobot & SKS:</span>
+                  <strong className="text-text">{generatedSyllabus?.credits}</strong>
+                </div>
+                <div>
+                  <span className="text-text-muted block">Rekomendasi Penempatan:</span>
+                  <strong className="text-text">{generatedSyllabus?.semester}</strong>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                  Capaian Pembelajaran Mata Kuliah (CPMK):
+                </h4>
+                <div className="space-y-2">
+                  {generatedSyllabus?.cpmk.map((c, i) => (
+                    <div key={i} className="p-3 bg-emerald-50/60 border border-emerald-200/80 rounded-xl text-xs text-slate-800 flex items-start gap-2">
+                      <Icon className="text-emerald-600 text-[16px] mt-0.5" name="check_circle" />
+                      <span>{c}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  onClick={() => setGeneratorState('idle')}
+                  className="btn-outline text-xs py-2 px-4 rounded-xl"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={() => {
+                    handleApply(selectedGapForRps?.id, generatedSyllabus?.course);
+                    setGeneratorState('idle');
+                  }}
+                  className="btn-primary text-xs py-2 px-4 rounded-xl flex items-center gap-1.5"
+                >
+                  <Icon className="text-[16px]" name="save" />
+                  Terapkan Sebagai Draf Resmi
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── AI Recommendation Cards Grid ── */}
+      <div>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-4">
           <div>
-            <h2 className="font-display text-base font-semibold text-text">Kesenjangan Keterampilan Terdeteksi</h2>
-            <p className="text-xs text-text-secondary mt-0.5">DIMINTA TINGGI, TIDAK DIAJARKAN</p>
+            <h2 className="text-lg font-bold text-text">
+              Daftar Paket Rekomendasi Kurikulum ({filteredGaps.length} Paket)
+            </h2>
+            <p className="text-xs text-text-secondary">Saran konkret penyesuaian materi untuk dosen pengampu & Kaprodi.</p>
           </div>
-          <div className="relative w-56">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[16px]">search</span>
+
+          <div className="relative w-full md:w-64">
+            <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[16px]" name="search" />
             <input
+              type="text"
+              placeholder="Cari rekomendasi..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Cari keterampilan..."
-              className="w-full pl-8 pr-4 py-2 border border-border rounded-lg text-sm bg-gray-50 focus:outline-none focus:border-brand transition-all"
+              className="w-full pl-9 pr-3 py-1.5 border border-border rounded-xl text-xs focus:outline-none focus:border-brand bg-slate-50"
             />
           </div>
         </div>
-        <table className="w-full text-left text-sm">
-          <thead>
-            <tr className="bg-gray-50 border-b border-border">
-              {['KETERAMPILAN','KATEGORI','PERMINTAAN INDUSTRI','URGENSI','AKSI'].map(h => (
-                <th key={h} className="px-5 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wide">{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {filtered.map(sk => (
-              <tr key={sk.name} className="hover:bg-gray-50 transition-colors">
-                <td className="px-5 py-3.5 font-semibold text-text">{sk.name}</td>
-                <td className="px-5 py-3.5 text-text-secondary">{sk.category}</td>
-                <td className="px-5 py-3.5">
-                  <div className="flex items-center gap-3">
-                    <div className="w-24 progress-track">
-                      <div className="progress-fill" style={{ width: `${sk.demand}%` }}/>
-                    </div>
-                    <span className="text-xs text-text-secondary">
-                      {sk.demand >= 80 ? 'Tinggi' : 'Sedang'}
-                    </span>
-                  </div>
-                </td>
-                <td className="px-5 py-3.5">
-                  <span className={urgencyBadge(sk.urgency)}>{sk.urgency}</span>
-                </td>
-                <td className="px-5 py-3.5">
-                  <button className="text-sm font-semibold text-brand hover:underline flex items-center gap-0.5">
-                    Detail <span className="material-symbols-outlined text-[14px]">chevron_right</span>
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
 
-      {/* ── AI Recommendation Cards ── */}
-      <div>
-        <h2 className="font-display text-base font-semibold text-text mb-4 flex items-center gap-2">
-          <span className="material-symbols-outlined text-[18px] text-brand">auto_awesome</span>
-          Rekomendasi Pembaruan Kurikulum AI
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {aiCards.map(card => (
-            <div key={card.id} className="card p-5">
-              <div className="flex justify-between items-start mb-3">
-                <span className={`badge ${card.tagColor}`}>{card.tag}</span>
-                <div className="w-8 h-8 rounded-lg bg-brand-light flex items-center justify-center">
-                  <span className="material-symbols-outlined text-brand text-[16px]">{card.icon}</span>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {filteredGaps.map((item) => (
+            <div
+              key={item.id}
+              className="bg-white border border-border rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-3"
+            >
+              <div>
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${item.tipe_mismatch === 'skill_shortages'
+                    ? 'bg-rose-50 text-rose-700 border-rose-200'
+                    : 'bg-orange-50 text-orange-700 border-orange-200'
+                    }`}>
+                    {item.proposed_tag}
+                  </span>
+                  <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">
+                    Dampak: {item.impact}
+                  </span>
                 </div>
+
+                <h3 className="font-display text-base font-bold text-text mb-1">
+                  {item.action_title}
+                </h3>
+                <p className="text-xs text-text-secondary leading-relaxed mb-3">
+                  {item.body}
+                </p>
               </div>
-              <h3 className="font-display text-sm font-bold text-text mb-2">{card.title}</h3>
-              <p className="text-xs text-text-secondary mb-4">{card.body}</p>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-text-secondary">
-                  Dampak Kecocokan: <span className="text-brand font-bold">{card.impact}</span>
+
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+                <span className="text-[11px] text-text-muted flex items-center gap-1">
+                  <Icon className="text-[14px]" name="warning" />
+                  Urgensi: <strong className="text-rose-600">{item.urgency} ({item.skor_urgensi}/10)</strong>
                 </span>
+
                 <button
-                  onClick={() => handleApply(card.id, card.title)}
-                  disabled={appliedDrafts[card.id]}
-                  className={`text-xs font-semibold ${appliedDrafts[card.id] ? 'text-text-muted cursor-default' : 'text-brand hover:underline cursor-pointer'}`}
+                  onClick={() => startGenerator(item)}
+                  className="btn-primary text-xs py-1.5 px-3 rounded-xl flex items-center gap-1.5"
                 >
-                  {appliedDrafts[card.id] ? '✓ Diterapkan' : 'Terapkan Draft'}
+                  <Icon className="text-[15px]" name="auto_awesome" />
+                  Buat Draf RPS
                 </button>
               </div>
             </div>
           ))}
-
-          {/* AI Generator Card */}
-          <div className="card p-5 bg-brand text-white border-0">
-            <div className="flex items-start justify-between mb-3">
-              <h3 className="font-display text-sm font-bold leading-snug">Generate Silabus Otomatis</h3>
-              <span className="material-symbols-outlined text-white/60 text-[20px]">auto_awesome</span>
-            </div>
-            <p className="text-xs text-white/80 mb-4">
-              Biarkan AI merancang draf Rencana Pembelajaran Semester (RPS) lengkap berdasarkan kesenjangan yang ditemukan.
-            </p>
-
-            {generatorState === 'idle' && (
-              <button
-                onClick={startGenerator}
-                className="w-full py-2 rounded-lg bg-white text-brand text-sm font-semibold hover:bg-brand-light transition-colors flex items-center justify-center gap-2"
-              >
-                <span className="material-symbols-outlined text-[16px]">auto_awesome</span>
-                Mulai Generator AI
-              </button>
-            )}
-
-            {generatorState === 'generating' && (
-              <div className="space-y-2">
-                {generatorSteps.map((step, i) => (
-                  <div key={i} className={`flex items-center gap-2 text-xs transition-all ${i < generatorStep ? 'opacity-100' : 'opacity-30'}`}>
-                    <span className={`material-symbols-outlined text-[14px] ${i < generatorStep ? 'text-white' : 'text-white/40'}`}>
-                      {i + 1 < generatorStep ? 'check_circle' : i + 1 === generatorStep ? 'hourglass_top' : 'radio_button_unchecked'}
-                    </span>
-                    <span className="text-white/90">{step.label}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {generatorState === 'finished' && (
-              <div className="text-center">
-                <span className="material-symbols-outlined text-white text-3xl">check_circle</span>
-                <p className="text-xs text-white/90 mt-1 font-semibold">RPS berhasil digenerate!</p>
-                <button
-                  onClick={() => setGeneratorState('idle')}
-                  className="mt-2 text-xs text-white/70 hover:text-white underline"
-                >
-                  Generate ulang
-                </button>
-              </div>
-            )}
-          </div>
         </div>
       </div>
+
     </div>
   );
 }

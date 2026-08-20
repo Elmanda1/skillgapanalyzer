@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useToast } from '../context/ToastContext';
+import Icon from '../components/Icon.jsx';
+
 
 const gapSkills = [
   { name: 'Docker & Containerization', category: 'DevOps',        demand: 85, urgency: 'Kritis' },
@@ -93,10 +95,10 @@ export default function AIAnalysis() {
               <option>Program Studi: Sistem Informasi</option>
               <option>Program Studi: Ilmu Komputer</option>
             </select>
-            <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-text-muted text-[16px] pointer-events-none">expand_more</span>
+            <Icon className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted text-[16px] pointer-events-none" name="expand_more" />
           </div>
           <button className="btn-outline flex items-center gap-2">
-            <span className="material-symbols-outlined text-[16px]">filter_list</span>
+            <Icon className="text-[16px]" name="filter_list" />
             Filter Lanjut
           </button>
         </div>
@@ -105,7 +107,7 @@ export default function AIAnalysis() {
       {/* ── Data Source Context ── */}
       <div className="card p-5 mb-5 bg-gradient-to-r from-brand to-[#043326] text-white">
         <h2 className="font-display text-base font-semibold flex items-center gap-2 mb-3">
-          <span className="material-symbols-outlined text-[18px]">info</span>
+          <Icon className="text-[18px]" name="info" />
           Konteks Analisis Data
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -161,7 +163,7 @@ export default function AIAnalysis() {
               <p className="text-xs text-text-secondary mt-0.5">AREA KONVERGENSI</p>
             </div>
             <button className="w-8 h-8 rounded-md border border-border flex items-center justify-center text-text-secondary hover:bg-gray-50 transition-colors">
-              <span className="material-symbols-outlined text-[16px]">fullscreen</span>
+              <Icon className="text-[16px]" name="fullscreen" />
             </button>
           </div>
           {/* SVG Venn Diagram */}
@@ -201,7 +203,7 @@ export default function AIAnalysis() {
             <p className="text-xs text-text-secondary mt-0.5">DIMINTA TINGGI, TIDAK DIAJARKAN</p>
           </div>
           <div className="relative w-56">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[16px]">search</span>
+            <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[16px]" name="search" />
             <input
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
@@ -238,7 +240,7 @@ export default function AIAnalysis() {
                 </td>
                 <td className="px-5 py-3.5">
                   <button className="text-sm font-semibold text-brand hover:underline flex items-center gap-0.5">
-                    Detail <span className="material-symbols-outlined text-[14px]">chevron_right</span>
+                    Detail <Icon className="text-[14px]" name="chevron_right" />
                   </button>
                 </td>
               </tr>
@@ -250,7 +252,7 @@ export default function AIAnalysis() {
       {/* ── AI Recommendation Cards ── */}
       <div>
         <h2 className="font-display text-base font-semibold text-text mb-4 flex items-center gap-2">
-          <span className="material-symbols-outlined text-[18px] text-brand">auto_awesome</span>
+          <Icon className="text-[18px] text-brand" name="auto_awesome" />
           Rekomendasi Pembaruan Kurikulum AI
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -259,7 +261,7 @@ export default function AIAnalysis() {
               <div className="flex justify-between items-start mb-3">
                 <span className={`badge ${card.tagColor}`}>{card.tag}</span>
                 <div className="w-8 h-8 rounded-lg bg-brand-light flex items-center justify-center">
-                  <span className="material-symbols-outlined text-brand text-[16px]">{card.icon}</span>
+                  <Icon className="text-brand text-[16px]" name={card.icon} />
                 </div>
               </div>
               <h3 className="font-display text-sm font-bold text-text mb-2">{card.title}</h3>
@@ -283,7 +285,7 @@ export default function AIAnalysis() {
           <div className="card p-5 bg-brand text-white border-0">
             <div className="flex items-start justify-between mb-3">
               <h3 className="font-display text-sm font-bold leading-snug">Generate Silabus Otomatis</h3>
-              <span className="material-symbols-outlined text-white/60 text-[20px]">auto_awesome</span>
+              <Icon className="text-white/60 text-[20px]" name="auto_awesome" />
             </div>
             <p className="text-xs text-white/80 mb-4">
               Biarkan AI merancang draf Rencana Pembelajaran Semester (RPS) lengkap berdasarkan kesenjangan yang ditemukan.
@@ -294,7 +296,7 @@ export default function AIAnalysis() {
                 onClick={startGenerator}
                 className="w-full py-2 rounded-lg bg-white text-brand text-sm font-semibold hover:bg-brand-light transition-colors flex items-center justify-center gap-2"
               >
-                <span className="material-symbols-outlined text-[16px]">auto_awesome</span>
+                <Icon className="text-[16px]" name="auto_awesome" />
                 Mulai Generator AI
               </button>
             )}
@@ -303,9 +305,7 @@ export default function AIAnalysis() {
               <div className="space-y-2">
                 {generatorSteps.map((step, i) => (
                   <div key={i} className={`flex items-center gap-2 text-xs transition-all ${i < generatorStep ? 'opacity-100' : 'opacity-30'}`}>
-                    <span className={`material-symbols-outlined text-[14px] ${i < generatorStep ? 'text-white' : 'text-white/40'}`}>
-                      {i + 1 < generatorStep ? 'check_circle' : i + 1 === generatorStep ? 'hourglass_top' : 'radio_button_unchecked'}
-                    </span>
+                    <Icon className={`text-[14px] ${i < generatorStep ? 'text-white' : 'text-white/40'}`} name={i + 1 < generatorStep ? 'check_circle' : i + 1 === generatorStep ? 'hourglass_top' : 'radio_button_unchecked'} />
                     <span className="text-white/90">{step.label}</span>
                   </div>
                 ))}
@@ -314,7 +314,7 @@ export default function AIAnalysis() {
 
             {generatorState === 'finished' && (
               <div className="text-center">
-                <span className="material-symbols-outlined text-white text-3xl">check_circle</span>
+                <Icon className="text-white text-3xl" name="check_circle" />
                 <p className="text-xs text-white/90 mt-1 font-semibold">RPS berhasil digenerate!</p>
                 <button
                   onClick={() => setGeneratorState('idle')}

@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Chart from 'chart.js/auto';
 import { useToast } from '../context/ToastContext';
+import Icon from '../components/Icon.jsx';
+
 
 const CLUSTER_DATA = [
   { label: 'Cloud & DevOps',       value: 320, color: '#064e3b' },
@@ -98,7 +100,7 @@ export default function CompetencyMap() {
           onClick={() => toast.success('Berhasil', 'Laporan taksonomi skill sedang diunduh.')}
           className="btn-outline flex items-center gap-2 text-xs py-1.5 mt-4 md:mt-0"
         >
-          <span className="material-symbols-outlined text-[16px]">download</span>
+          <Icon className="text-[16px]" name="download" />
           Unduh Laporan Taksonomi
         </button>
       </div>
@@ -116,7 +118,7 @@ export default function CompetencyMap() {
             <div className="flex gap-1.5">
               {['zoom_in','zoom_out'].map(ico => (
                 <button key={ico} className="w-8 h-8 rounded-md border border-border flex items-center justify-center text-text-secondary hover:bg-gray-50 transition-colors">
-                  <span className="material-symbols-outlined text-[16px]">{ico}</span>
+                  <Icon className="text-[16px]" name={ico} />
                 </button>
               ))}
             </div>
@@ -152,7 +154,7 @@ export default function CompetencyMap() {
         <div className="card p-5 flex flex-col">
           <div className="mb-4">
             <h2 className="font-display text-base font-semibold text-text flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px] text-brand">trending_up</span>
+              <Icon className="text-[18px] text-brand" name="trending_up" />
               Skills yang sedang tren
             </h2>
             <p className="text-xs text-text-secondary mt-0.5">Tren peningkatan permintaan dalam 7 hari terakhir.</p>
@@ -161,7 +163,7 @@ export default function CompetencyMap() {
             {trendingSkills.map(sk => (
               <div key={sk.name} className="flex items-center justify-between gap-3 p-2.5 rounded-lg hover:bg-gray-50 transition-colors">
                 <div className="w-8 h-8 rounded-lg bg-brand-light flex items-center justify-center flex-shrink-0">
-                  <span className="material-symbols-outlined text-brand text-[16px]">code</span>
+                  <Icon className="text-brand text-[16px]" name="code" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-text truncate">{sk.name}</p>
@@ -189,7 +191,7 @@ export default function CompetencyMap() {
           <div className="flex items-center gap-3 w-full md:w-auto">
             {/* Search */}
             <div className="relative flex-1 md:w-56">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[16px]">search</span>
+              <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[16px]" name="search" />
               <input
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
@@ -253,7 +255,7 @@ export default function CompetencyMap() {
               className="text-sm font-semibold text-brand hover:underline flex items-center gap-1 mx-auto"
             >
               {showAll ? 'Tampilkan Lebih Sedikit' : `Muat Lebih Banyak (${filtered.length - 5} lagi)`}
-              <span className="material-symbols-outlined text-[16px]">{showAll ? 'expand_less' : 'expand_more'}</span>
+              <Icon className="text-[16px]" name={showAll ? 'expand_less' : 'expand_more'} />
             </button>
           </div>
         )}
