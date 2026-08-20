@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import Chart from 'chart.js/auto';
 import { useToast } from '../context/ToastContext';
 import { useSkills } from '../context/SkillContext';
+import Icon from '../components/Icon.jsx';
+
 
 // ─── Dummy Data ────────────────────────────────────────────────────────────
 const STUDENT = {
@@ -116,14 +118,14 @@ export default function MahasiswaDashboard({ user }) {
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4 mb-5">
         {[
-          { label: 'IPK',              val: STUDENT.ipk,       icon: 'grade',        iconBg: 'bg-amber-50 text-amber-600' },
+          { label: 'IPK',              val: STUDENT.ipk,       icon: 'stars',        iconBg: 'bg-amber-50 text-amber-600' },
           { label: 'Skill Dikuasai',   val: mySkills.length.toString(), icon: 'psychology',   iconBg: 'bg-brand-light text-brand' },
           { label: 'Skill Gap Kritis', val: mySkills.filter(s => s.required - s.levelValue > 20).length.toString(), icon: 'warning',      iconBg: 'bg-red-50 text-red-500' },
           { label: 'Lowongan Cocok',   val: `${JOB_RECS.length}`, icon: 'work_alert', iconBg: 'bg-blue-50 text-blue-600' },
         ].map(m => (
           <div key={m.label} className="card p-4 flex items-center gap-4">
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${m.iconBg}`}>
-              <span className="material-symbols-outlined text-[20px]">{m.icon}</span>
+              <Icon className="text-[20px]" name={m.icon} />
             </div>
             <div>
               <p className="font-display text-xl font-bold text-text">{m.val}</p>
@@ -208,7 +210,7 @@ export default function MahasiswaDashboard({ user }) {
             {LEARNING_PATH.map(step => (
               <div key={step.step} className={`flex items-start gap-3 p-3 rounded-xl border transition-all ${step.done ? 'bg-brand-light border-brand-border' : 'bg-white border-border'}`}>
                 <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold ${step.done ? 'bg-brand text-white' : 'bg-gray-100 text-text-secondary'}`}>
-                  {step.done ? <span className="material-symbols-outlined text-[14px]">check</span> : step.step}
+                  {step.done ? <Icon className="text-[14px]" name="check" /> : step.step}
                 </div>
                 <div className="flex-1">
                   <p className={`text-sm font-semibold ${step.done ? 'text-brand line-through' : 'text-text'}`}>{step.title}</p>

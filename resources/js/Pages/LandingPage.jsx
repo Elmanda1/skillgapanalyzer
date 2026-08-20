@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from '@inertiajs/react';
+import Icon from '../components/Icon.jsx';
+
 
 // ─── Animated counter hook ─────────────────────────────────────────────────
 function useCountUp(target, duration = 1800) {
@@ -113,7 +115,7 @@ function DashboardMockup() {
       {/* Floating notification card */}
       <div className="absolute -bottom-5 -left-8 bg-white rounded-2xl shadow-xl border border-gray-100 px-4 py-3 flex items-center gap-3">
         <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
-          <span className="material-symbols-outlined text-green-600 text-[16px]">check_circle</span>
+          <Icon className="text-green-600 text-[16px]" name="check_circle" />
         </div>
         <div>
           <p className="text-xs font-semibold text-gray-800">Analisis selesai</p>
@@ -125,7 +127,7 @@ function DashboardMockup() {
         <p className="text-[10px] font-semibold text-gray-400 mb-0.5">Match Rate</p>
         <p className="font-display text-2xl font-bold text-brand">70%</p>
         <div className="flex items-center gap-1 mt-0.5">
-          <span className="material-symbols-outlined text-green-500 text-[12px]">trending_up</span>
+          <Icon className="text-green-500 text-[12px]" name="trending_up" />
           <span className="text-[10px] text-green-600 font-semibold">+12.5%</span>
         </div>
       </div>
@@ -151,7 +153,7 @@ function FeatureCard({ icon, title, desc, delay }) {
   return (
     <div className={`card p-6 hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 animate-fade-in-up ${delay}`}>
       <div className="w-11 h-11 rounded-xl bg-brand-light flex items-center justify-center mb-4">
-        <span className="material-symbols-outlined text-brand text-[22px]">{icon}</span>
+        <Icon className="text-brand text-[22px]" name={icon} />
       </div>
       <h3 className="font-display text-base font-bold text-text mb-2">{title}</h3>
       <p className="text-sm text-text-secondary leading-relaxed">{desc}</p>
@@ -164,7 +166,7 @@ function RoleCard({ icon, color, role, label, points, delay }) {
   return (
     <div className={`card p-6 border-t-4 ${color} animate-fade-in-up ${delay}`}>
       <div className="flex items-center gap-3 mb-4">
-        <span className="material-symbols-outlined text-[28px] text-text-secondary">{icon}</span>
+        <Icon className="text-[28px] text-text-secondary" name={icon} />
         <div>
           <p className="text-[11px] font-semibold text-text-muted uppercase tracking-wide">{role}</p>
           <h3 className="font-display text-base font-bold text-text">{label}</h3>
@@ -173,7 +175,7 @@ function RoleCard({ icon, color, role, label, points, delay }) {
       <ul className="space-y-2.5">
         {points.map((p, i) => (
           <li key={i} className="flex items-start gap-2.5 text-sm text-text-secondary">
-            <span className="material-symbols-outlined text-brand text-[16px] mt-0.5 flex-shrink-0">check_circle</span>
+            <Icon className="text-brand text-[16px] mt-0.5 flex-shrink-0" name="check_circle" />
             {p}
           </li>
         ))}
@@ -201,7 +203,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-6 h-24 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-brand flex items-center justify-center">
-              <span className="material-symbols-outlined text-white text-[18px]">insights</span>
+              <Icon className="text-white text-[18px]" name="insights" />
             </div>
             <span className="font-display font-bold text-text">Skill Gap Analyzer</span>
           </div>
@@ -215,7 +217,7 @@ export default function LandingPage() {
             className="btn-primary px-5 py-2 text-sm flex items-center gap-2"
           >
             Masuk ke Sistem
-            <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+            <Icon className="text-[16px]" name="arrow_forward" />
           </Link>
         </div>
       </nav>
@@ -241,28 +243,28 @@ export default function LandingPage() {
             <div className="flex flex-wrap gap-3">
               <Link href="/login" className="btn-primary px-7 py-3 text-base flex items-center gap-2">
                 Mulai Analisis Gratis
-                <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                <Icon className="text-[18px]" name="arrow_forward" />
               </Link>
               <button
                 onClick={() => document.getElementById('modul')?.scrollIntoView({ behavior: 'smooth' })}
                 className="btn-outline px-7 py-3 text-base flex items-center gap-2"
               >
-                <span className="material-symbols-outlined text-[18px]">play_circle</span>
+                <Icon className="text-[18px]" name="play_circle" />
                 Lihat Modul
               </button>
             </div>
             {/* Mini trust badges */}
             <div className="flex items-center gap-4 mt-8 text-xs text-text-muted">
               <span className="flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[14px] text-green-500">check</span>
+                <Icon className="text-[14px] text-green-500" name="check" />
                 Gratis untuk kampus vokasi
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[14px] text-green-500">check</span>
+                <Icon className="text-[14px] text-green-500" name="check" />
                 Setup dalam 5 menit
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[14px] text-green-500">check</span>
+                <Icon className="text-[14px] text-green-500" name="check" />
                 Tanpa kartu kredit
               </span>
             </div>
@@ -281,7 +283,7 @@ export default function LandingPage() {
             {['Politeknik Negeri Jakarta', 'POLBAN', 'PENS', 'Poltek Semarang', 'Poltek Malang', 'PNB Bali'].map(name => (
               <div key={name} className="flex items-center gap-2 text-sm font-semibold text-text-muted hover:text-text transition-colors">
                 <div className="w-6 h-6 rounded bg-brand-light flex items-center justify-center">
-                  <span className="material-symbols-outlined text-brand text-[12px]">school</span>
+                  <Icon className="text-brand text-[12px]" name="school" />
                 </div>
                 {name}
               </div>
@@ -305,12 +307,12 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               { icon: 'trending_up', color: 'text-red-500', bg: 'bg-red-50', stat: '+14.6%', title: 'Pengangguran Lulusan Meningkat', desc: 'Pengangguran lulusan sarjana/diploma naik 14.6% dari Feb 2024 ke Feb 2025.' },
-              { icon: 'people_outline', color: 'text-amber-500', bg: 'bg-amber-50', stat: '9 Juta', title: 'Kekurangan Tenaga Digital', desc: 'Indonesia diproyeksikan kekurangan 9 juta pekerja digital pada 2030 akibat gap skill.' },
+              { icon: 'group', color: 'text-amber-500', bg: 'bg-amber-50', stat: '9 Juta', title: 'Kekurangan Tenaga Digital', desc: 'Indonesia diproyeksikan kekurangan 9 juta pekerja digital pada 2030 akibat gap skill.' },
               { icon: 'sync_problem', color: 'text-blue-500', bg: 'bg-blue-50', stat: '44%', title: 'Kompetensi Inti Akan Berubah', desc: '44% kompetensi inti tenaga kerja global diperkirakan berubah pada 2027 karena AI & otomasi.' },
             ].map(p => (
               <div key={p.title} className="card p-6">
                 <div className={`w-12 h-12 rounded-xl ${p.bg} flex items-center justify-center mb-4`}>
-                  <span className={`material-symbols-outlined text-[24px] ${p.color}`}>{p.icon}</span>
+                  <Icon className={`text-[24px] ${p.color}`} name={p.icon} />
                 </div>
                 <div className={`font-display text-2xl font-extrabold ${p.color} mb-1`}>{p.stat}</div>
                 <h3 className="font-display text-sm font-bold text-text mb-2">{p.title}</h3>
@@ -422,7 +424,7 @@ export default function LandingPage() {
                   </div>
                   <div className="card flex-1 p-5">
                     <div className="flex items-center gap-3 mb-2">
-                      <span className="material-symbols-outlined text-brand text-[20px]">{item.icon}</span>
+                      <Icon className="text-brand text-[20px]" name={item.icon} />
                       <h3 className="font-display text-base font-bold text-text">{item.title}</h3>
                     </div>
                     <p className="text-sm text-text-secondary">{item.desc}</p>
@@ -448,7 +450,7 @@ export default function LandingPage() {
             className="bg-white text-brand font-semibold px-8 py-3.5 rounded-xl hover:bg-green-50 transition-colors text-base inline-flex items-center gap-2 shadow-lg"
           >
             Masuk & Coba Sekarang — Gratis
-            <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+            <Icon className="text-[18px]" name="arrow_forward" />
           </Link>
           <p className="text-green-300 text-xs mt-4">Demo tersedia · Tanpa instalasi · Langsung pakai</p>
         </div>
@@ -461,7 +463,7 @@ export default function LandingPage() {
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-7 h-7 rounded-lg bg-brand flex items-center justify-center">
-                  <span className="material-symbols-outlined text-white text-[16px]">insights</span>
+                  <Icon className="text-white text-[16px]" name="insights" />
                 </div>
                 <span className="font-display font-bold text-white text-sm">Skill Gap Analyzer</span>
               </div>

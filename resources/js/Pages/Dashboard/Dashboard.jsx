@@ -4,6 +4,8 @@ import { usePage, Link } from '@inertiajs/react';
 import Chart from 'chart.js/auto';
 import { useSkills } from '../../context/SkillContext';
 import { useToast } from '../../context/ToastContext';
+import Icon from '../../components/Icon.jsx';
+
 
 const ROLE_LABELS = {
   super_admin: 'Super Admin',
@@ -23,7 +25,7 @@ const MetricCard = ({ title, value, change, changeType, icon, iconBg, note }) =>
     <div className="flex items-start justify-between">
       <p className="text-xs font-semibold text-text-secondary uppercase tracking-wide">{title}</p>
       <div className={`w-9 h-9 rounded-lg ${iconBg} flex items-center justify-center flex-shrink-0`}>
-        <span className="material-symbols-outlined text-[18px]">{icon}</span>
+        <Icon className="text-[18px]" name={icon} />
       </div>
     </div>
     <div>
@@ -31,9 +33,7 @@ const MetricCard = ({ title, value, change, changeType, icon, iconBg, note }) =>
       <div className="flex items-center gap-2 mt-1.5">
         {change && (
           <span className={`badge text-[11px] ${changeType === 'up' ? 'badge-green' : 'badge-red'}`}>
-            <span className="material-symbols-outlined text-[12px]">
-              {changeType === 'up' ? 'trending_up' : 'trending_down'}
-            </span>
+            <Icon className="text-[12px]" name={changeType === 'up' ? 'trending_up' : 'trending_down'} />
             {change}
           </span>
         )}
@@ -53,7 +53,7 @@ function StatCard({ icon, label, value, tone = 'brand' }) {
   return (
     <div className="bg-white border border-border rounded-2xl shadow-sm p-5 flex flex-col gap-2">
       <div className={`w-9 h-9 rounded-lg ${chipClass} flex items-center justify-center`}>
-        <span className="material-symbols-outlined text-[20px]">{icon}</span>
+        <Icon className="text-[20px]" name={icon} />
       </div>
       <p className="text-xs text-text-secondary font-medium">{label}</p>
       <p className="font-display text-3xl font-bold text-text">{value}</p>
@@ -288,7 +288,7 @@ export default function Dashboard() {
         {role === 'super_admin' && (
           <div className="flex gap-3">
             <button className="btn-outline flex items-center gap-2">
-              <span className="material-symbols-outlined text-[16px]">download</span>
+              <Icon className="text-[16px]" name="download" />
               Ekspor Data
             </button>
             <button
@@ -322,7 +322,7 @@ export default function Dashboard() {
           <div className="bg-gradient-to-r from-brand-dark via-brand to-emerald-800 text-white rounded-2xl p-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 shadow-xl shadow-brand/10 border border-brand/20">
             <div className="flex items-start gap-4">
               <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center flex-shrink-0 text-white shadow-inner">
-                <span className="material-symbols-outlined text-[32px]">shield</span>
+                <Icon className="text-[32px]" name="shield" />
               </div>
               <div>
                 <div className="flex items-center gap-2 mb-1">
@@ -348,7 +348,7 @@ export default function Dashboard() {
                 href="/management"
                 className="px-5 py-2.5 bg-white text-brand rounded-xl text-sm font-bold shadow-md hover:bg-gray-50 transition-all flex items-center gap-2 flex-1 lg:flex-initial justify-center"
               >
-                <span className="material-symbols-outlined text-[18px]">domain</span>
+                <Icon className="text-[18px]" name="domain" />
                 Kelola Seluruh Kampus
               </Link>
             </div>
@@ -459,7 +459,7 @@ export default function Dashboard() {
               <div className="px-5 py-4 border-b border-border flex justify-between items-center bg-gray-50/50">
                 <div>
                   <h2 className="font-display text-base font-semibold text-text flex items-center gap-2">
-                    <span className="material-symbols-outlined text-brand text-[20px]">school</span>
+                    <Icon className="text-brand text-[20px]" name="school" />
                     Matriks Pemantauan 6 Politeknik Terhubung
                   </h2>
                   <p className="text-xs text-text-secondary mt-0.5">Ringkasan kurikulum, gap kompetensi, dan civitas akademika tiap institusi.</p>
@@ -484,7 +484,7 @@ export default function Dashboard() {
                     {stats.campusSummaries.map((camp, idx) => (
                       <tr key={idx} className="hover:bg-gray-50 transition-colors">
                         <td className="px-5 py-3.5 font-semibold text-text flex items-center gap-2">
-                          <span className="material-symbols-outlined text-brand text-[18px]">domain</span>
+                          <Icon className="text-brand text-[18px]" name="domain" />
                           {camp.name}
                         </td>
                         <td className="px-5 py-3.5 text-text-secondary">{camp.prodiCount} Program Studi</td>
@@ -540,7 +540,7 @@ export default function Dashboard() {
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-text-secondary">
-                            <span className="material-symbols-outlined text-[16px]">dns</span>
+                            <Icon className="text-[16px]" name="dns" />
                           </div>
                           <span className="font-medium text-text">{row.wilayah}</span>
                         </div>
@@ -576,7 +576,7 @@ export default function Dashboard() {
           <div className="bg-gradient-to-r from-brand to-brand-dark text-white rounded-2xl p-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 shadow-lg shadow-brand/10">
             <div className="flex items-start gap-4">
               <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center flex-shrink-0 text-white shadow-inner">
-                <span className="material-symbols-outlined text-[32px]">school</span>
+                <Icon className="text-[32px]" name="school" />
               </div>
               <div>
                 <div className="flex items-center gap-2 mb-1">
@@ -602,14 +602,14 @@ export default function Dashboard() {
                 href="/curriculum"
                 className="px-4 py-2.5 bg-white text-brand rounded-xl text-sm font-bold shadow hover:bg-gray-50 transition-all flex items-center gap-2 flex-1 lg:flex-initial justify-center"
               >
-                <span className="material-symbols-outlined text-[18px]">menu_book</span>
+                <Icon className="text-[18px]" name="menu_book" />
                 Kurikulum Prodi
               </Link>
               <Link
                 href="/management"
                 className="px-4 py-2.5 bg-white/15 hover:bg-white/25 border border-white/20 text-white rounded-xl text-sm font-semibold transition-all flex items-center gap-2 flex-1 lg:flex-initial justify-center backdrop-blur-sm"
               >
-                <span className="material-symbols-outlined text-[18px]">domain</span>
+                <Icon className="text-[18px]" name="domain" />
                 Manajemen Institusi
               </Link>
             </div>
@@ -659,7 +659,7 @@ export default function Dashboard() {
                     <h3 className="font-display text-base font-bold text-text">Distribusi Kategori Gap</h3>
                     <p className="text-xs text-text-secondary mt-0.5">Status keselarasan kompetensi dengan industri.</p>
                   </div>
-                  <span className="material-symbols-outlined text-brand text-[22px]">pie_chart</span>
+                  <Icon className="text-brand text-[22px]" name="pie_chart" />
                 </div>
 
                 <div className="space-y-4 my-4">
@@ -699,7 +699,7 @@ export default function Dashboard() {
                 <span className="text-text-muted">Rekomendasi Tindakan:</span>
                 <Link href="/ai-analysis" className="font-semibold text-brand hover:underline flex items-center gap-1">
                   Analisis AI
-                  <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                  <Icon className="text-[14px]" name="arrow_forward" />
                 </Link>
               </div>
             </div>
@@ -709,7 +709,7 @@ export default function Dashboard() {
               <div className="p-5 border-b border-border flex justify-between items-center bg-gray-50/50">
                 <div>
                   <h3 className="font-display text-base font-bold text-text flex items-center gap-2">
-                    <span className="material-symbols-outlined text-brand text-[20px]">fact_check</span>
+                    <Icon className="text-brand text-[20px]" name="fact_check" />
                     Mata Kuliah Prioritas Evaluasi
                   </h3>
                   <p className="text-xs text-text-secondary mt-0.5">Mata kuliah kurikulum prodi dengan tingkat kesenjangan tertinggi.</p>
@@ -745,7 +745,7 @@ export default function Dashboard() {
                             className="text-xs font-semibold text-brand hover:underline inline-flex items-center gap-1"
                           >
                             Detail
-                            <span className="material-symbols-outlined text-[14px]">chevron_right</span>
+                            <Icon className="text-[14px]" name="chevron_right" />
                           </Link>
                         </td>
                       </tr>
@@ -772,7 +772,7 @@ export default function Dashboard() {
           <div className="bg-gradient-to-r from-brand to-brand-dark text-white rounded-2xl p-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 shadow-lg shadow-brand/10">
             <div className="flex items-start gap-4">
               <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center flex-shrink-0 text-white shadow-inner">
-                <span className="material-symbols-outlined text-[32px]">cast_for_education</span>
+                <Icon className="text-[32px]" name="cast_for_education" />
               </div>
               <div>
                 <div className="flex items-center gap-2 mb-1">
@@ -805,14 +805,14 @@ export default function Dashboard() {
                 }}
                 className="px-4 py-2.5 bg-white text-brand rounded-xl text-sm font-bold shadow hover:bg-gray-50 transition-all flex items-center gap-2 flex-1 lg:flex-initial justify-center"
               >
-                <span className="material-symbols-outlined text-[18px]">add_task</span>
+                <Icon className="text-[18px]" name="add_task" />
                 Ajukan Usulan Silabus
               </button>
               <Link
                 href="/ai-analysis"
                 className="px-4 py-2.5 bg-white/15 hover:bg-white/25 border border-white/20 text-white rounded-xl text-sm font-semibold transition-all flex items-center gap-2 flex-1 lg:flex-initial justify-center backdrop-blur-sm"
               >
-                <span className="material-symbols-outlined text-[18px]">auto_awesome</span>
+                <Icon className="text-[18px]" name="auto_awesome" />
                 Analisis AI Kurikulum
               </Link>
             </div>
@@ -858,7 +858,7 @@ export default function Dashboard() {
             <div className="card p-0 bg-white overflow-hidden flex flex-col">
               <div className="p-4 border-b border-border bg-gray-50/80 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-brand text-[20px]">library_books</span>
+                  <Icon className="text-brand text-[20px]" name="library_books" />
                   <h3 className="font-display text-sm font-bold text-text">Daftar Mata Kuliah Diampu</h3>
                 </div>
                 <span className="text-xs text-text-muted">{dosenCourses.length} MK</span>
@@ -922,7 +922,7 @@ export default function Dashboard() {
                         href={`/curriculum/courses/${activeDosenCourse.id}`}
                         className="text-xs font-bold text-brand hover:underline flex items-center gap-1"
                       >
-                        Detail MK <span className="material-symbols-outlined text-[14px]">open_in_new</span>
+                        Detail MK <Icon className="text-[14px]" name="open_in_new" />
                       </Link>
                     </div>
 
@@ -931,7 +931,7 @@ export default function Dashboard() {
                       {/* Current Syllabus */}
                       <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
                         <div className="flex items-center gap-2 mb-3">
-                          <span className="material-symbols-outlined text-gray-600 text-[18px]">history_edu</span>
+                          <Icon className="text-gray-600 text-[18px]" name="history_edu" />
                           <h4 className="text-xs font-bold text-text uppercase tracking-wider">Silabus Berjalan Saat Ini</h4>
                         </div>
                         <div className="space-y-2">
@@ -951,7 +951,7 @@ export default function Dashboard() {
                       {/* AI Scraper Recommendation */}
                       <div className="bg-emerald-50/50 border border-emerald-200 rounded-xl p-4">
                         <div className="flex items-center gap-2 mb-3">
-                          <span className="material-symbols-outlined text-brand text-[18px]">auto_awesome</span>
+                          <Icon className="text-brand text-[18px]" name="auto_awesome" />
                           <h4 className="text-xs font-bold text-brand uppercase tracking-wider">Rekomendasi AI Scraper (2026)</h4>
                         </div>
                         <div className="space-y-2">
@@ -989,7 +989,7 @@ export default function Dashboard() {
                       }}
                       className="btn-primary px-4 py-2 text-xs rounded-xl flex items-center gap-1.5 whitespace-nowrap shadow-sm"
                     >
-                      <span className="material-symbols-outlined text-[16px]">send</span>
+                      <Icon className="text-[16px]" name="send" />
                       Ajukan Pembaruan ke Kaprodi
                     </button>
                   </div>
@@ -1009,7 +1009,7 @@ export default function Dashboard() {
               <div className="p-4 border-b border-border bg-gray-50 flex items-center justify-between">
                 <div>
                   <h3 className="font-display text-sm font-bold text-text flex items-center gap-2">
-                    <span className="material-symbols-outlined text-brand text-[18px]">trending_up</span>
+                    <Icon className="text-brand text-[18px]" name="trending_up" />
                     Tren Skill Industri Terkini (AI Scraper Feed)
                   </h3>
                   <p className="text-xs text-text-secondary mt-0.5">Sinyal kompetensi yang paling sering dicari perusahaan di Indonesia.</p>
@@ -1058,7 +1058,7 @@ export default function Dashboard() {
               <div className="p-4 border-b border-border bg-gray-50 flex items-center justify-between">
                 <div>
                   <h3 className="font-display text-sm font-bold text-text flex items-center gap-2">
-                    <span className="material-symbols-outlined text-brand text-[18px]">history</span>
+                    <Icon className="text-brand text-[18px]" name="history" />
                     Status Usulan Pembaruan Silabus
                   </h3>
                   <p className="text-xs text-text-secondary mt-0.5">Riwayat proposal kurikulum yang diajukan ke Kaprodi.</p>
@@ -1090,11 +1090,11 @@ export default function Dashboard() {
               <div className="bg-white rounded-2xl border border-border shadow-2xl max-w-lg w-full p-6 animate-fade-in-up">
                 <div className="flex items-center justify-between pb-4 border-b border-border mb-4">
                   <h3 className="font-display text-base font-bold text-text flex items-center gap-2">
-                    <span className="material-symbols-outlined text-brand text-[20px]">post_add</span>
+                    <Icon className="text-brand text-[20px]" name="post_add" />
                     Ajukan Usulan Pembaruan Silabus
                   </h3>
                   <button onClick={() => setShowProposalModal(false)} className="text-text-muted hover:text-text">
-                    <span className="material-symbols-outlined text-[20px]">close</span>
+                    <Icon className="text-[20px]" name="close" />
                   </button>
                 </div>
                 <form onSubmit={(e) => {
@@ -1155,7 +1155,7 @@ export default function Dashboard() {
                       type="submit"
                       className="btn-primary px-4 py-2 text-xs rounded-xl flex items-center gap-1.5"
                     >
-                      <span className="material-symbols-outlined text-[16px]">send</span>
+                      <Icon className="text-[16px]" name="send" />
                       Kirim ke Kaprodi
                     </button>
                   </div>
@@ -1245,7 +1245,7 @@ export default function Dashboard() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <h3 className="font-display text-base font-bold text-text flex items-center gap-2">
-                  <span className="material-symbols-outlined text-brand text-[20px]">explore</span>
+                  <Icon className="text-brand text-[20px]" name="explore" />
                   Eksplorasi Jalur Karier & Sinkronisasi AI Scraper
                 </h3>
                 <p className="text-xs text-text-secondary mt-0.5">
@@ -1275,7 +1275,7 @@ export default function Dashboard() {
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="material-symbols-outlined text-[20px]">{cr.icon}</span>
+                      <Icon className="text-[20px]" name={cr.icon} />
                       <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isSelected ? 'bg-white/20 text-white' : 'bg-brand-light text-brand'}`}>
                         {cr.match}% Cocok
                       </span>
@@ -1297,7 +1297,7 @@ export default function Dashboard() {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-display text-base font-bold text-text">Radar Kompetensi</h3>
-                  <span className="material-symbols-outlined text-brand text-[20px]">radar</span>
+                  <Icon className="text-brand text-[20px]" name="radar" />
                 </div>
                 <p className="text-xs text-text-secondary mb-4">
                   Perbandingan profil skill Anda terhadap benchmark pasar industri untuk <span className="font-bold text-text">{activeRoleData.name}</span>.
@@ -1322,7 +1322,7 @@ export default function Dashboard() {
                     <p className="text-xs text-text-secondary mt-0.5">Rincian penguasaan skill spesifik untuk posisi {activeRoleData.name}.</p>
                   </div>
                   <Link href="/competency" className="text-xs font-bold text-brand hover:underline flex items-center gap-1">
-                    Peta Kompetensi <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                    Peta Kompetensi <Icon className="text-[14px]" name="arrow_forward" />
                   </Link>
                 </div>
 
@@ -1375,7 +1375,7 @@ export default function Dashboard() {
               <div className="p-4 border-b border-border bg-gray-50 flex items-center justify-between">
                 <div>
                   <h3 className="font-display text-sm font-bold text-text flex items-center gap-2">
-                    <span className="material-symbols-outlined text-brand text-[18px]">checklist</span>
+                    <Icon className="text-brand text-[18px]" name="checklist" />
                     Rencana Belajar AI (Tutup Skill Gap)
                   </h3>
                   <p className="text-xs text-text-secondary mt-0.5">Langkah prioritas untuk menguasai kompetensi {activeRoleData.name}.</p>
@@ -1409,7 +1409,7 @@ export default function Dashboard() {
                           isDone ? 'bg-brand text-white shadow-sm' : 'bg-gray-100 text-text-secondary border border-gray-300 hover:bg-gray-200'
                         }`}
                       >
-                        {isDone ? <span className="material-symbols-outlined text-[16px]">check</span> : step.step}
+                        {isDone ? <Icon className="text-[16px]" name="check" /> : step.step}
                       </button>
 
                       <div className="flex-1 min-w-0">
@@ -1448,7 +1448,7 @@ export default function Dashboard() {
               <div className="p-4 border-b border-border bg-gray-50 flex items-center justify-between">
                 <div>
                   <h3 className="font-display text-sm font-bold text-text flex items-center gap-2">
-                    <span className="material-symbols-outlined text-brand text-[18px]">work</span>
+                    <Icon className="text-brand text-[18px]" name="work" />
                     Lowongan Kerja Terverifikasi (AI Scraper)
                   </h3>
                   <p className="text-xs text-text-secondary mt-0.5">Lowongan aktif yang cocok dengan profil vokasi Anda.</p>

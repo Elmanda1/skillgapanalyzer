@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Chart from 'chart.js/auto';
 import { useToast } from '../context/ToastContext';
+import Icon from '../components/Icon.jsx';
+
 
 // ─── Dummy data ────────────────────────────────────────────────────────────
 const MATAKULIAH_LIST = [
@@ -127,7 +129,7 @@ export default function DosenDashboard({ user }) {
         ].map(m => (
           <div key={m.label} className="card p-4 flex items-center gap-4">
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${m.iconBg}`}>
-              <span className="material-symbols-outlined text-[20px]">{m.icon}</span>
+              <Icon className="text-[20px]" name={m.icon} />
             </div>
             <div>
               <p className="font-display text-xl font-bold text-text">{m.val}</p>
@@ -176,12 +178,12 @@ export default function DosenDashboard({ user }) {
           <h2 className="font-display text-base font-semibold text-text">Daftar Mata Kuliah yang Diampu</h2>
           <div className="flex items-center gap-3">
             <div className="relative w-48 lg:w-64">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[16px]">search</span>
+              <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[16px]" name="search" />
               <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Cari MK..."
                 className="w-full pl-8 pr-4 py-2 border border-border rounded-lg text-sm bg-gray-50 focus:outline-none focus:border-brand transition-all"/>
             </div>
             <button onClick={() => setShowModal(true)} className="btn-primary py-2 px-3 text-sm flex items-center gap-1 whitespace-nowrap">
-              <span className="material-symbols-outlined text-[18px]">add</span>
+              <Icon className="text-[18px]" name="add" />
               Tambah MK
             </button>
           </div>
@@ -205,7 +207,7 @@ export default function DosenDashboard({ user }) {
                 </td>
                 <td className="px-5 py-3">
                   <button onClick={(e) => { e.stopPropagation(); handleDetailClick(mk); }} className="text-xs font-semibold text-brand hover:underline flex items-center gap-0.5">
-                    Detail <span className="material-symbols-outlined text-[14px]">chevron_right</span>
+                    Detail <Icon className="text-[14px]" name="chevron_right" />
                   </button>
                 </td>
               </tr>
@@ -218,7 +220,7 @@ export default function DosenDashboard({ user }) {
       <div className="card overflow-hidden">
         <div className="px-5 py-4 border-b border-border">
           <h2 className="font-display text-base font-semibold text-text flex items-center gap-2">
-            <span className="material-symbols-outlined text-[18px] text-brand">auto_awesome</span>
+            <Icon className="text-[18px] text-brand" name="auto_awesome" />
             Usulan Pembaruan Materi dari AI
           </h2>
         </div>
@@ -253,7 +255,7 @@ export default function DosenDashboard({ user }) {
             <div className="px-6 py-4 border-b border-border flex justify-between items-center">
               <h3 className="font-display font-bold text-lg text-text">Tambah Mata Kuliah</h3>
               <button onClick={() => setShowModal(false)} className="text-text-muted hover:text-text">
-                <span className="material-symbols-outlined">close</span>
+                <Icon className="" name="close" />
               </button>
             </div>
             <form onSubmit={handleAddMK} className="p-6 space-y-4">

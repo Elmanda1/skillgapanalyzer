@@ -1,12 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Chart from 'chart.js/auto';
+import Icon from '../components/Icon.jsx';
+
 
 const MetricCard = ({ title, value, change, changeType, icon, iconBg, note }) => (
   <div className="card p-5 flex flex-col gap-3">
     <div className="flex items-start justify-between">
       <p className="text-xs font-semibold text-text-secondary uppercase tracking-wide">{title}</p>
       <div className={`w-9 h-9 rounded-lg ${iconBg} flex items-center justify-center flex-shrink-0`}>
-        <span className="material-symbols-outlined text-[18px]">{icon}</span>
+        <Icon className="text-[18px]" name={icon} />
       </div>
     </div>
     <div>
@@ -14,9 +16,7 @@ const MetricCard = ({ title, value, change, changeType, icon, iconBg, note }) =>
       <div className="flex items-center gap-2 mt-1.5">
         {change && (
           <span className={`badge text-[11px] ${changeType === 'up' ? 'badge-green' : 'badge-red'}`}>
-            <span className="material-symbols-outlined text-[12px]">
-              {changeType === 'up' ? 'trending_up' : 'trending_down'}
-            </span>
+            <Icon className="text-[12px]" name={changeType === 'up' ? 'trending_up' : 'trending_down'} />
             {change}
           </span>
         )}
@@ -126,7 +126,7 @@ export default function Dashboard({ setActiveTab }) {
         </div>
         <div className="flex gap-3 mt-4 md:mt-0">
           <button className="btn-outline flex items-center gap-2">
-            <span className="material-symbols-outlined text-[16px]">download</span>
+            <Icon className="text-[16px]" name="download" />
             Ekspor Data
           </button>
           <button
@@ -146,7 +146,7 @@ export default function Dashboard({ setActiveTab }) {
       <div className="bg-gradient-to-r from-brand to-brand-light text-white rounded-xl p-6 mb-6 flex flex-col md:flex-row justify-between items-center gap-4 shadow-lg shadow-brand/20">
         <div>
           <h2 className="font-display text-lg font-bold flex items-center gap-2">
-            <span className="material-symbols-outlined text-[24px]">domain</span>
+            <Icon className="text-[24px]" name="domain" />
             Pusat Manajemen Kampus Aktif
           </h2>
           <p className="text-sm text-brand-50 mt-1 max-w-2xl">
@@ -290,7 +290,7 @@ export default function Dashboard({ setActiveTab }) {
                 <td className="px-5 py-3.5">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-text-secondary">
-                      <span className="material-symbols-outlined text-[16px]">dns</span>
+                      <Icon className="text-[16px]" name="dns" />
                     </div>
                     <span className="font-medium text-text">{row.name}</span>
                   </div>
