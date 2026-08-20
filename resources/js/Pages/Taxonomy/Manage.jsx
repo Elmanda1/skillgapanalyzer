@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
 import { COMPETENCE_DIMENSIONS, CATEGORIES } from '../../constants/taxonomy';
 import { useToast } from '../../context/ToastContext';
+import Icon from '../../components/Icon.jsx';
+
 
 const emptyForm = {
   nama: '',
@@ -17,13 +19,63 @@ const inputCls =
 
 const errCls = 'text-xs text-red-500 mt-1';
 
-export default function TaxonomyManage({ skills }) {
+export default function TaxonomyManage({ skills, search = '' }) {
   const toast = useToast();
   const [editing, setEditing] = useState(null);
   const [showForm, setShowForm] = useState(false);
-  const [search, setSearch] = useState('');
+  const [searchInput, setSearchInput] = useState(search);
   const [deletingId, setDeletingId] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const searchTimer = useRef(null);
   const form = useForm(emptyForm);
+
+  const items = Array.isArray(skills?.data) ? skills.data : [];
+  const currentPage = Number(skills?.current_page ?? 1);
+  const total = Number(skills?.total ?? items.length);
+  const totalPages = Math.max(1, Number(skills?.last_page ?? 1));
+  const from = Number(skills?.from ?? 0);
+  const to = Number(skills?.to ?? 0);
+
+  const applySearch = (value) => {
+    setLoading(true);
+    router.get('/taxonomy/manage', { search: value, page: 1 }, {
+      preserveState: true,
+      preserveScroll: true,
+      only: ['skills'],
+      onFinish: () => setLoading(false),
+    });
+  };
+
+  const onSearchChange = (value) => {
+    setSearchInput(value);
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(() => applySearch(value), 300);
+  };
+
+  const goToPage = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setLoading(true);
+      router.get('/taxonomy/manage', { search: searchInput, page }, {
+        preserveState: true,
+        preserveScroll: true,
+        only: ['skills'],
+        onFinish: () => setLoading(false),
+      });
+      document.querySelector('.card table')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const pageNumbers = (() => {
+    const pages = [];
+    for (let i = 1; i <= totalPages; i++) {
+      if (i === 1 || i === totalPages || Math.abs(i - currentPage) <= 2) {
+        pages.push(i);
+      } else if (pages[pages.length - 1] !== '...') {
+        pages.push('...');
+      }
+    }
+    return pages;
+  })();
 
   const openCreate = () => {
     form.setData({ ...emptyForm });
@@ -88,11 +140,6 @@ export default function TaxonomyManage({ skills }) {
     });
   };
 
-  const q = search.toLowerCase();
-  const filtered = skills.filter(
-    sk => sk.nama.toLowerCase().includes(q) || (sk.kategori || '').toLowerCase().includes(q)
-  );
-
   return (
     <div className="w-full p-6 md:p-8 animate-fade-in-up">
       <Head title="Manajemen Taksonomi" />
@@ -100,7 +147,7 @@ export default function TaxonomyManage({ skills }) {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3">
         <div>
           <h1 className="font-display text-2xl font-bold text-text flex items-center gap-2">
-            <span className="material-symbols-outlined text-[24px] text-brand">category</span>
+            <Icon className="text-[24px] text-brand" name="category" />
             Manajemen Taksonomi
           </h1>
           <p className="text-sm text-text-secondary mt-1">
@@ -108,7 +155,7 @@ export default function TaxonomyManage({ skills }) {
           </p>
         </div>
         <button onClick={openCreate} className="btn-primary flex items-center gap-2 text-sm">
-          <span className="material-symbols-outlined text-[18px]">add</span>
+          <Icon className="text-[18px]" name="add" />
           Tambah Skill
         </button>
       </div>
@@ -116,13 +163,13 @@ export default function TaxonomyManage({ skills }) {
       <div className="card overflow-hidden">
         <div className="px-5 py-4 border-b border-border flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
           <h2 className="font-display text-base font-semibold text-text">
-            Daftar Skill ({filtered.length})
+            Daftar Skill ({total})
           </h2>
           <div className="relative w-64">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[16px]">search</span>
+            <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[16px]" name="search" />
             <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
+              value={searchInput}
+              onChange={e => onSearchChange(e.target.value)}
               placeholder="Cari nama atau kategori..."
               className="w-full pl-8 pr-4 py-2 border border-border rounded-lg text-sm bg-gray-50 focus:outline-none focus:border-brand focus:bg-white transition-all"
             />
@@ -138,14 +185,33 @@ export default function TaxonomyManage({ skills }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {filtered.length === 0 && (
+            {loading && Array.from({ length: 10 }).map((_, i) => (
+              <tr key={`sk-${i}`} className="animate-pulse">
+                <td className="px-5 py-3.5">
+                  <div className="h-4 w-40 bg-gray-200 rounded" />
+                </td>
+                <td className="px-5 py-3.5">
+                  <div className="h-4 w-28 bg-gray-200 rounded" />
+                </td>
+                <td className="px-5 py-3.5">
+                  <div className="h-5 w-24 bg-gray-200 rounded-full" />
+                </td>
+                <td className="px-5 py-3.5">
+                  <div className="h-4 w-14 bg-gray-200 rounded" />
+                </td>
+                <td className="px-5 py-3.5">
+                  <div className="h-6 w-16 bg-gray-200 rounded" />
+                </td>
+              </tr>
+            ))}
+            {!loading && items.length === 0 && (
               <tr>
                 <td colSpan="5" className="px-5 py-8 text-center text-sm text-text-muted">
                   Tidak ada skill yang cocok
                 </td>
               </tr>
             )}
-            {filtered.map(sk => {
+            {!loading && items.map(sk => {
               const dim = COMPETENCE_DIMENSIONS.find(d => d.value === sk.dimension);
               return (
                 <tr key={sk.id} className="hover:bg-gray-50 transition-colors">
@@ -167,7 +233,7 @@ export default function TaxonomyManage({ skills }) {
                         aria-label={`Edit ${sk.nama}`}
                         className="w-8 h-8 rounded-md hover:bg-brand-light text-text-secondary hover:text-brand flex items-center justify-center transition-colors"
                       >
-                        <span className="material-symbols-outlined text-[16px]">edit</span>
+                        <Icon className="text-[16px]" name="edit" />
                       </button>
                       <button
                         onClick={() => remove(sk)}
@@ -176,7 +242,7 @@ export default function TaxonomyManage({ skills }) {
                         disabled={deletingId === sk.id}
                         className="w-8 h-8 rounded-md hover:bg-red-50 text-text-secondary hover:text-red-500 flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        <span className="material-symbols-outlined text-[16px]">delete</span>
+                        <Icon className="text-[16px]" name="delete" />
                       </button>
                     </div>
                   </td>
@@ -185,6 +251,49 @@ export default function TaxonomyManage({ skills }) {
             })}
           </tbody>
         </table>
+
+        {totalPages > 1 && (
+          <div className="px-5 py-4 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3">
+            <p className="text-xs text-text-secondary">
+              Menampilkan {from}–{to} dari {total} skill
+            </p>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => goToPage(currentPage - 1)}
+                disabled={currentPage === 1}
+                title="Sebelumnya"
+                className="w-8 h-8 rounded-md border border-border hover:border-brand text-text-secondary hover:text-brand flex items-center justify-center transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <Icon className="text-[16px]" name="chevron_left" />
+              </button>
+              {pageNumbers.map((p, i) =>
+                p === '...' ? (
+                  <span key={`e-${i}`} className="w-8 h-8 flex items-center justify-center text-xs text-text-muted">…</span>
+                ) : (
+                  <button
+                    key={p}
+                    onClick={() => goToPage(p)}
+                    className={`w-8 h-8 rounded-md text-xs font-semibold flex items-center justify-center transition-colors ${
+                      p === currentPage
+                        ? 'bg-brand text-white'
+                        : 'border border-border hover:border-brand text-text-secondary hover:text-brand'
+                    }`}
+                  >
+                    {p}
+                  </button>
+                )
+              )}
+              <button
+                onClick={() => goToPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                title="Berikutnya"
+                className="w-8 h-8 rounded-md border border-border hover:border-brand text-text-secondary hover:text-brand flex items-center justify-center transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <Icon className="text-[16px]" name="chevron_right" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {showForm && (
