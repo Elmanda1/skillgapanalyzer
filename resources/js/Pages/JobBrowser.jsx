@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { router, usePage } from '@inertiajs/react';
 import { useSkills } from '../context/SkillContext';
+import Icon from '../components/Icon.jsx';
+
 
 const formatSalary = (min, max) => {
   if (min === null && max === null) return null;
@@ -51,7 +53,7 @@ function CompanyLogo({ job }) {
 }
 
 export default function JobBrowser() {
-  const { jobs, filters = {}, lokasiOptions = [], sektorOptions = [] } = usePage().props;
+  const { jobs, filters = {}, lokasiOptions = [], sektorOptions = [], totalDatabaseJobs = 0 } = usePage().props;
   const { mySkills = [] } = useSkills() || {};
 
   const [search, setSearch] = useState(filters.search || '');
@@ -59,14 +61,21 @@ export default function JobBrowser() {
 
   const userSkillNames = useMemo(() => mySkills.map(s => s.name).filter(Boolean), [mySkills]);
 
+  const hasActiveFilters = Boolean(filters.search || filters.lokasi || filters.sektor || filters.is_remote);
+
   const applyFilters = (patch) => {
     router.get('/jobs', { ...filters, ...patch }, { preserveState: true, preserveScroll: true, replace: true });
+  };
+
+  const resetFilters = () => {
+    setSearch('');
+    router.get('/jobs', {}, { preserveState: true, preserveScroll: true, replace: true });
   };
 
   useEffect(() => {
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      if (search !== (filters.search || '')) applyFilters({ search });
+      if (search !== (filters.search || '')) applyFilters({ search, page: 1 });
     }, 350);
     return () => clearTimeout(debounceRef.current);
   }, [search]);
@@ -79,22 +88,22 @@ export default function JobBrowser() {
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
         <div>
           <h1 className="font-display text-2xl font-bold text-text flex items-center gap-2">
-            <span className="material-symbols-outlined text-[28px] text-brand">work</span>
+            <Icon className="text-[28px] text-brand" name="work" />
             Eksplorasi Lowongan
           </h1>
           <p className="text-sm text-text-secondary mt-1">
-            {total > 0
-              ? `${total.toLocaleString('id-ID')} lowongan dari loker.id, dipadankan dengan profil skill Anda.`
-              : 'Temukan lowongan pekerjaan yang paling cocok dengan profil skill Anda saat ini.'}
+            {totalDatabaseJobs > 0
+              ? `${totalDatabaseJobs.toLocaleString('id-ID')} total lowongan riil dari loker.id, dipadankan dengan profil skill Anda.`
+              : 'Temukan lowongan pekerjaan riil yang paling cocok dengan profil skill Anda.'}
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative w-64">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[18px]">search</span>
+            <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[18px]" name="search" />
             <input
               type="text"
-              placeholder="Cari posisi atau perusahaan..."
+              placeholder="Cari posisi, skill, atau PT..."
               value={search}
               onChange={e => setSearch(e.target.value)}
               className="w-full pl-9 pr-4 py-2 border border-border rounded-lg text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all bg-white"
@@ -136,36 +145,36 @@ export default function JobBrowser() {
               const salary = formatSalary(job.salary_min, job.salary_max);
               return (
                 <div key={job.id} className="card p-5 hover:shadow-lg transition-shadow border border-border/50 hover:border-brand/30 group flex flex-col h-full">
-<div className="flex justify-between items-start mb-3 gap-3">
-                      <div className="flex items-start gap-3 min-w-0">
-                        <CompanyLogo job={job} />
-                        <div className="min-w-0">
-                          <h3 className="font-bold text-text group-hover:text-brand transition-colors leading-snug">{job.title}</h3>
-                          <p className="text-sm text-text-secondary truncate">{job.company_name}</p>
-                        </div>
+                  <div className="flex justify-between items-start mb-3 gap-3">
+                    <div className="flex items-start gap-3 min-w-0">
+                      <CompanyLogo job={job} />
+                      <div className="min-w-0">
+                        <h3 className="font-bold text-text group-hover:text-brand transition-colors leading-snug">{job.title}</h3>
+                        <p className="text-sm text-text-secondary truncate">{job.company_name}</p>
                       </div>
-                      <MatchBadge rate={rate} />
                     </div>
+                    <MatchBadge rate={rate} />
+                  </div>
 
                   <div className="space-y-2 mb-4 flex-1">
                     <div className="flex items-center gap-2 text-xs text-text-muted">
-                      <span className="material-symbols-outlined text-[16px]">location_on</span>
+                      <Icon className="text-[16px]" name="pin_drop" />
                       {job.lokasi || 'Lokasi tidak dicantumkan'}
                       {job.is_remote && <span className="badge badge-green text-[10px] px-1.5 py-0.5">Remote</span>}
                     </div>
                     {salary && (
                       <div className="flex items-center gap-2 text-xs text-text-muted">
-                        <span className="material-symbols-outlined text-[16px]">payments</span>
+                        <Icon className="text-[16px]" name="payments" />
                         {salary}
                       </div>
                     )}
                     <div className="flex items-center gap-2 text-xs text-text-muted">
-                      <span className="material-symbols-outlined text-[16px]">schedule</span>
+                      <Icon className="text-[16px]" name="schedule" />
                       {job.job_type || 'Tipe tidak dicantumkan'}
                       {job.job_experience && <span>· {job.job_experience}</span>}
                     </div>
                     <div className="flex items-center gap-2 text-xs text-text-muted">
-                      <span className="material-symbols-outlined text-[16px]">domain</span>
+                      <Icon className="text-[16px]" name="domain" />
                       {job.sektor}
                     </div>
                   </div>
@@ -217,7 +226,7 @@ export default function JobBrowser() {
                       onClick={() => link.url && router.get(link.url, {}, { preserveState: true, preserveScroll: true })}
                       className="px-3 py-2 border border-border rounded-lg text-sm text-text-secondary disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50"
                     >
-                      <span className="material-symbols-outlined text-[16px]">{label === 'Previous' ? 'chevron_left' : 'chevron_right'}</span>
+                      <Icon className="text-[16px]" name={label === 'Previous' ? 'chevron_left' : 'chevron_right'} />
                     </button>
                   );
                 }
@@ -239,13 +248,26 @@ export default function JobBrowser() {
         </>
       ) : (
         <div className="py-24 text-center">
-          <span className="material-symbols-outlined text-5xl text-gray-300 mb-3">work_off</span>
-          <h3 className="font-display text-lg font-bold text-text">Belum ada data lowongan</h3>
+          <Icon className="text-5xl text-gray-300 mb-3" name="work_off" />
+          <h3 className="font-display text-lg font-bold text-text">
+            {totalDatabaseJobs === 0 ? 'Belum ada data lowongan' : 'Tidak ada lowongan yang cocok'}
+          </h3>
           <p className="text-text-secondary text-sm mt-1 max-w-md mx-auto">
-            {total === 0
-              ? 'Belum ada lowongan terimport di database. Jalankan `php artisan jobs:import` untuk mengisi data.'
-              : 'Tidak ada lowongan yang cocok dengan filter pencarian Anda. Coba ubah kata kunci atau filter.'}
+            {totalDatabaseJobs === 0
+              ? 'Belum ada lowongan terimport di database. Jalankan `php artisan jobs:import` untuk mengisi data riil.'
+              : `Tidak ditemukan lowongan yang cocok dengan kata kunci atau filter saat ini. Coba sesuaikan kata kunci pencarian.`}
           </p>
+          {hasActiveFilters && totalDatabaseJobs > 0 && (
+            <div className="mt-4">
+              <button
+                onClick={resetFilters}
+                className="btn-secondary px-4 py-2 text-xs font-semibold inline-flex items-center gap-1.5"
+              >
+                <Icon className="text-[16px]" name="restart_alt" />
+                Reset Semua Filter
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

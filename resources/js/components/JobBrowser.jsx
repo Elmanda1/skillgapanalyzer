@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useToast } from '../context/ToastContext';
+import Icon from '../components/Icon.jsx';
+
 
 const DUMMY_JOBS = [
   { id: 1, title: 'Junior Backend Developer', company: 'Gojek', location: 'Jakarta, Indonesia (Hybrid)', salary: 'Rp 8–12 jt/bln', match: 85, type: 'Full-time', skills: ['Node.js', 'Express', 'PostgreSQL', 'Docker'] },
@@ -30,7 +32,7 @@ export default function JobBrowser() {
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
         <div>
           <h1 className="font-display text-2xl font-bold text-text flex items-center gap-2">
-            <span className="material-symbols-outlined text-[28px] text-brand">work</span>
+            <Icon className="text-[28px] text-brand" name="work" />
             Eksplorasi Lowongan
           </h1>
           <p className="text-sm text-text-secondary mt-1">
@@ -40,7 +42,7 @@ export default function JobBrowser() {
         
         <div className="flex items-center gap-3">
           <div className="relative w-64">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[18px]">search</span>
+            <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[18px]" name="search" />
             <input
               type="text"
               placeholder="Cari posisi atau perusahaan..."
@@ -77,15 +79,15 @@ export default function JobBrowser() {
             
             <div className="space-y-2 mb-4 flex-1">
               <div className="flex items-center gap-2 text-xs text-text-muted">
-                <span className="material-symbols-outlined text-[16px]">location_on</span>
+                <Icon className="text-[16px]" name="pin_drop" />
                 {job.location}
               </div>
               <div className="flex items-center gap-2 text-xs text-text-muted">
-                <span className="material-symbols-outlined text-[16px]">payments</span>
+                <Icon className="text-[16px]" name="payments" />
                 {job.salary}
               </div>
               <div className="flex items-center gap-2 text-xs text-text-muted">
-                <span className="material-symbols-outlined text-[16px]">schedule</span>
+                <Icon className="text-[16px]" name="schedule" />
                 {job.type}
               </div>
             </div>
@@ -109,13 +111,13 @@ export default function JobBrowser() {
                 Simpan & Lamar
               </button>
               <button className="px-3 py-2 border border-border rounded-lg text-text-secondary hover:bg-gray-50 transition-colors">
-                <span className="material-symbols-outlined text-[18px]">bookmark_border</span>
+                <Icon className="text-[18px]" name="bookmark" />
               </button>
             </div>
           </div>
         )) : (
           <div className="col-span-full py-12 text-center">
-            <span className="material-symbols-outlined text-4xl text-gray-300 mb-2">work_off</span>
+            <Icon className="text-4xl text-gray-300 mb-2" name="work_off" />
             <p className="text-text-secondary text-sm">Tidak ada lowongan yang sesuai dengan pencarian Anda.</p>
           </div>
         )}
