@@ -8,6 +8,12 @@ use Illuminate\Database\Eloquent\Model;
 #[Fillable(['skill_id', 'alias_name'])]
 class SkillAlias extends Model
 {
+    protected static function booted(): void
+    {
+        static::created(fn () => app(\App\Services\Taxonomy\TaxonomySummary::class)->forget());
+        static::deleted(fn () => app(\App\Services\Taxonomy\TaxonomySummary::class)->forget());
+    }
+
     public function skill()
     {
         return $this->belongsTo(Skill::class);
