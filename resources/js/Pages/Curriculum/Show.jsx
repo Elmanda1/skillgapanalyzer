@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useForm, Link } from '@inertiajs/react';
+import Icon from '../../components/Icon.jsx';
+
 
 // ─── Detail row helper ─────────────────────────────────────────────────────
 function DetailItem({ label, value, mono = false }) {
@@ -22,7 +24,7 @@ function LearningOutcomeItem({ index, lo }) {
         <p className="text-sm text-text leading-relaxed">{lo.text}</p>
         {lo.source_doc && (
           <span className="badge badge-gray mt-2">
-            <span className="material-symbols-outlined text-[14px]">description</span>
+            <Icon className="text-[14px]" name="description" />
             {lo.source_doc}
           </span>
         )}
@@ -31,7 +33,7 @@ function LearningOutcomeItem({ index, lo }) {
   );
 }
 
-// ─── Skill checkbox row ────────────────────────────────────────────────────
+// ─── Skill checkbox row (search result) ────────────────────────────────────
 function SkillRow({ skill, checked, onToggle }) {
   return (
     <label className={`flex items-start gap-3 border rounded-lg p-3 cursor-pointer transition-all duration-150 ${checked ? 'border-brand bg-brand-light/60' : 'border-border hover:border-gray-300 hover:bg-gray-50'}`}>
@@ -51,12 +53,53 @@ function SkillRow({ skill, checked, onToggle }) {
 }
 
 // ─── Main Curriculum Show ──────────────────────────────────────────────────
-export default function CurriculumShow({ course, skills }) {
+export default function CurriculumShow({ course, totalSkills = 0 }) {
   const sp = course.study_program;
   const verified = Boolean(course.status_verifikasi_ekstraksi);
 
   const loForm = useForm({ text: '', source_doc: '' });
   const skillForm = useForm({ skill_ids: course.skills.map((s) => s.id) });
+
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const [searched, setSearched] = useState(false);
+  const searchTimer = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (searchTimer.current) clearTimeout(searchTimer.current);
+    };
+  }, []);
+
+  const runSearch = async (value) => {
+    if (!value.trim()) {
+      setResults([]);
+      setSearched(false);
+      setSearching(false);
+      return;
+    }
+    setSearching(true);
+    setSearched(true);
+    try {
+      const res = await fetch(`/taxonomy/search?q=${encodeURIComponent(value)}`, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest', Accept: 'application/json' },
+      });
+      if (!res.ok) throw new Error('Gagal mencari skill');
+      const data = await res.json();
+      setResults(data.results ?? []);
+    } catch {
+      setResults([]);
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const onQueryChange = (value) => {
+    setQuery(value);
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(() => runSearch(value), 300);
+  };
 
   const handleLoSubmit = (e) => {
     e.preventDefault();
@@ -75,17 +118,20 @@ export default function CurriculumShow({ course, skills }) {
     skillForm.setData('skill_ids', ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]);
   };
 
+  const isSelected = (id) => skillForm.data.skill_ids.includes(id);
+
+  const selectedSkills = course.skills.filter((s) => isSelected(s.id));
+
   return (
     <div className="w-full p-6 md:p-8 animate-fade-in-up">
       <div className="mb-4">
         <Link href="/curriculum" className="btn-outline inline-flex items-center gap-2">
-          <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+          <Icon className="text-[16px]" name="arrow_back" />
           Kembali ke Daftar Kurikulum
         </Link>
       </div>
 
       <main className="py-4">
-        {/* ── Header ── */}
         <header className="mb-6">
           <div className="flex items-center gap-2 mb-2">
             <span className="badge badge-gray font-mono">{course.code}</span>
@@ -100,7 +146,6 @@ export default function CurriculumShow({ course, skills }) {
           </p>
         </header>
 
-        {/* ── Detail mata kuliah ── */}
         <section className="card p-6 mb-6">
           <h2 className="font-display text-base font-bold text-text mb-4">Detail Mata Kuliah</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -112,7 +157,6 @@ export default function CurriculumShow({ course, skills }) {
         </section>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-          {/* ── Capaian Pembelajaran ── */}
           <section className="card p-6">
             <h2 className="font-display text-base font-bold text-text mb-1">Capaian Pembelajaran</h2>
             <p className="text-xs text-text-muted mb-5">Learning outcome yang dimiliki mata kuliah ini.</p>
@@ -159,38 +203,75 @@ export default function CurriculumShow({ course, skills }) {
                 disabled={loForm.processing}
                 className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                <span className="material-symbols-outlined text-[16px]">add</span>
+                <Icon className="text-[16px]" name="add" />
                 {loForm.processing ? 'Menyimpan...' : 'Tambah Capaian Pembelajaran'}
               </button>
             </form>
           </section>
 
-          {/* ── Peta Skill ── */}
           <section className="card p-6">
             <h2 className="font-display text-base font-bold text-text mb-1">Peta Skill</h2>
             <p className="text-xs text-text-muted mb-2">
               Petakan skill industri yang relevan dengan mata kuliah ini.
             </p>
             <p className="text-xs text-text-muted mb-5">
-              Terpilih <span className="font-bold text-text">{skillForm.data.skill_ids.length}</span> dari {skills.length} skill di katalog.
+              Terpilih <span className="font-bold text-text">{skillForm.data.skill_ids.length}</span> dari {totalSkills} skill di katalog.
             </p>
 
-            {skills.length === 0 ? (
-              <p className="text-sm text-text-muted bg-page-bg border border-border rounded-lg p-4 mb-5">
-                Katalog skill masih kosong.
-              </p>
-            ) : (
-              <div className="space-y-2.5 max-h-96 overflow-y-auto custom-scrollbar pr-1 mb-5">
-                {skills.map((skill) => (
-                  <SkillRow
-                    key={skill.id}
-                    skill={skill}
-                    checked={skillForm.data.skill_ids.includes(skill.id)}
-                    onToggle={toggleSkill}
-                  />
+            {selectedSkills.length > 0 && (
+              <div className="flex items-center gap-2 flex-wrap mb-4">
+                {selectedSkills.map((s) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => toggleSkill(s.id)}
+                    title={`Hapus ${s.nama}`}
+                    className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-brand-light text-brand font-semibold hover:bg-brand hover:text-white transition-colors"
+                  >
+                    {s.nama}
+                    <Icon className="text-[13px]" name="close" />
+                  </button>
                 ))}
               </div>
             )}
+
+            <div className="relative mb-4">
+              <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[16px]" name="search" />
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => onQueryChange(e.target.value)}
+                placeholder="Cari skill untuk dipetakan..."
+                className="w-full pl-8 pr-4 py-2 border border-border rounded-lg text-sm bg-gray-50 focus:outline-none focus:border-brand focus:bg-white transition-all"
+              />
+            </div>
+
+            <div className="space-y-2.5 max-h-72 overflow-y-auto custom-scrollbar pr-1 mb-5">
+              {searching && (
+                <p className="text-xs text-text-muted text-center py-3">Mencari...</p>
+              )}
+
+              {!searching && searched && results.length === 0 && (
+                <p className="text-sm text-text-muted bg-page-bg border border-border rounded-lg p-4 text-center">
+                  Tidak ada skill yang cocok dengan pencarian.
+                </p>
+              )}
+
+              {!searching && results.map((skill) => (
+                <SkillRow
+                  key={skill.id}
+                  skill={skill}
+                  checked={isSelected(skill.id)}
+                  onToggle={toggleSkill}
+                />
+              ))}
+
+              {!searching && !searched && (
+                <p className="text-xs text-text-muted text-center py-3">
+                  Ketik untuk mencari skill dari katalog.
+                </p>
+              )}
+            </div>
 
             {skillForm.errors.skill_ids && (
               <p className="text-xs text-status-red-text mb-2">{skillForm.errors.skill_ids}</p>
@@ -202,7 +283,7 @@ export default function CurriculumShow({ course, skills }) {
                 disabled={skillForm.processing}
                 className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                <span className="material-symbols-outlined text-[16px]">sync</span>
+                <Icon className="text-[16px]" name="sync" />
                 {skillForm.processing ? 'Menyimpan...' : 'Simpan Pemetaan Skill'}
               </button>
             </form>

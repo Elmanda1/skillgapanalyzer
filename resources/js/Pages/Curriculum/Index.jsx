@@ -1,5 +1,7 @@
 import React from 'react';
 import { useForm, Link, usePage } from '@inertiajs/react';
+import Icon from '../../components/Icon.jsx';
+
 
 // ─── Course row card ───────────────────────────────────────────────────────
 function CourseCard({ course }) {
@@ -13,7 +15,7 @@ function CourseCard({ course }) {
     >
       <div className="flex items-start gap-4">
         <div className="w-11 h-11 rounded-xl bg-brand-light flex items-center justify-center flex-shrink-0">
-          <span className="material-symbols-outlined text-brand text-[22px]">book_2</span>
+          <Icon className="text-brand text-[22px]" name="book_2" />
         </div>
         <div>
           <div className="flex items-center gap-2 mb-1">
@@ -34,7 +36,7 @@ function CourseCard({ course }) {
           <p className="text-sm font-semibold text-text">Semester {course.semester}</p>
           <p className="text-xs text-text-muted mt-0.5">{course.credits} SKS{course.versi ? ` · ${course.versi}` : ''}</p>
         </div>
-        <span className="material-symbols-outlined text-text-muted text-[20px] transition-all duration-200 group-hover:text-brand group-hover:translate-x-0.5">chevron_right</span>
+        <Icon className="text-text-muted text-[20px] transition-all duration-200 group-hover:text-brand group-hover:translate-x-0.5" name="chevron_right" />
       </div>
     </Link>
   );
@@ -111,7 +113,7 @@ export default function CurriculumIndex({ courses, studyPrograms = [] }) {
               <div className="bg-brand/5 border border-brand/20 rounded-xl p-3.5">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-[10px] font-bold text-brand uppercase tracking-wider">Program Studi Terkait</span>
-                  <span className="material-symbols-outlined text-brand text-[16px]">domain</span>
+                  <Icon className="text-brand text-[16px]" name="domain" />
                 </div>
                 <p className="text-sm font-bold text-text">
                   {userProdi ? `${userProdi.jenjang} ${userProdi.nama_prodi}` : 'Teknik Informatika'}
@@ -174,7 +176,7 @@ export default function CurriculumIndex({ courses, studyPrograms = [] }) {
               disabled={form.processing}
               className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              <span className="material-symbols-outlined text-[16px]">add</span>
+              <Icon className="text-[16px]" name="add" />
               {form.processing ? 'Menyimpan...' : 'Simpan Mata Kuliah'}
             </button>
           </form>
@@ -188,7 +190,7 @@ export default function CurriculumIndex({ courses, studyPrograms = [] }) {
           </div>
           {courses.length === 0 ? (
             <div className="card p-10 text-center">
-              <span className="material-symbols-outlined text-[36px] text-text-muted mb-2">menu_book</span>
+              <Icon className="text-[36px] text-text-muted mb-2" name="menu_book" />
               <p className="text-sm text-text-secondary">Belum ada mata kuliah. Tambahkan mata kuliah pertama melalui form di samping.</p>
             </div>
           ) : (
