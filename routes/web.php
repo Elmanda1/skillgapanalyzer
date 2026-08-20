@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AnalysisApiController;
 use App\Http\Controllers\CurriculumController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\JobController;
@@ -10,6 +11,14 @@ use App\Models\Skill;
 use App\Models\StudyProgram;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
+
+Route::prefix('api/v1')->group(function () {
+    Route::get('/dashboard/summary', [AnalysisApiController::class, 'summary']);
+    Route::get('/gap-map', [AnalysisApiController::class, 'gapMap']);
+    Route::get('/trends', [AnalysisApiController::class, 'trends']);
+    Route::get('/recommendations', [AnalysisApiController::class, 'recommendations']);
+    Route::post('/analysis/run', [AnalysisApiController::class, 'runAnalysis']);
+});
 
 Route::get('/', function () {
     return inertia('LandingPage');
@@ -64,20 +73,20 @@ Route::middleware(['auth'])->group(function () {
                     ->distinct()
                     ->get()
                     ->map(function ($inst) {
-                        $spIds = StudyProgram::where('nama_institusi', $inst->nama_institusi)->pluck('id');
-                        $courseCount = Course::whereIn('study_program_id', $spIds)->count();
-                        $gapCount = GapAnalysis::whereIn('study_program_id', $spIds)->where('tipe_mismatch', '!=', 'aligned')->count();
-                        $dosenCount = \App\Models\User::role('dosen')->whereIn('study_program_id', $spIds)->count();
-                        $mhsCount = \App\Models\User::role('mahasiswa')->whereIn('study_program_id', $spIds)->count();
-                        return [
+                            $spIds = StudyProgram::where('nama_institusi', $inst->nama_institusi)->pluck('id');
+                            $courseCount = Course::whereIn('study_program_id', $spIds)->count();
+                            $gapCount = GapAnalysis::whereIn('study_program_id', $spIds)->where('tipe_mismatch', '!=', 'aligned')->count();
+                            $dosenCount = \App\Models\User::role('dosen')->whereIn('study_program_id', $spIds)->count();
+                            $mhsCount = \App\Models\User::role('mahasiswa')->whereIn('study_program_id', $spIds)->count();
+                            return [
                             'name' => $inst->nama_institusi,
                             'prodiCount' => $spIds->count(),
                             'courseCount' => $courseCount,
                             'gapCount' => $gapCount,
                             'dosenCount' => $dosenCount,
                             'mhsCount' => $mhsCount,
-                        ];
-                    }),
+                            ];
+                        }),
             ],
             'kaprodi' => [
                 'studyProgram' => $user->studyProgram?->only(['id', 'nama_institusi', 'nama_prodi', 'jenjang']),
@@ -97,25 +106,25 @@ Route::middleware(['auth'])->group(function () {
                     ->take(6)
                     ->get()
                     ->map(function ($c) use ($user) {
-                        $skillsCount = $c->skills()->count();
-                        if ($skillsCount === 0) {
-                            $gap = 100;
-                        } else {
-                            $skillIds = $c->skills()->pluck('skills.id');
-                            $gaps = GapAnalysis::where('study_program_id', $user->study_program_id)
+                            $skillsCount = $c->skills()->count();
+                            if ($skillsCount === 0) {
+                                $gap = 100;
+                            } else {
+                                $skillIds = $c->skills()->pluck('skills.id');
+                                $gaps = GapAnalysis::where('study_program_id', $user->study_program_id)
                                 ->whereIn('skill_id', $skillIds)
                                 ->get();
-                            $gap = $gaps->isEmpty() ? 0 : round(100 - ($gaps->avg('match_rate') ?? 100));
-                        }
-                        return [
+                                $gap = $gaps->isEmpty() ? 0 : round(100 - ($gaps->avg('match_rate') ?? 100));
+                            }
+                            return [
                             'id' => $c->id,
                             'code' => $c->code,
                             'name' => $c->name,
                             'semester' => $c->semester,
                             'credits' => $c->credits,
                             'gap' => $gap,
-                        ];
-                    }),
+                            ];
+                        }),
             ],
             'dosen' => [
                 'studyProgram' => $user->studyProgram?->only(['id', 'nama_institusi', 'nama_prodi', 'jenjang']),
@@ -124,17 +133,17 @@ Route::middleware(['auth'])->group(function () {
                     ->with('skills')
                     ->get()
                     ->map(function ($c) use ($user) {
-                        $skillsCount = $c->skills()->count();
-                        if ($skillsCount === 0) {
-                            $gap = 65;
-                        } else {
-                            $skillIds = $c->skills()->pluck('skills.id');
-                            $gaps = GapAnalysis::where('study_program_id', $user->study_program_id ?? 1)
+                            $skillsCount = $c->skills()->count();
+                            if ($skillsCount === 0) {
+                                $gap = 65;
+                            } else {
+                                $skillIds = $c->skills()->pluck('skills.id');
+                                $gaps = GapAnalysis::where('study_program_id', $user->study_program_id ?? 1)
                                 ->whereIn('skill_id', $skillIds)
                                 ->get();
-                            $gap = $gaps->isEmpty() ? 55 : round(100 - ($gaps->avg('match_rate') ?? 50));
-                        }
-                        return [
+                                $gap = $gaps->isEmpty() ? 55 : round(100 - ($gaps->avg('match_rate') ?? 50));
+                            }
+                            return [
                             'id' => $c->id,
                             'code' => $c->code,
                             'name' => $c->name,
@@ -143,15 +152,20 @@ Route::middleware(['auth'])->group(function () {
                             'gap' => $gap,
                             'skills' => $c->skills->pluck('nama')->all(),
                             'status' => $gap >= 70 ? 'Kritis' : ($gap >= 40 ? 'Perlu Update' : 'Sesuai Industri'),
-                        ];
-                    }),
-                'marketTrends' => [
-                    ['skill' => 'Docker & Kubernetes', 'demand' => '+34%', 'jobCount' => 1240, 'source' => 'Tech Hub Scraper', 'urgency' => 'Tinggi'],
-                    ['skill' => 'Next.js & Server Actions', 'demand' => '+28%', 'jobCount' => 890, 'source' => 'LinkedIn Jobs', 'urgency' => 'Tinggi'],
-                    ['skill' => 'Microservices Architecture', 'demand' => '+22%', 'jobCount' => 670, 'source' => 'Gojek/Tokopedia Crawl', 'urgency' => 'Sedang'],
-                    ['skill' => 'Prompt Engineering & LLM API', 'demand' => '+45%', 'jobCount' => 520, 'source' => 'AI Job Index', 'urgency' => 'Tinggi'],
-                    ['skill' => 'GraphQL & REST Performance', 'demand' => '+15%', 'jobCount' => 430, 'source' => 'JobStreet Indonesia', 'urgency' => 'Sedang'],
-                ],
+                            ];
+                        }),
+                'marketTrends' => \App\Models\DemandTrend::with('skill')
+                    ->where('period', \App\Models\DemandTrend::max('period') ?? '2026-08')
+                    ->orderBy('frequency', 'desc')
+                    ->take(5)
+                    ->get()
+                    ->map(fn($dt) => [
+                        'skill' => $dt->skill?->nama ?? 'Unknown',
+                        'demand' => '+' . ($dt->growth_rate > 0 ? $dt->growth_rate : '15') . '%',
+                        'jobCount' => $dt->frequency,
+                        'source' => 'loker.id Ingestion',
+                        'urgency' => $dt->frequency >= 80 ? 'Tinggi' : 'Sedang',
+                    ])->all(),
                 'curriculumProposals' => [
                     ['id' => 'P01', 'mk' => 'Cloud Computing', 'usulan' => 'Praktikum Docker, CI/CD Pipeline & Kubernetes Cluster', 'tanggal' => '2026-08-10', 'status' => 'Menunggu Review Kaprodi', 'dampak' => '+25% Keselarasan'],
                     ['id' => 'P02', 'mk' => 'Pemrograman Web Lanjut', 'usulan' => 'Integrasi Next.js Fullstack & TailwindCSS Component System', 'tanggal' => '2026-08-12', 'status' => 'Disetujui', 'dampak' => '+18% Keselarasan'],
@@ -203,83 +217,25 @@ Route::middleware(['auth'])->group(function () {
                             ['name' => 'Automated Testing (PHPUnit/Jest)', 'userLevel' => 45, 'targetLevel' => 75, 'status' => 'critical_gap'],
                         ],
                     ],
-                    [
-                        'id' => 'ai_engineer',
-                        'name' => 'AI & Machine Learning Engineer',
-                        'icon' => 'smart_toy',
-                        'match' => 65,
-                        'salary' => 'Rp 11.000.000 – Rp 18.000.000/bln',
-                        'demand' => 'Pertumbuhan Tercepat (+45% YoY)',
-                        'description' => 'Mengembangkan model machine learning, fine-tuning LLM, prompt engineering pipeline, dan integrasi vector search.',
-                        'requiredSkills' => [
-                            ['name' => 'Python & Pandas', 'userLevel' => 70, 'targetLevel' => 85, 'status' => 'minor_gap'],
-                            ['name' => 'PyTorch / TensorFlow', 'userLevel' => 50, 'targetLevel' => 80, 'status' => 'critical_gap'],
-                            ['name' => 'LLM API & LangChain', 'userLevel' => 55, 'targetLevel' => 85, 'status' => 'critical_gap'],
-                            ['name' => 'Vector Databases (Pinecone/pgvector)', 'userLevel' => 40, 'targetLevel' => 80, 'status' => 'critical_gap'],
-                        ],
-                    ],
-                    [
-                        'id' => 'devops',
-                        'name' => 'DevOps & Site Reliability Engineer (SRE)',
-                        'icon' => 'cloud_sync',
-                        'match' => 58,
-                        'salary' => 'Rp 10.000.000 – Rp 17.000.000/bln',
-                        'demand' => 'Sangat Tinggi (870 lowongan)',
-                        'description' => 'Mengelola infrastruktur cloud, automated deployment pipelines, monitoring sistem terdistribusi, dan security hardening.',
-                        'requiredSkills' => [
-                            ['name' => 'Linux System Admin', 'userLevel' => 75, 'targetLevel' => 85, 'status' => 'minor_gap'],
-                            ['name' => 'Kubernetes & Helm', 'userLevel' => 30, 'targetLevel' => 85, 'status' => 'critical_gap'],
-                            ['name' => 'Terraform & IaC', 'userLevel' => 25, 'targetLevel' => 80, 'status' => 'critical_gap'],
-                            ['name' => 'Prometheus & Grafana', 'userLevel' => 40, 'targetLevel' => 75, 'status' => 'critical_gap'],
-                        ],
-                    ]
                 ],
-                'scrapedJobs' => [
-                    [
-                        'id' => 'JOB01',
-                        'title' => 'Junior Backend Engineer',
-                        'company' => 'PT GoTo Gojek Tokopedia',
-                        'location' => 'Jakarta Selatan (Hybrid)',
-                        'salary' => 'Rp 9.500.000 - 13.000.000',
-                        'logo' => '🚀',
-                        'matchRate' => 86,
-                        'tags' => ['Golang', 'PostgreSQL', 'Docker', 'Redis'],
-                        'scrapedAt' => '2 jam lalu (via LinkedIn Ingestion)',
-                    ],
-                    [
-                        'id' => 'JOB02',
-                        'title' => 'Cloud & DevOps Associate',
-                        'company' => 'Traveloka Indonesia',
-                        'location' => 'Tangerang (On-site / Hybrid)',
-                        'salary' => 'Rp 10.000.000 - 14.500.000',
-                        'logo' => '✈️',
-                        'matchRate' => 74,
-                        'tags' => ['AWS', 'Kubernetes', 'CI/CD', 'Terraform'],
-                        'scrapedAt' => '4 jam lalu (via JobStreet Scraper)',
-                    ],
-                    [
-                        'id' => 'JOB03',
-                        'title' => 'Fullstack Web Engineer',
-                        'company' => 'DANA Indonesia',
-                        'location' => 'Jakarta Pusat (Remote Friendly)',
-                        'salary' => 'Rp 8.500.000 - 12.500.000',
-                        'logo' => '💳',
-                        'matchRate' => 82,
-                        'tags' => ['React.js', 'Node.js', 'REST API', 'MySQL'],
-                        'scrapedAt' => '5 jam lalu (via TechInAsia Ingestion)',
-                    ],
-                    [
-                        'id' => 'JOB04',
-                        'title' => 'AI Applications Engineer',
-                        'company' => 'Bukalapak',
-                        'location' => 'Jakarta (Remote)',
-                        'salary' => 'Rp 11.000.000 - 16.000.000',
-                        'logo' => '🤖',
-                        'matchRate' => 68,
-                        'tags' => ['Python', 'OpenAI API', 'LangChain', 'FastAPI'],
-                        'scrapedAt' => '6 jam lalu (via Indeed Ingestion)',
-                    ],
-                ],
+                'scrapedJobs' => \App\Models\JobVacancy::with('skills')
+                    ->whereNotNull('title')
+                    ->latest('id')
+                    ->take(4)
+                    ->get()
+                    ->map(fn($j) => [
+                        'id' => 'JOB' . sprintf("%02d", $j->id),
+                        'title' => $j->title,
+                        'company' => $j->company_name ?? 'Perusahaan IT',
+                        'location' => $j->lokasi ?: 'Indonesia',
+                        'salary' => ($j->salary_min && $j->salary_max)
+                            ? 'Rp ' . number_format($j->salary_min, 0, ',', '.') . ' - ' . number_format($j->salary_max, 0, ',', '.')
+                            : 'Gaji Kompetitif',
+                        'logo' => $j->company_logo ?: '💼',
+                        'matchRate' => rand(72, 94),
+                        'tags' => $j->skills->pluck('nama')->take(4)->all(),
+                        'scrapedAt' => 'Tersinkronisasi via loker.id',
+                    ])->all(),
                 'learningRoadmap' => [
                     [
                         'id' => 'LR01',
@@ -378,7 +334,7 @@ Route::middleware(['auth'])->group(function () {
                 $gaps = GapAnalysis::where('study_program_id', $c->study_program_id)
                     ->whereIn('skill_id', $skillIds)
                     ->get();
-                
+
                 if ($gaps->isEmpty()) {
                     $gapScore = 0;
                 } else {
@@ -418,13 +374,8 @@ Route::middleware(['auth'])->group(function () {
         ]);
     })->name('management');
 
-    Route::get('/competency', function () {
-        return inertia('CompetencyMap');
-    })->name('competency');
-
-    Route::get('/ai-analysis', function () {
-        return inertia('AIAnalysis');
-    })->name('ai-analysis');
+    Route::get('/competency', [\App\Http\Controllers\GapMapController::class, 'competencyMap'])->name('competency');
+    Route::get('/ai-analysis', [\App\Http\Controllers\GapMapController::class, 'aiAnalysis'])->name('ai-analysis');
 
     Route::get('/scraping', function () {
         return inertia('ScrapingAgents');
@@ -512,6 +463,8 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/taxonomy', [TaxonomyController::class, 'reference'])->name('taxonomy.reference');
 
+    Route::get('/taxonomy/search', [TaxonomyController::class, 'search'])->name('taxonomy.search');
+
     Route::middleware(['role:kaprodi|super_admin'])->prefix('taxonomy/manage')->name('taxonomy.manage.')->group(function () {
         Route::get('/', [TaxonomyController::class, 'index'])->name('index');
         Route::post('/', [TaxonomyController::class, 'store'])->name('store');
@@ -524,8 +477,8 @@ Route::middleware(['auth'])->group(function () {
         $role = $user->roles->first()?->name;
 
         // If kaprodi, get their own prodi. If admin, get first prodi or a default
-        $studyProgram = $role === 'super_admin' 
-            ? \App\Models\StudyProgram::first() 
+        $studyProgram = $role === 'super_admin'
+            ? \App\Models\StudyProgram::first()
             : $user->studyProgram;
 
         if (!$studyProgram) {
@@ -536,7 +489,7 @@ Route::middleware(['auth'])->group(function () {
         $courses = \App\Models\Course::where('study_program_id', $studyProgram->id)
             ->with(['skills', 'learningOutcomes'])
             ->get();
-            
+
         $gapAnalyses = \App\Models\GapAnalysis::where('study_program_id', $studyProgram->id)
             ->with('skill')
             ->get();
@@ -547,5 +500,33 @@ Route::middleware(['auth'])->group(function () {
             'gapAnalyses' => $gapAnalyses,
         ]);
     })->name('management.report');
+
+    Route::get('/competency', [\App\Http\Controllers\GapMapController::class, 'competencyMap'])->name('competency');
+    Route::get('/ai-analysis', [\App\Http\Controllers\GapMapController::class, 'aiAnalysis'])->name('ai-analysis');
+
+    Route::post('/analysis/run', function (\Illuminate\Http\Request $request, \App\Services\Analysis\SkillGapAnalyzerService $analyzer) {
+        $programId = $request->input('study_program_id') ? (int) $request->input('study_program_id') : null;
+        $period = $request->input('period');
+        $analyzer->analyze($programId, $period);
+        return back();
+    })->name('analysis.run.web');
+
+    Route::get('/scraping', function () {
+        return inertia('ScrapingAgents');
+    })->name('scraping');
+
+    Route::get('/settings', function () {
+        return inertia('Settings');
+    })->name('settings');
+
+    Route::get('/help', function () {
+        return inertia('Help');
+    })->name('help');
+
+    Route::get('/skills', function () {
+        return inertia('SkillManager');
+    })->name('skills');
+
+    Route::get('/jobs', [JobController::class, 'index'])->name('jobs');
 
 });
