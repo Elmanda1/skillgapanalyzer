@@ -16,9 +16,23 @@ spec.loader.exec_module(module)
 
 @pytest.fixture()
 def sample_job():
-    with open(Path(__file__).resolve().parent.parent.parent
-              / "database" / "datajson" / "15892033.json", encoding="utf-8") as f:
-        return json.load(f)
+    json_path = Path(__file__).resolve().parent.parent.parent / "database" / "datajson" / "15892033.json"
+    if json_path.exists():
+        with open(json_path, encoding="utf-8") as f:
+            return json.load(f)
+    return {
+        "job": {
+            "id": 15892033,
+            "slug": "teknisi-maintenance",
+            "title": "Teknisi Maintenance",
+            "salary_min": 5000000,
+            "salary_max": 7000000,
+            "locations": [{"name": "Bekasi"}],
+            "types": [{"name": "Full Time"}],
+            "experiences": [{"name": "1-2 Tahun"}],
+        },
+        "company": {"name": "PT Maju Terus"},
+    }
 
 
 def test_extract_remix():

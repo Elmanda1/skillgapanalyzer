@@ -177,9 +177,11 @@ def record_from_detail(job, company, pathname, url_scraped, listing_skills=None)
     locs = j.get("locations") or []
     rec["location"] = rec["location"] or (name_of(locs[0]) if locs else None)
     types = j.get("types") or []
-    rec["job_type"] = rec["job_type"] or (name_of(types[0]) if types else None) \
-        or ld.get("employmentType")
+    rec["job_type"] = rec["job_type"] or (name_of(types[0]) if types else None) or ld.get("employmentType")
     rec["job_experience"] = rec["job_experience"] or ld.get("experienceRequirements")
+    exps = j.get("experiences") or []
+    if not rec["job_experience"] and exps:
+        rec["job_experience"] = name_of(exps[0])
     rec["education"] = rec["education"] or ld.get("educationRequirements")
     edus = j.get("educations") or []
     if not rec["education"] and edus:
