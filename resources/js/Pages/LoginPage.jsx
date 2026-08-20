@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useForm } from '@inertiajs/react';
+import Icon from '../components/Icon.jsx';
+
 
 const ROLE_CARDS = [
   {
@@ -81,7 +83,7 @@ export default function LoginPage({ onBack }) {
           onClick={onBack}
           className="absolute top-6 left-6 flex items-center gap-2 text-sm font-semibold text-text-secondary hover:text-brand transition-colors bg-white/80 backdrop-blur-md px-4 py-2 rounded-full border border-border shadow-sm z-50"
         >
-          <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+          <Icon className="text-[18px]" name="arrow_back" />
           Kembali
         </button>
       )}
@@ -90,7 +92,7 @@ export default function LoginPage({ onBack }) {
         {/* Brand */}
         <div className="text-center mb-8">
           <div className="w-14 h-14 rounded-2xl bg-brand flex items-center justify-center mx-auto mb-4 shadow-md">
-            <span className="material-symbols-outlined text-white text-3xl">insights</span>
+            <Icon className="text-white text-3xl" name="insights" />
           </div>
           <h1 className="font-display text-2xl font-bold text-text">Skill Gap Analyzer</h1>
           <p className="text-sm text-text-secondary mt-1">Sistem Analitik Kurikulum Vokasi</p>
@@ -113,7 +115,7 @@ export default function LoginPage({ onBack }) {
                 }`}
               >
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-transform duration-300 ${selectedRole === rc.role ? 'scale-110' : 'group-hover:scale-110'} ${rc.iconBg} shadow-sm`}>
-                  <span className="material-symbols-outlined text-[24px]">{rc.icon}</span>
+                  <Icon className="text-[24px]" name={rc.icon} />
                 </div>
                 <div>
                   <p className={`text-xs font-bold leading-tight ${selectedRole === rc.role ? 'text-brand' : 'text-text group-hover:text-brand'}`}>
@@ -127,7 +129,7 @@ export default function LoginPage({ onBack }) {
           {/* Role description */}
           {selectedRole && (
             <div className="bg-brand/10 border border-brand/20 rounded-xl px-4 py-3 mb-6 text-xs text-brand-dark flex items-start gap-3 animate-fade-in-up">
-              <span className="material-symbols-outlined text-[16px] mt-0.5 flex-shrink-0 text-brand">lightbulb</span>
+              <Icon className="text-[16px] mt-0.5 flex-shrink-0 text-brand" name="lightbulb" />
               <span className="leading-relaxed">{ROLE_CARDS.find(r => r.role === selectedRole)?.description}</span>
             </div>
           )}
@@ -137,7 +139,7 @@ export default function LoginPage({ onBack }) {
             <div>
               <label className="block text-xs font-bold text-text-secondary mb-2">Email Akses</label>
               <div className="relative group">
-                <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors text-[20px]">mail</span>
+                <Icon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors text-[20px]" name="mail" />
                 <input
                   type="email"
                   value={data.email}
@@ -151,7 +153,7 @@ export default function LoginPage({ onBack }) {
             <div>
               <label className="block text-xs font-bold text-text-secondary mb-2">Kata Sandi</label>
               <div className="relative group">
-                <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors text-[20px]">lock</span>
+                <Icon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors text-[20px]" name="lock" />
                 <input
                   type={showPw ? 'text' : 'password'}
                   value={data.password}
@@ -162,14 +164,14 @@ export default function LoginPage({ onBack }) {
                 />
                 <button type="button" onClick={() => setShowPw(!showPw)}
                   className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-text transition-colors">
-                  <span className="material-symbols-outlined text-[20px]">{showPw ? 'visibility_off' : 'visibility'}</span>
+                  <Icon className="text-[20px]" name={showPw ? 'visibility_off' : 'visibility'} />
                 </button>
               </div>
             </div>
 
             {formError && (
               <div className="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-600">
-                <span className="material-symbols-outlined text-[14px]">error</span>
+                <Icon className="text-[14px]" name="error" />
                 {formError}
               </div>
             )}
@@ -181,12 +183,12 @@ export default function LoginPage({ onBack }) {
             >
               {processing ? (
                 <>
-                  <span className="material-symbols-outlined text-[16px] animate-spin">progress_activity</span>
+                  <Icon className="text-[16px] animate-spin" name="progress_activity" />
                   Masuk...
                 </>
               ) : (
                 <>
-                  <span className="material-symbols-outlined text-[16px]">login</span>
+                  <Icon className="text-[16px]" name="login" />
                   Masuk ke Sistem
                 </>
               )}
@@ -199,7 +201,7 @@ export default function LoginPage({ onBack }) {
               href="/register"
               className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand hover:text-brand-dark transition-colors"
             >
-              <span className="material-symbols-outlined text-[16px]">person_add</span>
+              <Icon className="text-[16px]" name="person_add" />
               Daftar sebagai Mahasiswa
             </Link>
           </div>

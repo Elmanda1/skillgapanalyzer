@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useForm } from '@inertiajs/react';
+import Icon from '../components/Icon.jsx';
+
 
 export default function RegisterPage() {
   const { data, setData, post, processing, errors, reset } = useForm({
@@ -39,7 +41,7 @@ export default function RegisterPage() {
         href="/login"
         className="absolute top-6 left-6 flex items-center gap-2 text-sm font-semibold text-text-secondary hover:text-brand transition-colors bg-white/80 backdrop-blur-md px-4 py-2 rounded-full border border-border shadow-sm z-50"
       >
-        <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+        <Icon className="text-[18px]" name="arrow_back" />
         Kembali
       </Link>
 
@@ -47,7 +49,7 @@ export default function RegisterPage() {
         {/* Brand */}
         <div className="text-center mb-8">
           <div className="w-14 h-14 rounded-2xl bg-brand flex items-center justify-center mx-auto mb-4 shadow-md">
-            <span className="material-symbols-outlined text-white text-3xl">insights</span>
+            <Icon className="text-white text-3xl" name="insights" />
           </div>
           <h1 className="font-display text-2xl font-bold text-text">Skill Gap Analyzer</h1>
           <p className="text-sm text-text-secondary mt-1">Sistem Analitik Kurikulum Vokasi</p>
@@ -59,7 +61,7 @@ export default function RegisterPage() {
 
           {formError && (
             <div className="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-600 mb-4">
-              <span className="material-symbols-outlined text-[14px]">error</span>
+              <Icon className="text-[14px]" name="error" />
               {formError}
             </div>
           )}
@@ -68,7 +70,7 @@ export default function RegisterPage() {
             <div>
               <label className="block text-xs font-bold text-text-secondary mb-2">Nama Lengkap</label>
               <div className="relative group">
-                <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors text-[20px]">person</span>
+                <Icon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors text-[20px]" name="person" />
                 <input
                   type="text"
                   value={data.name}
@@ -84,7 +86,7 @@ export default function RegisterPage() {
             <div>
               <label className="block text-xs font-bold text-text-secondary mb-2">Email</label>
               <div className="relative group">
-                <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors text-[20px]">mail</span>
+                <Icon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors text-[20px]" name="mail" />
                 <input
                   type="email"
                   value={data.email}
@@ -100,7 +102,7 @@ export default function RegisterPage() {
             <div>
               <label className="block text-xs font-bold text-text-secondary mb-2">Kata Sandi</label>
               <div className="relative group">
-                <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors text-[20px]">lock</span>
+                <Icon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors text-[20px]" name="lock" />
                 <input
                   type={showPw ? 'text' : 'password'}
                   value={data.password}
@@ -111,7 +113,7 @@ export default function RegisterPage() {
                 />
                 <button type="button" onClick={() => setShowPw(!showPw)}
                   className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-text transition-colors">
-                  <span className="material-symbols-outlined text-[20px]">{showPw ? 'visibility_off' : 'visibility'}</span>
+                  <Icon className="text-[20px]" name={showPw ? 'visibility_off' : 'visibility'} />
                 </button>
               </div>
               {errors.password && <p className="mt-1.5 text-[11px] font-medium text-red-500">{errors.password}</p>}
@@ -120,7 +122,7 @@ export default function RegisterPage() {
             <div>
               <label className="block text-xs font-bold text-text-secondary mb-2">Konfirmasi Kata Sandi</label>
               <div className="relative group">
-                <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors text-[20px]">lock_reset</span>
+                <Icon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors text-[20px]" name="lock_reset" />
                 <input
                   type="password"
                   value={data.password_confirmation}
@@ -134,7 +136,7 @@ export default function RegisterPage() {
             </div>
 
             <div className="bg-brand/10 border border-brand/20 rounded-xl px-4 py-3 text-xs text-brand-dark flex items-start gap-3">
-              <span className="material-symbols-outlined text-[16px] mt-0.5 flex-shrink-0 text-brand">lightbulb</span>
+              <Icon className="text-[16px] mt-0.5 flex-shrink-0 text-brand" name="lightbulb" />
               <span className="leading-relaxed">Pendaftaran otomatis memberikan peran <b>Mahasiswa</b>. Fitur profil skill mahasiswa hadir di fase berikutnya.</span>
             </div>
 
@@ -145,12 +147,12 @@ export default function RegisterPage() {
             >
               {processing ? (
                 <>
-                  <span className="material-symbols-outlined text-[16px] animate-spin">progress_activity</span>
+                  <Icon className="text-[16px] animate-spin" name="progress_activity" />
                   Mendaftar...
                 </>
               ) : (
                 <>
-                  <span className="material-symbols-outlined text-[16px]">how_to_reg</span>
+                  <Icon className="text-[16px]" name="how_to_reg" />
                   Daftar Sekarang
                 </>
               )}
