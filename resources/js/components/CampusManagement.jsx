@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useToast } from '../context/ToastContext';
+import Icon from '../components/Icon.jsx';
+
 
 // Dummy Data
 const USERS = [
@@ -58,7 +60,7 @@ export default function CampusManagement() {
     <div className="w-full p-6 md:p-8 animate-fade-in-up">
       <div className="mb-8">
         <h1 className="font-display text-2xl font-bold text-text flex items-center gap-2">
-          <span className="material-symbols-outlined text-[28px] text-brand">domain</span>
+          <Icon className="text-[28px] text-brand" name="domain" />
           Manajemen Kampus
         </h1>
         <p className="text-sm text-text-secondary mt-1">
@@ -82,7 +84,7 @@ export default function CampusManagement() {
                 : 'border-transparent text-text-muted hover:text-text'
             }`}
           >
-            <span className="material-symbols-outlined text-[18px]">{tab.icon}</span>
+            <Icon className="text-[18px]" name={tab.icon} />
             {tab.label}
           </button>
         ))}
@@ -98,10 +100,10 @@ export default function CampusManagement() {
               <h2 className="font-display text-base font-semibold text-text">Daftar Civitas Akademika</h2>
               <div className="flex gap-3">
                 <button className="px-4 py-2 border border-border rounded-lg text-sm text-text-secondary hover:bg-gray-100 bg-white flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[16px]">upload</span> Import CSV
+                  <Icon className="text-[16px]" name="upload" /> Import CSV
                 </button>
                 <button onClick={handleAddUser} className="btn-primary px-4 py-2 text-sm flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[16px]">add</span> Tambah Pengguna
+                  <Icon className="text-[16px]" name="add" /> Tambah Pengguna
                 </button>
               </div>
             </div>
@@ -128,8 +130,8 @@ export default function CampusManagement() {
                       </span>
                     </td>
                     <td className="px-5 py-3 flex gap-2">
-                      <button className="text-text-muted hover:text-brand transition-colors"><span className="material-symbols-outlined text-[18px]">edit</span></button>
-                      <button onClick={() => handleDeleteUser(u.id)} className="text-text-muted hover:text-red-500 transition-colors"><span className="material-symbols-outlined text-[18px]">delete</span></button>
+                      <button className="text-text-muted hover:text-brand transition-colors"><Icon className="text-[18px]" name="edit" /></button>
+                      <button onClick={() => handleDeleteUser(u.id)} className="text-text-muted hover:text-red-500 transition-colors"><Icon className="text-[18px]" name="delete" /></button>
                     </td>
                   </tr>
                 ))}
@@ -149,7 +151,7 @@ export default function CampusManagement() {
                   <p className="text-xs text-text-secondary mt-0.5">Seluruh mata kuliah yang terdaftar dan skor kesenjangannya (Gap Score).</p>
                 </div>
                 <button className="btn-primary px-4 py-2 text-sm flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[16px]">add</span> Tambah MK Baru
+                  <Icon className="text-[16px]" name="add" /> Tambah MK Baru
                 </button>
               </div>
               <table className="w-full text-left text-sm">
@@ -171,7 +173,7 @@ export default function CampusManagement() {
                         </span>
                       </td>
                       <td className="px-5 py-3">
-                        <button className="text-text-muted hover:text-brand transition-colors"><span className="material-symbols-outlined text-[18px]">edit</span></button>
+                        <button className="text-text-muted hover:text-brand transition-colors"><Icon className="text-[18px]" name="edit" /></button>
                       </td>
                     </tr>
                   ))}
@@ -183,7 +185,7 @@ export default function CampusManagement() {
             <div className="border border-border rounded-xl overflow-hidden mt-4">
               <div className="p-4 border-b border-border bg-gray-50">
                 <h2 className="font-display text-base font-semibold text-text flex items-center gap-2">
-                  <span className="material-symbols-outlined text-brand text-[18px]">notifications_active</span>
+                  <Icon className="text-brand text-[18px]" name="notifications_active" />
                   Persetujuan Usulan Pembaruan Silabus
                 </h2>
                 <p className="text-xs text-text-secondary mt-0.5">Review usulan pembaruan materi yang diajukan oleh dosen berdasarkan saran AI.</p>
@@ -228,14 +230,14 @@ export default function CampusManagement() {
         {activeTab === 'akreditasi' && (
           <div className="p-8 text-center bg-white flex flex-col items-center justify-center py-16">
             <div className="w-20 h-20 bg-brand-light rounded-full flex items-center justify-center text-brand mb-4">
-              <span className="material-symbols-outlined text-[40px]">workspace_premium</span>
+              <Icon className="text-[40px]" name="workspace_premium" />
             </div>
             <h2 className="font-display text-xl font-bold text-text mb-2">Laporan Penyelarasan Industri</h2>
             <p className="text-sm text-text-secondary max-w-lg mb-8">
               Unduh laporan komprehensif yang berisi metrik kesesuaian kurikulum kampus Anda terhadap tren keahlian industri terkini. Sangat direkomendasikan untuk dilampirkan pada instrumen akreditasi BAN-PT.
             </p>
             <button onClick={handleGenerateReport} className="btn-primary px-6 py-3 text-sm flex items-center gap-2">
-              <span className="material-symbols-outlined">download</span> Generate PDF Laporan
+              <Icon className="" name="download" /> Generate PDF Laporan
             </button>
           </div>
         )}

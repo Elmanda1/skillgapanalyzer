@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useToast } from '../context/ToastContext';
+import Icon from '../components/Icon.jsx';
+
 
 const AGENTS = [
   { id: 'JKT-Worker-01', source: 'LinkedIn Jobs', location: 'Jakarta',  status: 'Active',  uptime: '99.98%', data: '1.8 TB' },
@@ -92,11 +94,11 @@ export default function ScrapingAgents() {
         </div>
         <div className="flex gap-3 mt-4 md:mt-0">
           <button className="btn-outline flex items-center gap-2" onClick={handleSyncAll}>
-            <span className="material-symbols-outlined text-[16px]">refresh</span>
+            <Icon className="text-[16px]" name="refresh" />
             Sinkronisasi Ulang
           </button>
           <button className="btn-primary flex items-center gap-2" onClick={handleDeploy}>
-            <span className="material-symbols-outlined text-[16px]">add</span>
+            <Icon className="text-[16px]" name="add" />
             Deploy Agen Baru
           </button>
         </div>
@@ -124,7 +126,7 @@ export default function ScrapingAgents() {
           <div className="px-5 py-4 border-b border-border flex items-center justify-between">
             <h2 className="font-display text-base font-semibold text-text">Daftar Agen Aktif</h2>
             <div className="relative w-52">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[16px]">search</span>
+              <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[16px]" name="search" />
               <input
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
@@ -147,7 +149,7 @@ export default function ScrapingAgents() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <div className="w-7 h-7 rounded-lg bg-brand-light flex items-center justify-center">
-                        <span className="material-symbols-outlined text-brand text-[14px]">dns</span>
+                        <Icon className="text-brand text-[14px]" name="dns" />
                       </div>
                       <span className="font-mono text-xs font-semibold text-text">{a.id}</span>
                     </div>

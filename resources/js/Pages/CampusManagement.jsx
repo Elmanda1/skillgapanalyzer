@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useToast } from '../context/ToastContext';
 import { useForm, Link, usePage, router } from '@inertiajs/react';
+import Icon from '../components/Icon.jsx';
+
 
 // Dummy Data
 const USERS = [
@@ -335,7 +337,7 @@ export default function CampusManagement({
             </span>
           </div>
           <h1 className="font-display text-2xl md:text-3xl font-bold text-text flex items-center gap-2">
-            <span className="material-symbols-outlined text-[32px] text-brand">domain</span>
+            <Icon className="text-[32px] text-brand" name="domain" />
             {userRole === 'super_admin' ? 'Manajemen Multi-Kampus & Civitas' : `Manajemen Institusi — ${currentInstitution}`}
           </h1>
           <p className="text-sm text-text-secondary mt-1 max-w-3xl">
@@ -351,7 +353,7 @@ export default function CampusManagement({
             onClick={handleGenerateReport}
             className="px-4 py-2.5 bg-white border border-border hover:bg-gray-50 text-text rounded-xl text-xs font-bold shadow-sm transition-all flex items-center gap-2"
           >
-            <span className="material-symbols-outlined text-[18px] text-brand">picture_as_pdf</span>
+            <Icon className="text-[18px] text-brand" name="picture_as_pdf" />
             Ekspor Akreditasi
           </button>
         </div>
@@ -364,7 +366,7 @@ export default function CampusManagement({
           <div>
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-bold text-text uppercase tracking-wider flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-brand text-[18px]">school</span>
+                <Icon className="text-brand text-[18px]" name="school" />
                 Pilih Kampus / Politeknik:
               </span>
               <span className="text-xs text-text-muted font-medium">
@@ -424,7 +426,7 @@ export default function CampusManagement({
                     : 'text-text-secondary hover:text-text'
                 }`}
               >
-                <span className="material-symbols-outlined text-[16px]">{tab.icon}</span>
+                <Icon className="text-[16px]" name={tab.icon} />
                 {tab.label}
                 {tab.count !== undefined && (
                   <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${activeTab === tab.id ? 'bg-brand-light text-brand' : 'bg-gray-200 text-gray-700'}`}>
@@ -438,7 +440,7 @@ export default function CampusManagement({
           {/* Search & Action */}
           <div className="flex items-center gap-2 w-full md:w-auto">
             <div className="relative flex-1 md:w-72">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[18px]">search</span>
+              <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[18px]" name="search" />
               <input
                 type="text"
                 value={searchQuery}
@@ -451,7 +453,7 @@ export default function CampusManagement({
                   onClick={() => setSearchQuery('')}
                   className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text"
                 >
-                  <span className="material-symbols-outlined text-[16px]">close</span>
+                  <Icon className="text-[16px]" name="close" />
                 </button>
               )}
             </div>
@@ -461,7 +463,7 @@ export default function CampusManagement({
                 onClick={() => setShowAddUserModal(true)}
                 className="btn-primary px-3.5 py-2 text-xs rounded-xl flex items-center gap-1.5 whitespace-nowrap shadow-sm"
               >
-                <span className="material-symbols-outlined text-[16px]">person_add</span>
+                <Icon className="text-[16px]" name="person_add" />
                 Tambah Akun
               </button>
             ) : activeTab === 'kurikulum' ? (
@@ -469,7 +471,7 @@ export default function CampusManagement({
                 onClick={() => setShowAddCourseModal(true)}
                 className="btn-primary px-3.5 py-2 text-xs rounded-xl flex items-center gap-1.5 whitespace-nowrap shadow-sm"
               >
-                <span className="material-symbols-outlined text-[16px]">add_circle</span>
+                <Icon className="text-[16px]" name="add_circle" />
                 Tambah MK
               </button>
             ) : null}
@@ -546,7 +548,7 @@ export default function CampusManagement({
                         </td>
                         <td className="px-5 py-4">
                           <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg border ${getCampusBadgeColor(u.institusiText)}`}>
-                            <span className="material-symbols-outlined text-[15px]">domain</span>
+                            <Icon className="text-[15px]" name="domain" />
                             <span>{u.institusiText}</span>
                           </span>
                         </td>
@@ -578,14 +580,14 @@ export default function CampusManagement({
                               className="p-1.5 text-text-muted hover:text-brand hover:bg-brand-light rounded-lg transition-all"
                               title="Edit Pengguna"
                             >
-                              <span className="material-symbols-outlined text-[18px]">edit</span>
+                              <Icon className="text-[18px]" name="edit" />
                             </button>
                             <button 
                               onClick={() => handleDeleteUserDb(u)} 
                               className="p-1.5 text-text-muted hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
                               title="Hapus Pengguna"
                             >
-                              <span className="material-symbols-outlined text-[18px]">delete</span>
+                              <Icon className="text-[18px]" name="delete" />
                             </button>
                           </div>
                         </td>
@@ -595,7 +597,7 @@ export default function CampusManagement({
                   {filteredUsers.length === 0 && (
                     <tr>
                       <td colSpan="7" className="px-5 py-12 text-center text-xs text-text-muted">
-                        <span className="material-symbols-outlined text-[36px] text-gray-300 block mb-2">person_off</span>
+                        <Icon className="text-[36px] text-gray-300 block mb-2" name="person_off" />
                         Tidak ada akun civitas akademika yang cocok dengan kriteria pencarian/filter.
                       </td>
                     </tr>
@@ -631,7 +633,7 @@ export default function CampusManagement({
                       </td>
                       <td className="px-5 py-4">
                         <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg border ${getCampusBadgeColor(c.institusiText)}`}>
-                          <span className="material-symbols-outlined text-[15px]">domain</span>
+                          <Icon className="text-[15px]" name="domain" />
                           <span>{c.institusiText}</span>
                         </span>
                       </td>
@@ -661,21 +663,21 @@ export default function CampusManagement({
                             className="p-1.5 text-text-muted hover:text-brand hover:bg-brand-light rounded-lg transition-all"
                             title="Edit Mata Kuliah"
                           >
-                            <span className="material-symbols-outlined text-[18px]">edit</span>
+                            <Icon className="text-[18px]" name="edit" />
                           </button>
                           <Link 
                             href={c.db_id ? `/curriculum/courses/${c.db_id}` : '#'} 
                             className="p-1.5 text-text-muted hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
                             title="Detail Kurikulum"
                           >
-                            <span className="material-symbols-outlined text-[18px]">visibility</span>
+                            <Icon className="text-[18px]" name="visibility" />
                           </Link>
                           <button 
                             onClick={() => handleDeleteCourseDb(c)} 
                             className="p-1.5 text-text-muted hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
                             title="Hapus Mata Kuliah"
                           >
-                            <span className="material-symbols-outlined text-[18px]">delete</span>
+                            <Icon className="text-[18px]" name="delete" />
                           </button>
                         </div>
                       </td>
@@ -684,7 +686,7 @@ export default function CampusManagement({
                   {filteredCourses.length === 0 && (
                     <tr>
                       <td colSpan="7" className="px-5 py-12 text-center text-xs text-text-muted">
-                        <span className="material-symbols-outlined text-[36px] text-gray-300 block mb-2">menu_book</span>
+                        <Icon className="text-[36px] text-gray-300 block mb-2" name="menu_book" />
                         Tidak ada mata kuliah yang cocok dengan kriteria pencarian/filter.
                       </td>
                     </tr>
@@ -697,7 +699,7 @@ export default function CampusManagement({
             <div className="border border-border rounded-xl overflow-hidden mt-4">
               <div className="p-4 border-b border-border bg-gray-50">
                 <h2 className="font-display text-base font-semibold text-text flex items-center gap-2">
-                  <span className="material-symbols-outlined text-brand text-[18px]">notifications_active</span>
+                  <Icon className="text-brand text-[18px]" name="notifications_active" />
                   Persetujuan Usulan Pembaruan Silabus
                 </h2>
                 <p className="text-xs text-text-secondary mt-0.5">Review usulan pembaruan materi yang diajukan oleh dosen berdasarkan saran AI.</p>
@@ -742,14 +744,14 @@ export default function CampusManagement({
         {activeTab === 'akreditasi' && (
           <div className="p-8 text-center bg-white flex flex-col items-center justify-center py-16">
             <div className="w-20 h-20 bg-brand-light rounded-full flex items-center justify-center text-brand mb-4">
-              <span className="material-symbols-outlined text-[40px]">workspace_premium</span>
+              <Icon className="text-[40px]" name="workspace_premium" />
             </div>
             <h2 className="font-display text-xl font-bold text-text mb-2">Laporan Penyelarasan Industri</h2>
             <p className="text-sm text-text-secondary max-w-lg mb-8">
               Unduh laporan komprehensif yang berisi metrik kesesuaian kurikulum kampus Anda terhadap tren keahlian industri terkini. Sangat direkomendasikan untuk dilampirkan pada instrumen akreditasi BAN-PT.
             </p>
             <button onClick={handleGenerateReport} className="btn-primary px-6 py-3 text-sm flex items-center gap-2">
-              <span className="material-symbols-outlined">download</span> Generate PDF Laporan
+              <Icon className="" name="download" /> Generate PDF Laporan
             </button>
           </div>
         )}
@@ -761,14 +763,14 @@ export default function CampusManagement({
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full border border-border overflow-hidden animate-scale-in">
             <div className="px-6 py-4 bg-gray-50 border-b border-border flex items-center justify-between">
               <h3 className="font-display text-base font-bold text-text flex items-center gap-2">
-                <span className="material-symbols-outlined text-brand">book_2</span>
+                <Icon className="text-brand" name="book_2" />
                 Tambah Mata Kuliah Baru
               </h3>
               <button 
                 onClick={() => setShowAddCourseModal(false)}
                 className="text-text-muted hover:text-text p-1 rounded-lg hover:bg-gray-200 transition-colors"
               >
-                <span className="material-symbols-outlined text-[20px]">close</span>
+                <Icon className="text-[20px]" name="close" />
               </button>
             </div>
             
@@ -885,14 +887,14 @@ export default function CampusManagement({
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full border border-border overflow-hidden animate-scale-in">
             <div className="px-6 py-4 bg-gray-50 border-b border-border flex items-center justify-between">
               <h3 className="font-display text-base font-bold text-text flex items-center gap-2">
-                <span className="material-symbols-outlined text-brand">edit</span>
+                <Icon className="text-brand" name="edit" />
                 Edit Mata Kuliah
               </h3>
               <button 
                 onClick={() => setShowEditCourseModal(false)}
                 className="text-text-muted hover:text-text p-1 rounded-lg hover:bg-gray-200 transition-colors"
               >
-                <span className="material-symbols-outlined text-[20px]">close</span>
+                <Icon className="text-[20px]" name="close" />
               </button>
             </div>
             
@@ -1004,14 +1006,14 @@ export default function CampusManagement({
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full border border-border overflow-hidden animate-scale-in">
             <div className="px-6 py-4 bg-gray-50 border-b border-border flex items-center justify-between">
               <h3 className="font-display text-base font-bold text-text flex items-center gap-2">
-                <span className="material-symbols-outlined text-brand">person_add</span>
+                <Icon className="text-brand" name="person_add" />
                 Tambah Pengguna Baru
               </h3>
               <button 
                 onClick={() => setShowAddUserModal(false)}
                 className="text-text-muted hover:text-text p-1 rounded-lg hover:bg-gray-200 transition-colors"
               >
-                <span className="material-symbols-outlined text-[20px]">close</span>
+                <Icon className="text-[20px]" name="close" />
               </button>
             </div>
             
@@ -1115,14 +1117,14 @@ export default function CampusManagement({
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full border border-border overflow-hidden animate-scale-in">
             <div className="px-6 py-4 bg-gray-50 border-b border-border flex items-center justify-between">
               <h3 className="font-display text-base font-bold text-text flex items-center gap-2">
-                <span className="material-symbols-outlined text-brand">edit</span>
+                <Icon className="text-brand" name="edit" />
                 Edit Data Pengguna
               </h3>
               <button 
                 onClick={() => setShowEditUserModal(false)}
                 className="text-text-muted hover:text-text p-1 rounded-lg hover:bg-gray-200 transition-colors"
               >
-                <span className="material-symbols-outlined text-[20px]">close</span>
+                <Icon className="text-[20px]" name="close" />
               </button>
             </div>
             

@@ -1,11 +1,13 @@
 import React from 'react';
+import Icon from '../components/Icon.jsx';
+
 
 export default function Help() {
   return (
     <div className="w-full p-6 md:p-8 animate-fade-in-up">
       <div className="mb-8">
         <h1 className="font-display text-2xl font-bold text-text flex items-center gap-2">
-          <span className="material-symbols-outlined text-[28px] text-brand">help_outline</span>
+          <Icon className="text-[28px] text-brand" name="help" />
           Pusat Bantuan & Dokumentasi
         </h1>
         <p className="text-sm text-text-secondary mt-2">
@@ -18,7 +20,7 @@ export default function Help() {
         {/* Apa itu Skill Gap Analyzer */}
         <div className="card p-6">
           <h2 className="font-display text-lg font-bold text-text mb-3 flex items-center gap-2">
-            <span className="material-symbols-outlined text-brand">insights</span>
+            <Icon className="text-brand" name="insights" />
             Apa itu Skill Gap Analyzer?
           </h2>
           <p className="text-sm text-text-secondary leading-relaxed mb-4">
@@ -29,7 +31,7 @@ export default function Help() {
         {/* Alur Kerja Sistem */}
         <div className="card p-6">
           <h2 className="font-display text-lg font-bold text-text mb-4 flex items-center gap-2">
-            <span className="material-symbols-outlined text-brand">account_tree</span>
+            <Icon className="text-brand" name="account_tree" />
             Alur Kerja Sistem (Flow)
           </h2>
           
@@ -87,27 +89,27 @@ export default function Help() {
         {/* FAQ atau Info Tambahan */}
         <div className="card p-6">
           <h2 className="font-display text-lg font-bold text-text mb-3 flex items-center gap-2">
-            <span className="material-symbols-outlined text-brand">info</span>
+            <Icon className="text-brand" name="info" />
             Penjelasan Role Pengguna
           </h2>
           <div className="space-y-3 mt-4">
             <div className="p-3 border-b border-border">
               <h4 className="font-semibold text-sm text-text mb-1 flex items-center gap-2">
-                <span className="material-symbols-outlined text-[16px] text-brand">shield_person</span>
+                <Icon className="text-[16px] text-brand" name="shield_person" />
                 Admin Institusi
               </h4>
               <p className="text-xs text-text-secondary">Dapat melihat seluruh dashboard, memantau agen scraping, mengonfigurasi API, dan mengelola pengguna.</p>
             </div>
             <div className="p-3 border-b border-border">
               <h4 className="font-semibold text-sm text-text mb-1 flex items-center gap-2">
-                <span className="material-symbols-outlined text-[16px] text-brand">person_add</span>
+                <Icon className="text-[16px] text-brand" name="person_add" />
                 Dosen / Kaprodi
               </h4>
               <p className="text-xs text-text-secondary">Fokus pada analisis kesenjangan, melihat tren industri, dan melakukan generate draft silabus/RPS untuk mata kuliah yang diampunya.</p>
             </div>
             <div className="p-3">
               <h4 className="font-semibold text-sm text-text mb-1 flex items-center gap-2">
-                <span className="material-symbols-outlined text-[16px] text-brand">school</span>
+                <Icon className="text-[16px] text-brand" name="school" />
                 Mahasiswa
               </h4>
               <p className="text-xs text-text-secondary">Melihat peta kecocokan skill pribadinya dengan industri, rekomendasi pekerjaan, serta panduan kursus spesifik (Learning Path) untuk mengejar ketertinggalan skill.</p>

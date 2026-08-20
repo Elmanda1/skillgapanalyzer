@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
+import Icon from '../components/Icon.jsx';
+
 
 const SYSTEM_STATUS = [
   { name: 'API Gateway',    status: 'Online',    badge: 'badge-green' },
@@ -83,12 +85,10 @@ export default function Settings() {
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <span className={`material-symbols-outlined text-[18px] ${activeSection === item.id ? 'text-brand' : 'text-text-muted'}`}>
-                    {item.icon}
-                  </span>
+                  <Icon className={`text-[18px] ${activeSection === item.id ? 'text-brand' : 'text-text-muted'}`} name={item.icon} />
                   <span>{item.label}</span>
                 </div>
-                <span className="material-symbols-outlined text-[16px] text-text-muted">chevron_right</span>
+                <Icon className="text-[16px] text-text-muted" name="chevron_right" />
               </button>
             ))}
           </div>
@@ -152,7 +152,7 @@ export default function Settings() {
                 <div>
                   <label className="block text-xs font-semibold text-text-secondary mb-1.5">Logo Institusi</label>
                   <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-brand hover:bg-brand-light/30 transition-all cursor-pointer">
-                    <span className="material-symbols-outlined text-3xl text-text-muted block mx-auto mb-2">cloud_upload</span>
+                    <Icon className="text-3xl text-text-muted block mx-auto mb-2" name="cloud_upload" />
                     <p className="text-sm font-medium text-text-secondary">Klik untuk unggah</p>
                     <p className="text-xs text-text-muted mt-1">SVG, PNG, atau JPG (Maks. 2MB)</p>
                   </div>
@@ -186,7 +186,7 @@ export default function Settings() {
                       <option>Setiap 6 Jam</option>
                       <option>Manual</option>
                     </select>
-                    <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-text-muted text-[16px] pointer-events-none">expand_more</span>
+                    <Icon className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted text-[16px] pointer-events-none" name="expand_more" />
                   </div>
                 </div>
                 <div>
@@ -241,11 +241,11 @@ export default function Settings() {
                   onClick={() => toast.info('Fitur Terkunci', 'Manajemen pengguna sedang dalam mode read-only.')}
                   className="btn-primary flex items-center gap-2"
                 >
-                  <span className="material-symbols-outlined text-[16px]">add</span> Tambah Pengguna
+                  <Icon className="text-[16px]" name="add" /> Tambah Pengguna
                 </button>
               </div>
               <div className="bg-gray-50 rounded-lg p-6 text-center border border-dashed border-border">
-                <span className="material-symbols-outlined text-4xl text-gray-300 mb-2">manage_accounts</span>
+                <Icon className="text-4xl text-gray-300 mb-2" name="manage_accounts" />
                 <p className="text-sm font-semibold text-text-secondary">Tidak ada daftar pengguna terbaru.</p>
                 <p className="text-xs text-text-muted">Integrasi SSO belum dikonfigurasi.</p>
               </div>
@@ -264,7 +264,7 @@ export default function Settings() {
                   onClick={() => toast.success('API Key Dibuat', 'Kunci API baru berhasil di-generate.')}
                   className="btn-outline flex items-center gap-2"
                 >
-                  <span className="material-symbols-outlined text-[16px]">key</span> Generate Key
+                  <Icon className="text-[16px]" name="key" /> Generate Key
                 </button>
               </div>
               <div className="space-y-4">

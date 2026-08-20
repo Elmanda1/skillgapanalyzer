@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useToast } from '../context/ToastContext';
 import { useSkills } from '../context/SkillContext';
+import Icon from '../components/Icon.jsx';
+
 
 const TRENDING_SKILLS = [
   { name: 'Docker', count: 1205, demand: 'Tinggi', category: 'DevOps' },
@@ -70,7 +72,7 @@ export default function SkillManager() {
     <div className="w-full p-6 md:p-8 animate-fade-in-up">
       <div className="mb-8">
         <h1 className="font-display text-2xl font-bold text-text flex items-center gap-2">
-          <span className="material-symbols-outlined text-[28px] text-brand">psychology</span>
+          <Icon className="text-[28px] text-brand" name="psychology" />
           Manajemen Keahlian
         </h1>
         <p className="text-sm text-text-secondary mt-1">
@@ -132,7 +134,7 @@ export default function SkillManager() {
                       className="w-8 h-8 flex items-center justify-center rounded-full text-text-muted hover:bg-red-50 hover:text-red-500 transition-colors"
                       title="Hapus Skill"
                     >
-                      <span className="material-symbols-outlined text-[18px]">delete</span>
+                      <Icon className="text-[18px]" name="delete" />
                     </button>
                   </div>
                 ))
@@ -149,7 +151,7 @@ export default function SkillManager() {
                 <h3 className="font-display text-lg font-bold text-text">Rangkuman Tren Skill Industri</h3>
                 <p className="text-xs text-text-secondary mt-1">Skill yang paling sering muncul dari 5000+ lowongan kerja bulan ini.</p>
               </div>
-              <span className="material-symbols-outlined text-brand text-3xl opacity-20">trending_up</span>
+              <Icon className="text-brand text-3xl opacity-20" name="trending_up" />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -169,14 +171,14 @@ export default function SkillManager() {
                     className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-text-secondary hover:bg-brand hover:border-brand hover:text-white transition-all"
                     title="Tambahkan ke Profil"
                   >
-                    <span className="material-symbols-outlined text-[16px]">add</span>
+                    <Icon className="text-[16px]" name="add" />
                   </button>
                 </div>
               ))}
             </div>
 
             <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-100 flex gap-3">
-              <span className="material-symbols-outlined text-blue-600">lightbulb</span>
+              <Icon className="text-blue-600" name="lightbulb" />
               <div>
                 <h4 className="text-sm font-bold text-blue-900 mb-1">Insight AI</h4>
                 <p className="text-xs text-blue-800/80 leading-relaxed">
