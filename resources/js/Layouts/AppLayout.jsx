@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Link, usePage, router } from '@inertiajs/react';
+import Icon from '../components/Icon.jsx';
+
 
 // ─── Nav Configs per Role ──────────────────────────────────────────────────
 const NAV_BY_ROLE = {
@@ -40,7 +42,7 @@ const NAV_BY_ROLE = {
 
 const BOTTOM_NAV = [
   { id: 'settings', label: 'Pengaturan', icon: 'settings', href: '/settings' },
-  { id: 'help',     label: 'Bantuan',    icon: 'help_outline', href: '/help' },
+  { id: 'help',     label: 'Bantuan',    icon: 'help', href: '/help' },
 ];
 
 const ROLE_META = {
@@ -63,9 +65,7 @@ function NavButton({ item, isActive }) {
       {isActive && (
         <span className="absolute right-0 top-1/2 -translate-y-1/2 w-[3px] h-7 bg-brand rounded-l-full" />
       )}
-      <span className={`material-symbols-outlined text-[20px] ${isActive ? 'text-brand' : 'text-text-secondary'}`}>
-        {item.icon}
-      </span>
+      <Icon className={`text-[20px] ${isActive ? 'text-brand' : 'text-text-secondary'}`} name={item.icon} />
       <span>{item.label}</span>
     </Link>
   );
@@ -100,7 +100,7 @@ export default function AppLayout({ children }) {
         <div className="px-4 py-5 border-b border-border">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-lg bg-brand flex items-center justify-center flex-shrink-0">
-              <span className="material-symbols-outlined text-white text-[20px]">insights</span>
+              <Icon className="text-white text-[20px]" name="insights" />
             </div>
             <div>
               <p className="font-display font-bold text-sm text-text leading-tight">Skill Gap</p>
@@ -120,7 +120,7 @@ export default function AppLayout({ children }) {
           {user?.study_program && (
             <div className="mt-1.5 pt-1.5 border-t border-dashed border-gray-200">
               <p className="text-[10px] text-brand font-semibold truncate flex items-center gap-1">
-                <span className="material-symbols-outlined text-[13px]">domain</span>
+                <Icon className="text-[13px]" name="domain" />
                 {user.study_program.nama_institusi}
               </p>
               <p className="text-[10px] text-text-secondary truncate mt-0.5">
@@ -153,7 +153,7 @@ export default function AppLayout({ children }) {
               onClick={handleLogout}
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-text-secondary hover:bg-red-50 hover:text-red-600 transition-all"
             >
-              <span className="material-symbols-outlined text-[20px]">logout</span>
+              <Icon className="text-[20px]" name="logout" />
               <span>Keluar</span>
             </button>
           </div>
@@ -164,7 +164,7 @@ export default function AppLayout({ children }) {
       <div className="flex-1 ml-52 flex flex-col min-h-screen">
         <header className="h-14 sticky top-0 bg-white border-b border-border flex items-center justify-between px-6 z-40">
           <div className="relative w-80">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[18px]">search</span>
+            <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[18px]" name="search" />
             <input
               type="text"
               placeholder="Cari kurikulum, skill, atau nodus..."
@@ -181,11 +181,11 @@ export default function AppLayout({ children }) {
               href="/help"
               className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors ${currentPath === '/help' ? 'bg-brand-light text-brand' : 'text-text-secondary hover:bg-gray-100'}`}
             >
-              <span className="material-symbols-outlined text-[22px]">help_outline</span>
+              <Icon className="text-[22px]" name="help" />
             </Link>
             <div className="relative">
               <button onClick={() => setShowNotif(!showNotif)} className="w-9 h-9 flex items-center justify-center rounded-full text-text-secondary hover:bg-gray-100 transition-colors relative">
-                <span className="material-symbols-outlined text-[22px]">notifications</span>
+                <Icon className="text-[22px]" name="notifications" />
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
               </button>
               {showNotif && (

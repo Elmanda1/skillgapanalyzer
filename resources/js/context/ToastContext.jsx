@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
+import Icon from '../components/Icon.jsx';
+
 
 // ─── Types & config ────────────────────────────────────────────────────────
 const TOAST_CONFIG = {
@@ -19,9 +21,7 @@ function ToastItem({ toast, onRemove }) {
         animate-[slideInRight_0.25s_ease-out]
       `}
     >
-      <span className={`material-symbols-outlined text-[20px] flex-shrink-0 mt-0.5 ${cfg.iconColor}`}>
-        {cfg.icon}
-      </span>
+      <Icon className={`text-[20px] flex-shrink-0 mt-0.5 ${cfg.iconColor}`} name={cfg.icon} />
       <div className="flex-1 min-w-0">
         {toast.title && (
           <p className="text-sm font-semibold text-gray-900 leading-tight">{toast.title}</p>
@@ -34,7 +34,7 @@ function ToastItem({ toast, onRemove }) {
         onClick={() => onRemove(toast.id)}
         className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
       >
-        <span className="material-symbols-outlined text-[16px]">close</span>
+        <Icon className="text-[16px]" name="close" />
       </button>
       {/* Progress bar */}
       <div className="absolute bottom-0 left-0 right-0 h-0.5 rounded-b-xl overflow-hidden">

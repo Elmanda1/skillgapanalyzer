@@ -7,14 +7,17 @@ import AppLayout from './Layouts/AppLayout.jsx'
 
 createInertiaApp({
   resolve: name => {
-    const pages = import.meta.glob('./Pages/**/*.jsx', { eager: true })
+    const pages = import.meta.glob('./Pages/**/*.jsx')
     const page = pages[`./Pages/${name}.jsx`]
-    
+
     // Assign AppLayout as default layout, except for public/auth pages
-    if (page.default.layout === undefined && !['LandingPage', 'LoginPage', 'RegisterPage'].includes(name)) {
-      page.default.layout = pageComponent => <AppLayout>{pageComponent}</AppLayout>
-    }
-    return page
+    return page().then(module => {
+      const component = module.default
+      if (component.layout === undefined && !['LandingPage', 'LoginPage', 'RegisterPage'].includes(name)) {
+        component.layout = pageComponent => <AppLayout>{pageComponent}</AppLayout>
+      }
+      return component
+    })
   },
   setup({ el, App, props }) {
     createRoot(el).render(
