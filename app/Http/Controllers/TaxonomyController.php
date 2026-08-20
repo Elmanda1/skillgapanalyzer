@@ -4,28 +4,76 @@ namespace App\Http\Controllers;
 
 use App\Models\Skill;
 use App\Models\SkillAlias;
+use App\Services\Taxonomy\TaxonomySummary;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class TaxonomyController extends Controller
 {
+    public function __construct(private TaxonomySummary $summary)
+    {
+    }
+
     public function reference(Request $request)
     {
-        $skills = Skill::with('aliases')->orderBy('nama')->get();
+        $search = trim((string) $request->string('search', ''));
+        $dimension = $request->string('dimension', 'all');
+        $kategori = $request->string('kategori', 'all');
+
+        $skills = Skill::query()
+            ->with('aliases')
+            ->orderBy('nama')
+            ->search($search)
+            ->inDimension($dimension)
+            ->inCategory($kategori)
+            ->paginate(25)
+            ->withQueryString();
 
         return inertia('Taxonomy/Reference', [
             'skills' => $skills,
-            'totalSkills' => $skills->count(),
-            'totalAliases' => SkillAlias::count(),
+            'filters' => [
+                'search' => $search,
+                'dimension' => $dimension,
+                'kategori' => $kategori,
+            ],
+            'summary' => $this->summary->get(),
         ]);
     }
 
     public function index(Request $request)
     {
-        $skills = Skill::with('aliases')->orderBy('nama')->get();
+        $search = trim((string) $request->string('search', ''));
+
+        $skills = Skill::query()
+            ->with('aliases')
+            ->orderBy('nama')
+            ->search($search)
+            ->paginate(25)
+            ->withQueryString();
 
         return inertia('Taxonomy/Manage', [
             'skills' => $skills,
+            'search' => $search,
+        ]);
+    }
+
+    public function search(Request $request)
+    {
+        $term = trim((string) $request->string('q', ''));
+
+        if ($term === '') {
+            return response()->json(['results' => []]);
+        }
+
+        $results = Skill::query()
+            ->search($term)
+            ->select('id', 'nama', 'kategori', 'sektor_industri_terkait', 'dimension')
+            ->orderBy('nama')
+            ->limit(20)
+            ->get();
+
+        return response()->json([
+            'results' => $results,
         ]);
     }
 
@@ -57,6 +105,8 @@ class TaxonomyController extends Controller
                 );
             }
         }
+
+        $this->summary->forget();
 
         return back();
     }
@@ -97,6 +147,8 @@ class TaxonomyController extends Controller
             $skill->aliases()->whereNotIn('id', $keepIds)->delete();
         }
 
+        $this->summary->forget();
+
         return back();
     }
 
@@ -104,6 +156,8 @@ class TaxonomyController extends Controller
     {
         $skill->aliases()->delete();
         $skill->delete();
+
+        $this->summary->forget();
 
         return back();
     }
