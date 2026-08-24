@@ -1,13 +1,18 @@
 <?php
 
 use App\Http\Controllers\Api\AnalysisApiController;
+use App\Http\Controllers\HealthCheckController;
 use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
 | API Routes (v1 Contract - SDD §8)
 |--------------------------------------------------------------------------
+|
 */
+
+// Health check endpoint (no version prefix)
+Route::get('/health', HealthCheckController::class)->name('health.check');
 
 Route::prefix('v1')->group(function () {
     Route::get('/dashboard/summary', [AnalysisApiController::class, 'summary']);

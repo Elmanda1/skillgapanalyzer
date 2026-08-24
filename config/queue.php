@@ -73,6 +73,15 @@ return [
             'after_commit' => false,
         ],
 
+        'job_fetching' => [
+            'driver' => 'database',
+            'connection' => env('DB_QUEUE_CONNECTION'),
+            'table' => env('DB_QUEUE_TABLE', 'jobs'),
+            'queue' => 'job_fetching',
+            'retry_after' => (int) env('DB_QUEUE_RETRY_AFTER', 3600),
+            'after_commit' => false,
+        ],
+
         'deferred' => [
             'driver' => 'deferred',
         ],
