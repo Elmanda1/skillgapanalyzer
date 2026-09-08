@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
@@ -75,6 +76,11 @@
     color: #111827;
     font-family: "Inter", sans-serif;
     -webkit-font-smoothing: antialiased;
+    transition: background-color 300ms ease, color 300ms ease;
+  }
+  .dark body {
+    background-color: #020617;
+    color: #f8fafc;
   }
 
   #root { min-height: 100vh; }
@@ -109,12 +115,17 @@
    DESIGN SYSTEM UTILITIES
    ============================================ */
 @layer utilities {
-  /* Card — white, rounded, subtle shadow */
+  /* Card — white, rounded, subtle shadow, dark-mode aware */
   .card {
     background-color: #ffffff;
     border-radius: 0.75rem;
     border: 1px solid #e5e7eb;
     box-shadow: 0 1px 3px 0 rgba(0,0,0,0.07), 0 1px 2px -1px rgba(0,0,0,0.05);
+  }
+  .dark .card {
+    background-color: #0b1329;
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 20px -2px rgba(0,0,0,0.5);
   }
 
   /* Primary button */
@@ -138,11 +149,21 @@
     padding: 0.5rem 1rem;
     font-size: 0.875rem;
     font-weight: 500;
-    transition: border-color 150ms, background-color 150ms;
+    transition: border-color 150ms, background-color 150ms, color 150ms;
   }
   .btn-outline:hover {
     border-color: #9ca3af;
     background-color: #f9fafb;
+  }
+  .dark .btn-outline {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: #e2e8f0;
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+  .dark .btn-outline:hover {
+    border-color: rgba(52, 211, 153, 0.4);
+    background-color: rgba(255, 255, 255, 0.09);
+    color: #ffffff;
   }
 
   /* Status pill */
@@ -166,6 +187,45 @@
   .custom-scrollbar::-webkit-scrollbar-track { background: #f3f4f6; border-radius: 9999px; }
   .custom-scrollbar::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 9999px; }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+  /* ── Ambient Radial Mesh Background ── */
+  .ambient-mesh-glow {
+    background-color: #f9fafb;
+    background-image: 
+      radial-gradient(at 15% 15%, rgba(6, 78, 59, 0.06) 0px, transparent 50%),
+      radial-gradient(at 85% 20%, rgba(13, 148, 136, 0.05) 0px, transparent 50%),
+      radial-gradient(at 50% 80%, rgba(6, 95, 70, 0.04) 0px, transparent 50%);
+  }
+  .dark .ambient-mesh-glow {
+    background-color: #020617;
+    background-image: 
+      radial-gradient(at 15% 15%, rgba(16, 185, 129, 0.12) 0px, transparent 50%),
+      radial-gradient(at 85% 20%, rgba(13, 148, 136, 0.1) 0px, transparent 50%),
+      radial-gradient(at 50% 80%, rgba(5, 150, 105, 0.08) 0px, transparent 50%);
+  }
+
+  /* ── Rich Brand CTA Gradient ── */
+  .gradient-brand-cta {
+    background: linear-gradient(135deg, #064e3b 0%, #047857 52%, #0d9488 100%);
+    box-shadow: 0 12px 24px -6px rgba(6, 78, 59, 0.35), 0 4px 8px -2px rgba(6, 78, 59, 0.2);
+  }
+
+  /* ── Glassmorphism Card ── */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(229, 231, 235, 0.85);
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+  }
+
+  .glass-card-dark {
+    background: rgba(15, 23, 42, 0.88);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.3);
+  }
 }
 
 /* ============================================
@@ -191,6 +251,14 @@
   from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-7px); }
+}
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(1deg); }
+}
 
 .animate-fade-in-up {
   animation: fadeInUp 0.5s ease-out forwards;
@@ -198,8 +266,74 @@
 .animate-fade-in {
   animation: fadeIn 0.4s ease-out forwards;
 }
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+.animate-float-slow {
+  animation: floatSlow 6s ease-in-out infinite;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-100%); }
+}
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+}
+.direction-reverse {
+  animation-direction: reverse;
+}
 .delay-100 { animation-delay: 0.1s; opacity: 0; }
 .delay-200 { animation-delay: 0.2s; opacity: 0; }
 .delay-300 { animation-delay: 0.3s; opacity: 0; }
 .delay-400 { animation-delay: 0.4s; opacity: 0; }
 .delay-500 { animation-delay: 0.5s; opacity: 0; }
+
+/* ============================================
+   LAZY RENDERING / PERFORMANCE OPTIMIZATION
+   ============================================ */
+.lazy-section {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 750px;
+}
+
+/* ============================================
+   VIEW TRANSITIONS API: ULTRA-SMOOTH CIRCULAR RIPPLE
+   ============================================ */
+
+/* Prevent the browser from capturing/animating the group itself */
+::view-transition-group(root) {
+  overflow: clip;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* Default stack: new expands on top */
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 9999;
+}
+
+/* When shrinking back: old layer collapses on top */
+html.theme-transition-shrink::view-transition-old(root) {
+  z-index: 9999;
+}
+
+html.theme-transition-shrink::view-transition-new(root) {
+  z-index: 1;
+}
+
+/* Suppress all competing CSS transitions during view-transition to eliminate hitch/freezing */
+html.theme-transitioning,
+html.theme-transitioning *,
+html.theme-transitioning *::before,
+html.theme-transitioning *::after {
+  transition: none !important;
+}
