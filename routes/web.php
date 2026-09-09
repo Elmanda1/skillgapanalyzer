@@ -436,8 +436,13 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/courses/{course}', [CurriculumController::class, 'show'])->name('courses.show');
         Route::post('/courses', [CurriculumController::class, 'storeCourse'])->name('courses.store');
         Route::put('/courses/{course}', [CurriculumController::class, 'updateCourse'])->name('courses.update');
+        Route::post('/courses/{course}/override', [CurriculumController::class, 'toggleCourseOverride'])->name('courses.override');
         Route::post('/courses/{course}/skills', [CurriculumController::class, 'syncSkills'])->name('courses.skills.sync');
+        Route::post('/courses/{course}/skills/{skill}/override', [CurriculumController::class, 'toggleSkillOverride'])->name('courses.skills.override');
         Route::post('/courses/{course}/learning-outcomes', [CurriculumController::class, 'storeLearningOutcome'])->name('courses.learning-outcomes.store');
+        Route::put('/courses/{course}/learning-outcomes/{learningOutcome}', [CurriculumController::class, 'updateLearningOutcome'])->name('courses.learning-outcomes.update');
+        Route::delete('/courses/{course}/learning-outcomes/{learningOutcome}', [CurriculumController::class, 'destroyLearningOutcome'])->name('courses.learning-outcomes.destroy');
+        Route::post('/courses/{course}/learning-outcomes/{learningOutcome}/override', [CurriculumController::class, 'toggleLearningOutcomeOverride'])->name('courses.learning-outcomes.override');
     });
 
     Route::middleware(['role:kaprodi|super_admin'])->group(function () {

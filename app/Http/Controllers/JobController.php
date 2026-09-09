@@ -46,6 +46,19 @@ class JobController extends Controller
                 }
             }
             $job->last_scraped_at = $formatted ?? date('d/m/Y H:i:s');
+
+            $pubAt = $job->published_at ?? $job->created_at ?? $job->tanggal_crawl;
+            $pubFormatted = null;
+            if ($pubAt) {
+                try {
+                    $tsPub = is_string($pubAt) ? strtotime($pubAt) : $pubAt->timestamp;
+                    $pubFormatted = date('d/m/Y H:i:s', $tsPub);
+                } catch (\Throwable) {
+                    $pubFormatted = null;
+                }
+            }
+            $job->published_at_formatted = $pubFormatted ?? '-';
+
             return $job;
         });
 

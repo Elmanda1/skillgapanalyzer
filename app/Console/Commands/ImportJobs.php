@@ -277,7 +277,7 @@ class ImportJobs extends Command
             'job_type' => $this->value($obj, 'job_type'),
             'job_experience' => $this->value($obj, 'job_experience'),
             'is_remote' => (bool) ($this->value($obj, 'is_remote') ?? false),
-            'published_at' => $this->datetimeOrNull($this->value($obj, 'published_at') ?? $this->value($obj, 'post_date')),
+            'published_at' => $this->datetimeOrNull($this->value($obj, 'published_at') ?? $this->value($obj, 'post_date') ?? $this->value($obj, 'display_date') ?? $this->value($obj, 'post_modified')),
             'closed_at' => $this->datetimeOrNull($this->value($obj, 'closed_at')),
         ];
 

@@ -225,8 +225,8 @@ export default function ScrapingAgents() {
 
       {/* ── Modal Deploy Agen Baru ── */}
       {showDeployModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 border border-border">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/5 p-4 animate-fade-in" onClick={(e) => { if (e.target === e.currentTarget) setShowDeployModal(false); }}>
+          <div className="bg-white rounded-2xl shadow-2xl shadow-slate-900/15 max-w-lg w-full p-6 border border-slate-200/80">
             <div className="flex justify-between items-center pb-4 border-b border-border mb-5">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-brand-light flex items-center justify-center">

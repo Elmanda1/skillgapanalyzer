@@ -90,9 +90,15 @@ export default function JobBrowser() {
                 <Icon className="text-[16px]" name="schedule" />
                 {job.type}
               </div>
-              <div className="flex items-center gap-2 text-[11px] text-brand font-medium pt-2 border-t border-border/40 mt-1">
-                <Icon className="text-[14px] text-brand" name="history" />
-                <span>Terakhir di-scrap: 09/09/2026 23:37:35</span>
+              <div className="flex flex-col gap-1 text-[11px] pt-2 border-t border-border/40 mt-1">
+                <div className="flex items-center gap-1.5 text-text-muted font-medium">
+                  <Icon className="text-[14px] text-gray-500" name="calendar_today" />
+                  <span>Created At: {job.published_at || job.created_at || '17/08/2026 10:35:30'}</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-brand font-medium">
+                  <Icon className="text-[14px] text-brand" name="history" />
+                  <span>Terakhir di-scrap: 09/09/2026 23:37:35</span>
+                </div>
               </div>
             </div>
 
