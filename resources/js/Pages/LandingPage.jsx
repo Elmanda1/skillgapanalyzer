@@ -54,18 +54,106 @@ const navItems = [
 function LiveDashboardPreview() {
   const [activeTab, setActiveTab] = useState('gap-map');
   const [hoveredSkill, setHoveredSkill] = useState(null);
+  const [selectedSkill, setSelectedSkill] = useState(null);
   const [selectedPeriod, setSelectedPeriod] = useState('2026-Q1');
+  const [categoryFilter, setCategoryFilter] = useState('all');
 
-  const skillsData = [
-    { name: 'Docker', rate: 35, jobs: '1.4K', status: 'Kritis', desc: 'Containerization & Multi-stage builds' },
-    { name: 'Kubernetes', rate: 28, jobs: '980', status: 'Kritis', desc: 'Cluster orchestration & Ingress' },
-    { name: 'CI/CD', rate: 45, jobs: '1.2K', status: 'Kritis', desc: 'GitHub Actions & Automated Testing' },
-    { name: 'React.js', rate: 88, jobs: '2.1K', status: 'Sesuai', desc: 'Component Architecture & Hooks' },
-    { name: 'Laravel', rate: 82, jobs: '1.8K', status: 'Sesuai', desc: 'Eloquent ORM & RESTful APIs' },
-    { name: 'PostgreSQL', rate: 74, jobs: '1.6K', status: 'Minor Gap', desc: 'Indexing & Database Performance' },
-    { name: 'Redis Cache', rate: 40, jobs: '890', status: 'Kritis', desc: 'In-memory caching & queues' },
-    { name: 'Cloud AWS', rate: 32, jobs: '1.1K', status: 'Kritis', desc: 'EC2, S3, IAM & Cloud Architecture' },
+  const periodStats = {
+    '2026-Q1': { mapped: '14,208', growth: '+342 minggu ini', critical: '42 Skill', match: '70.4%', matchDiff: '+12.5% YoY' },
+    '2025-Q4': { mapped: '12,850', growth: '+180 minggu ini', critical: '56 Skill', match: '62.1%', matchDiff: '+4.2% YoY' },
+  };
+
+  const rawSkillsData = [
+    {
+      name: 'Docker',
+      rates: { '2026-Q1': 35, '2025-Q4': 28 },
+      jobs: '1.4K',
+      status: 'Kritis',
+      category: 'cloud',
+      desc: 'Containerization & Multi-stage builds',
+      rps: 'Cloud Architecture & DevOps',
+      recommendation: 'Tambahkan praktikum Dockerfile & Containerization di Minggu ke-6',
+    },
+    {
+      name: 'Kubernetes',
+      rates: { '2026-Q1': 28, '2025-Q4': 20 },
+      jobs: '980',
+      status: 'Kritis',
+      category: 'cloud',
+      desc: 'Cluster orchestration & Ingress',
+      rps: 'Sistem Terdistribusi',
+      recommendation: 'Integrasikan konsep Pod, Deployment & Ingress Controller',
+    },
+    {
+      name: 'CI/CD',
+      rates: { '2026-Q1': 45, '2025-Q4': 38 },
+      jobs: '1.2K',
+      status: 'Kritis',
+      category: 'cloud',
+      desc: 'GitHub Actions & Automated Testing',
+      rps: 'Manajemen Proyek Perangkat Lunak',
+      recommendation: 'Wajibkan Automated Pipeline pada Tugas Akhir Mata Kuliah',
+    },
+    {
+      name: 'React.js',
+      rates: { '2026-Q1': 88, '2025-Q4': 82 },
+      jobs: '2.1K',
+      status: 'Sesuai',
+      category: 'web',
+      desc: 'Component Architecture & Hooks',
+      rps: 'Pemrograman Web Lanjut',
+      recommendation: 'Kurikulum materi React.js sudah selaras 88% dengan DUDI',
+    },
+    {
+      name: 'Laravel',
+      rates: { '2026-Q1': 82, '2025-Q4': 80 },
+      jobs: '1.8K',
+      status: 'Sesuai',
+      category: 'web',
+      desc: 'Eloquent ORM & RESTful APIs',
+      rps: 'Pemrograman Web Framework',
+      recommendation: 'Pertahankan silabus Eloquent & RESTful API Architecture',
+    },
+    {
+      name: 'PostgreSQL',
+      rates: { '2026-Q1': 74, '2025-Q4': 70 },
+      jobs: '1.6K',
+      status: 'Minor Gap',
+      category: 'web',
+      desc: 'Indexing & Database Performance',
+      rps: 'Basis Data Lanjut',
+      recommendation: 'Tambahkan materi Query Optimization & Indexing Strategies',
+    },
+    {
+      name: 'Redis',
+      rates: { '2026-Q1': 40, '2025-Q4': 32 },
+      jobs: '890',
+      status: 'Kritis',
+      category: 'cloud',
+      desc: 'In-memory caching & queues',
+      rps: 'Pemrograman Web Lanjut',
+      recommendation: 'Sisipkan modul Session Caching & Redis Queue Worker',
+    },
+    {
+      name: 'AWS Cloud',
+      rates: { '2026-Q1': 32, '2025-Q4': 25 },
+      jobs: '1.1K',
+      status: 'Kritis',
+      category: 'cloud',
+      desc: 'EC2, S3, IAM & Cloud Architecture',
+      rps: 'Komputasi Awan',
+      recommendation: 'Integrasikan kurikulum AWS Academy Cloud Foundations',
+    },
   ];
+
+  const currentStats = periodStats[selectedPeriod];
+
+  const filteredSkills = rawSkillsData.filter((item) => {
+    if (categoryFilter === 'all') return true;
+    return item.category === categoryFilter;
+  });
+
+  const displaySkill = selectedSkill || hoveredSkill;
 
   return (
     <div className="relative w-full max-w-xl mx-auto lg:max-w-none">
@@ -73,7 +161,7 @@ function LiveDashboardPreview() {
       <div className="absolute -inset-2 rounded-3xl bg-gradient-to-r from-emerald-500/20 via-teal-400/20 to-emerald-600/10 blur-xl opacity-70 -z-10" />
 
       {/* Main Glass Dashboard Card */}
-      <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200/90 dark:border-slate-800 overflow-hidden transition-all duration-300 hover:shadow-emerald-950/10">
+      <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200/90 dark:border-slate-800 overflow-hidden transition-all duration-300">
         {/* Browser Chrome Header */}
         <div className="flex items-center justify-between px-4 py-3 bg-gray-50/90 dark:bg-slate-950/80 border-b border-gray-200/80 dark:border-slate-800 text-xs">
           <div className="flex items-center gap-2">
@@ -87,13 +175,13 @@ function LiveDashboardPreview() {
             </span>
           </div>
           {/* Period selector */}
-          <div className="flex items-center gap-1.5 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-md px-2 py-1 text-[11px] font-medium text-gray-600 dark:text-gray-300">
+          <div className="flex items-center gap-1.5 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-md px-2.5 py-1 text-[11px] font-medium text-gray-600 dark:text-gray-300 shadow-2xs">
             <Calendar className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" />
             <select
               value={selectedPeriod}
               onChange={(e) => setSelectedPeriod(e.target.value)}
               aria-label="Pilih Periode Analisis"
-              className="bg-transparent border-none outline-hidden cursor-pointer text-gray-700 dark:text-gray-200 text-[11px]"
+              className="bg-transparent border-none outline-hidden cursor-pointer text-gray-800 dark:text-gray-200 text-[11px] font-semibold"
             >
               <option value="2026-Q1">Periode: 2026 Q1</option>
               <option value="2025-Q4">Periode: 2025 Q4</option>
@@ -125,9 +213,9 @@ function LiveDashboardPreview() {
               KPI & Metrik
             </button>
           </div>
-          <div className="flex items-center gap-1 text-[11px] text-emerald-800 dark:text-emerald-400 font-medium">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping inline-block" />
-            Data Live loker.id
+          <div className="flex items-center gap-1.5 text-[11px] text-emerald-800 dark:text-emerald-400 font-medium">
+            <span className="inline-block w-2 h-2 rounded-full bg-emerald-500" />
+            Live Data Scraping
           </div>
         </div>
 
@@ -135,101 +223,223 @@ function LiveDashboardPreview() {
         <div className="p-4 sm:p-5">
           {/* Quick Metrics Bar */}
           <div className="grid grid-cols-3 gap-2.5 mb-4">
-            <div className="bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/40 rounded-xl p-2.5 transition-transform hover:-translate-y-0.5">
+            <div className="bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/40 rounded-xl p-2.5 transition-all hover:scale-[1.02]">
               <p className="text-[10px] font-semibold text-emerald-900 dark:text-emerald-300 uppercase">Skill Terpetakan</p>
-              <p className="font-display text-lg font-bold text-emerald-950 dark:text-emerald-100 mt-0.5">14,208</p>
-              <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-medium">+342 minggu ini</span>
+              <p className="font-display text-lg font-bold text-emerald-950 dark:text-emerald-100 mt-0.5">{currentStats.mapped}</p>
+              <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-medium">{currentStats.growth}</span>
             </div>
-            <div className="bg-rose-50/80 dark:bg-rose-950/40 border border-rose-100 dark:border-rose-900/40 rounded-xl p-2.5 transition-transform hover:-translate-y-0.5">
+            <div className="bg-rose-50/80 dark:bg-rose-950/40 border border-rose-100 dark:border-rose-900/40 rounded-xl p-2.5 transition-all hover:scale-[1.02]">
               <p className="text-[10px] font-semibold text-rose-900 dark:text-rose-300 uppercase">Gap Kritis</p>
-              <p className="font-display text-lg font-bold text-rose-950 dark:text-rose-100 mt-0.5">42 Skill</p>
-              <span className="text-[10px] text-rose-700 dark:text-rose-400 font-medium">Butuh revisi RPS</span>
+              <p className="font-display text-lg font-bold text-rose-950 dark:text-rose-100 mt-0.5">{currentStats.critical}</p>
+              <span className="text-[10px] text-rose-700 dark:text-rose-400 font-medium">Revisi RPS direkomendasikan</span>
             </div>
-            <div className="bg-blue-50/80 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/40 rounded-xl p-2.5 transition-transform hover:-translate-y-0.5">
+            <div className="bg-blue-50/80 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/40 rounded-xl p-2.5 transition-all hover:scale-[1.02]">
               <p className="text-[10px] font-semibold text-blue-900 dark:text-blue-300 uppercase">Keselarasan</p>
-              <p className="font-display text-lg font-bold text-blue-950 dark:text-blue-100 mt-0.5">70.4%</p>
-              <span className="text-[10px] text-blue-700 dark:text-blue-400 font-medium">+12.5% YoY</span>
+              <p className="font-display text-lg font-bold text-blue-950 dark:text-blue-100 mt-0.5">{currentStats.match}</p>
+              <span className="text-[10px] text-blue-700 dark:text-blue-400 font-medium">{currentStats.matchDiff}</span>
             </div>
           </div>
 
-          {/* Interactive Chart Area */}
-          <div className="bg-gray-50/70 dark:bg-slate-950/60 rounded-xl p-3 border border-gray-100 dark:border-slate-800">
-            <div className="flex items-center justify-between mb-3 text-xs">
-              <div className="flex items-center gap-1.5 font-semibold text-gray-700 dark:text-gray-200">
-                <BarChart3 className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
-                Kesesuaian Skill vs Permintaan Pasar (Hover Batang)
-              </div>
-              <div className="flex items-center gap-3 text-[10px] text-gray-500 dark:text-gray-400">
-                <span className="flex items-center gap-1">
-                  <span className="w-2 h-2 rounded bg-emerald-700 dark:bg-emerald-500" /> Sesuai
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="w-2 h-2 rounded bg-rose-500" /> Gap Kritis
-                </span>
-              </div>
-            </div>
+          <AnimatePresence mode="wait">
+            {activeTab === 'gap-map' ? (
+              <motion.div
+                key="gap-map"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.2 }}
+                className="bg-gray-50/70 dark:bg-slate-950/60 rounded-xl p-3 border border-gray-100 dark:border-slate-800"
+              >
+                {/* Header & Filter Pills */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 text-xs">
+                  <div className="flex items-center gap-1.5 font-semibold text-gray-700 dark:text-gray-200">
+                    <BarChart3 className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
+                    Kesesuaian Skill vs Pasar <span className="text-[10px] text-gray-400 font-normal">(Klik batang untuk detail)</span>
+                  </div>
 
-            {/* Interactive Bars */}
-            <div className="flex items-end gap-1.5 sm:gap-2 h-36 pt-4 pb-1 px-1">
-              {skillsData.map((item, idx) => {
-                const isCritical = item.rate < 60;
-                const isHovered = hoveredSkill?.name === item.name;
-                return (
-                  <div
-                    key={idx}
-                    onMouseEnter={() => setHoveredSkill(item)}
-                    onMouseLeave={() => setHoveredSkill(null)}
-                    className="flex-1 flex flex-col items-center h-full justify-end group cursor-pointer"
-                  >
-                    <div
-                      className={`w-full rounded-t-md transition-all duration-300 relative ${
-                        isCritical
-                          ? isHovered
-                            ? 'bg-rose-600 scale-x-105'
-                            : 'bg-rose-400/90 dark:bg-rose-500/80'
-                          : isHovered
-                          ? 'bg-emerald-900 dark:bg-emerald-500 scale-x-105'
-                          : 'bg-emerald-700 dark:bg-emerald-600'
-                      }`}
-                      style={{ height: `${item.rate}%` }}
+                  {/* Filter pills */}
+                  <div className="flex items-center gap-1">
+                    {[
+                      { id: 'all', label: 'Semua' },
+                      { id: 'cloud', label: 'Cloud/DevOps' },
+                      { id: 'web', label: 'Web/Dev' },
+                    ].map((btn) => (
+                      <button
+                        key={btn.id}
+                        onClick={() => setCategoryFilter(btn.id)}
+                        className={`px-2 py-0.5 rounded-md text-[10px] font-medium transition-all cursor-pointer ${
+                          categoryFilter === btn.id
+                            ? 'bg-gray-800 text-white dark:bg-slate-700'
+                            : 'text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'
+                        }`}
+                      >
+                        {btn.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Interactive Chart Bars */}
+                <div className="flex items-end gap-1.5 sm:gap-2 h-36 pt-4 pb-1 px-1">
+                  {filteredSkills.map((item) => {
+                    const rate = item.rates[selectedPeriod];
+                    const isCritical = rate < 60;
+                    const isHovered = hoveredSkill?.name === item.name;
+                    const isSelected = selectedSkill?.name === item.name;
+
+                    return (
+                      <div
+                        key={item.name}
+                        onClick={() => setSelectedSkill(isSelected ? null : item)}
+                        onMouseEnter={() => setHoveredSkill(item)}
+                        onMouseLeave={() => setHoveredSkill(null)}
+                        className="flex-1 flex flex-col items-center h-full justify-end group cursor-pointer"
+                      >
+                        <motion.div
+                          layout
+                          className={`w-full rounded-t-md transition-all duration-300 relative ${
+                            isSelected
+                              ? 'ring-2 ring-emerald-500 dark:ring-emerald-400 ring-offset-1 dark:ring-offset-slate-900 bg-emerald-600 dark:bg-emerald-400'
+                              : isCritical
+                              ? isHovered
+                                ? 'bg-rose-600 scale-x-105'
+                                : 'bg-rose-400/90 dark:bg-rose-500/80'
+                              : isHovered
+                              ? 'bg-emerald-900 dark:bg-emerald-500 scale-x-105'
+                              : 'bg-emerald-700 dark:bg-emerald-600'
+                          }`}
+                          style={{ height: `${rate}%` }}
+                        >
+                          {/* Live Bar Top Value */}
+                          <span className="absolute -top-5 left-1/2 -translate-x-1/2 text-[9px] font-bold text-gray-600 dark:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                            {rate}%
+                          </span>
+                        </motion.div>
+                        <span
+                          className={`text-[9px] font-medium mt-1 truncate w-full text-center ${
+                            isSelected ? 'text-emerald-700 dark:text-emerald-400 font-bold' : 'text-gray-500 dark:text-gray-400'
+                          }`}
+                        >
+                          {item.name}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Detailed Inspection Panel below Chart */}
+                <div className="mt-2 pt-2 border-t border-gray-200/70 dark:border-slate-800 min-h-[44px] flex items-center justify-between text-xs">
+                  {displaySkill ? (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="w-full bg-white dark:bg-slate-900/80 border border-gray-200/80 dark:border-slate-800 rounded-lg p-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
                     >
-                      {/* Live Bar Top Value */}
-                      <span className="absolute -top-5 left-1/2 -translate-x-1/2 text-[9px] font-bold text-gray-600 dark:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                        {item.rate}%
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`w-2 h-2 rounded-full ${
+                              displaySkill.rates[selectedPeriod] >= 60 ? 'bg-emerald-600' : 'bg-rose-500'
+                            }`}
+                          />
+                          <strong className="text-gray-900 dark:text-gray-100">{displaySkill.name}</strong>
+                          <span className="text-[10px] text-gray-400 font-mono">({displaySkill.jobs} lowongan)</span>
+                          <span
+                            className={`text-[9px] px-1.5 py-0.5 rounded font-semibold ${
+                              displaySkill.rates[selectedPeriod] >= 60
+                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                                : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
+                            }`}
+                          >
+                            {displaySkill.status}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-gray-600 dark:text-gray-300">
+                          <strong>Mata Kuliah:</strong> {displaySkill.rps} — {displaySkill.recommendation}
+                        </p>
+                      </div>
+
+                      {selectedSkill && (
+                        <button
+                          onClick={() => setSelectedSkill(null)}
+                          className="self-end sm:self-center px-2 py-1 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300 text-[10px] font-semibold rounded cursor-pointer transition-colors"
+                        >
+                          Tutup Detail
+                        </button>
+                      )}
+                    </motion.div>
+                  ) : (
+                    <div className="flex items-center justify-between w-full text-gray-400 dark:text-gray-500 text-[11px] italic">
+                      <span>Arahkan kursor atau klik pada batang diagram untuk menginspeksi rekomendasi RPS...</span>
+                      <span className="text-[10px] font-mono not-italic text-emerald-800 dark:text-emerald-400 font-medium hidden sm:inline">
+                        Klik untuk Pin
                       </span>
                     </div>
-                    <span className="text-[9px] font-medium text-gray-500 dark:text-gray-400 mt-1 truncate w-full text-center">
-                      {item.name}
-                    </span>
+                  )}
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="kpi"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.2 }}
+                className="bg-gray-50/70 dark:bg-slate-950/60 rounded-xl p-3.5 border border-gray-100 dark:border-slate-800 space-y-3"
+              >
+                <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-1.5 font-semibold text-gray-700 dark:text-gray-200">
+                    <TrendingUp className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
+                    Analisis Capaian Pembelajaran Lulusan (CPL)
                   </div>
-                );
-              })}
-            </div>
+                  <span className="text-[10px] text-gray-400">Standar Standarisasi Dikti & LAM-INFOKOM</span>
+                </div>
 
-            {/* Detail Tooltip Bar on Hover */}
-            <div className="mt-2 pt-2 border-t border-gray-200/70 dark:border-slate-800 min-h-[32px] flex items-center justify-between text-xs">
-              {hoveredSkill ? (
-                <div className="flex items-center justify-between w-full text-emerald-950 dark:text-emerald-300 font-medium">
-                  <span className="flex items-center gap-2">
-                    <span className={`w-2 h-2 rounded-full ${hoveredSkill.rate >= 60 ? 'bg-emerald-600' : 'bg-rose-500'}`} />
-                    <strong>{hoveredSkill.name}:</strong> {hoveredSkill.desc}
+                {/* Progress Indicators */}
+                <div className="space-y-2.5">
+                  <div className="bg-white dark:bg-slate-900 border border-gray-200/80 dark:border-slate-800 rounded-lg p-2.5 text-xs">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="font-semibold text-gray-800 dark:text-gray-200">CPL 01: Cloud Native & Containerization</span>
+                      <span className="font-bold text-rose-600 dark:text-rose-400 text-[11px]">38% Terpenuhi (Gap 62%)</span>
+                    </div>
+                    <div className="w-full bg-gray-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+                      <div className="bg-rose-500 h-full rounded-full transition-all duration-500" style={{ width: '38%' }} />
+                    </div>
+                    <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-1">
+                      Kebutuhan industri: 1.4K lowongan Docker/K8s belum tercakup optimal dalam RPS aktif.
+                    </p>
+                  </div>
+
+                  <div className="bg-white dark:bg-slate-900 border border-gray-200/80 dark:border-slate-800 rounded-lg p-2.5 text-xs">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="font-semibold text-gray-800 dark:text-gray-200">CPL 02: Full-Stack Web Development</span>
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400 text-[11px]">85% Terpenuhi (Sesuai)</span>
+                    </div>
+                    <div className="w-full bg-gray-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+                      <div className="bg-emerald-600 h-full rounded-full transition-all duration-500" style={{ width: '85%' }} />
+                    </div>
+                    <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-1">
+                      Kemampuan React.js & Laravel mahasiswa telah sesuai dengan kriteria pasar kerja.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-2 bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-900/40 rounded-lg flex items-center justify-between text-[11px]">
+                  <span className="text-emerald-900 dark:text-emerald-300 font-medium">
+                    Efisiensi Pengusulan RPS Baru: <strong>2.4 Minggu</strong> (Dahulu 12 Minggu)
                   </span>
-                  <span className="text-[11px] text-gray-500 dark:text-gray-400 font-mono">
-                    {hoveredSkill.jobs} lowongan · Status: {hoveredSkill.status}
+                  <span className="text-[10px] bg-emerald-700 text-white dark:bg-emerald-600 px-2 py-0.5 rounded font-bold">
+                    Otomatis 80%
                   </span>
                 </div>
-              ) : (
-                <span className="text-gray-400 dark:text-gray-500 text-[11px] italic">
-                  Arahkan kursor pada diagram untuk menginspeksi detail kompetensi spesifik...
-                </span>
-              )}
-            </div>
-          </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
       {/* Floating Badge 1 (Top Right) */}
-      <div className="absolute -top-4 -right-2 sm:-right-6 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl shadow-xl dark:shadow-black/50 border border-gray-100 dark:border-slate-800 p-3 animate-float hidden sm:block">
+      <div className="absolute -top-4 -right-2 sm:-right-6 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl shadow-xl dark:shadow-black/50 border border-gray-100 dark:border-slate-800 p-3 hidden sm:block">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 flex items-center justify-center">
             <TrendingUp className="w-4.5 h-4.5" />
@@ -237,17 +447,16 @@ function LiveDashboardPreview() {
           <div>
             <p className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Match Rate Vokasi</p>
             <p className="font-display text-base font-bold text-emerald-950 dark:text-emerald-100 leading-none mt-0.5">
-              70.4% <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">+12.5%</span>
+              {currentStats.match} <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">{currentStats.matchDiff}</span>
             </p>
           </div>
         </div>
       </div>
 
       {/* Floating Badge 2 (Bottom Left) */}
-      <div className="absolute -bottom-5 -left-2 sm:-left-6 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl shadow-xl dark:shadow-black/50 border border-gray-100 dark:border-slate-800 px-3.5 py-2.5 animate-float-slow hidden sm:flex items-center gap-3">
-        <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+      <div className="absolute -bottom-5 -left-2 sm:-left-6 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl shadow-xl dark:shadow-black/50 border border-gray-100 dark:border-slate-800 px-3.5 py-2.5 hidden sm:flex items-center gap-3">
         <div>
-          <p className="text-xs font-bold text-gray-800 dark:text-gray-100">42 Skill Kritis Terdeteksi</p>
+          <p className="text-xs font-bold text-gray-800 dark:text-gray-100">{currentStats.critical} Terdeteksi</p>
           <p className="text-[10px] text-gray-500 dark:text-gray-400">Rekomendasi revisi RPS siap diekspor</p>
         </div>
       </div>
@@ -561,14 +770,14 @@ function LiveDemoSection() {
   );
 }
 
-// ─── Component 4: Persona Tabs Switcher ("Untuk Siapa") ─────────────────────
+// ─── Component 4: Persona Tabs Switcher ("Untuk Siapa / Peran") ─────────────
 function PersonaTabsSection() {
   const [activePersona, setActivePersona] = useState('kaprodi');
 
   const personas = {
     kaprodi: {
       id: 'kaprodi',
-      icon: GraduationCap,
+      icon: Users,
       role: 'Ketua Program Studi',
       headline: 'Pemantauan Keselarasan Kurikulum Program Studi',
       desc: 'Melihat rekapitulasi ketercapaian kompetensi industri pada seluruh mata kuliah untuk bahan evaluasi kurikulum dan akreditasi.',
@@ -622,7 +831,7 @@ function PersonaTabsSection() {
     <section id="untuk-siapa" className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50/70 dark:bg-slate-950/90 transition-colors lazy-section">
       <div className="max-w-6xl mx-auto">
         <div className="text-center max-w-2xl mx-auto mb-12">
-          <span className="badge badge-blue mb-3 inline-flex">Persona Beragam, Satu Tujuan</span>
+          <span className="badge badge-gray mb-3 inline-flex">Peran</span>
           <h2 className="font-display text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white tracking-tight">
             Dibuat untuk Seluruh Ekosistem Pendidikan Vokasi
           </h2>
@@ -685,15 +894,11 @@ function PersonaTabsSection() {
             {/* Right: Interactive Role Mini Card */}
             <div className="lg:col-span-5">
               <div className="bg-gradient-to-br from-emerald-950 via-emerald-900 to-teal-950 text-white p-6 rounded-2xl shadow-xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
-                  {React.createElement(current.icon, { className: "w-28 h-28" })}
-                </div>
                 <div className="relative z-10">
                   <div className="flex items-center justify-between mb-4">
                     <span className="text-[11px] font-semibold text-emerald-300 uppercase tracking-wider">
                       Live Workspace Preview
                     </span>
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
                   </div>
                   <h4 className="font-display text-lg font-bold text-white mb-1">
                     {current.previewTitle}
@@ -1055,15 +1260,19 @@ export default function LandingPage() {
         <InfiniteSlider
           speed={32}
           items={JOB_PORTALS.map((portal, idx) => (
-            <div
+            <a
               key={idx}
-              className="flex items-center gap-3 px-5 py-2.5 rounded-2xl bg-gray-50 dark:bg-slate-800/80 border border-gray-200/80 dark:border-slate-700/80 hover:bg-white dark:hover:bg-slate-700 hover:border-emerald-300 dark:hover:border-emerald-500/50 hover:shadow-md transition-all group cursor-default"
+              href={portal.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={`Buka portal lowongan ${portal.name}`}
+              className="flex items-center gap-3 px-5 py-2.5 rounded-2xl bg-white/75 dark:bg-slate-900/75 backdrop-blur-md border border-gray-200/80 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-850 hover:border-emerald-500/60 hover:shadow-lg hover:scale-105 transition-all group cursor-pointer"
             >
               {portal.logo}
-              <span className="text-[10px] font-semibold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-0.5 rounded-full border border-emerald-200/60 dark:border-emerald-800/60 whitespace-nowrap">
+              <span className="text-[10px] font-semibold text-emerald-800 dark:text-emerald-300 bg-emerald-50/80 dark:bg-emerald-950/60 px-2.5 py-0.5 rounded-full border border-emerald-200/60 dark:border-emerald-800/60 whitespace-nowrap">
                 {portal.tag}
               </span>
-            </div>
+            </a>
           ))}
         />
 
@@ -1073,16 +1282,22 @@ export default function LandingPage() {
             speed={38}
             direction="right"
             items={TECH_SKILLS.map((sk, idx) => (
-              <div
+              <a
                 key={idx}
-                className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-slate-900 text-white text-xs font-semibold shadow-xs select-none hover:bg-emerald-950 hover:border-emerald-500/50 transition-all border border-slate-800 cursor-default"
+                href={sk.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={`Buka dokumentasi resmi ${sk.name}`}
+                className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/75 dark:bg-slate-900/75 backdrop-blur-md border border-gray-200/80 dark:border-slate-800 text-gray-900 dark:text-gray-100 text-xs font-bold shadow-xs select-none hover:bg-white dark:hover:bg-slate-850 hover:border-emerald-500/60 hover:scale-105 hover:shadow-lg transition-all cursor-pointer"
               >
-                <div className="flex-shrink-0">{sk.icon}</div>
-                <span className="font-semibold text-gray-100">{sk.name}</span>
-                <span className="text-[10px] text-emerald-400 font-mono font-bold bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-800/60">
+                <div className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 bg-gray-100/80 dark:bg-slate-800/80">
+                  {sk.icon}
+                </div>
+                <span className="font-bold text-gray-900 dark:text-gray-100">{sk.name}</span>
+                <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-mono font-bold bg-emerald-50/80 dark:bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-200/60 dark:border-emerald-800/60">
                   {sk.growth}
                 </span>
-              </div>
+              </a>
             ))}
           />
         </div>
