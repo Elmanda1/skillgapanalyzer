@@ -133,9 +133,19 @@ def enumerate_pages(policy: Dict[str, Any], logger, max_pages: int = None) -> Li
 
         saved = LIST_RAW_DIR / f"page_{page}.json"
         if saved.exists():
-            with open(saved, encoding="utf-8") as f:
-                ctx = json.load(f)
-            jobs, meta = listing_from_ctx(ctx)
+            ctx = None
+            jobs, meta = None, None
+            try:
+                with open(saved, encoding="utf-8") as f:
+                    ctx = json.load(f)
+                jobs, meta = listing_from_ctx(ctx)
+            except (json.JSONDecodeError, OSError) as e:
+                logger.warning(f"Corrupted cache file {saved.name}: {e}. Removing corrupted cache and re-fetching...")
+                try:
+                    saved.unlink(missing_ok=True)
+                except Exception:
+                    pass
+
             if meta:
                 LAST = meta.get("last_page")
                 total = meta.get("total")
