@@ -2,6 +2,8 @@
 **Skill Gap Analyzer (Curriculum Intelligence Platform)**  
 *Document Version: 1.0 — KMIPN VIII Academic & Engineering Specification*
 
+[🇮🇩 Baca Versi Bahasa Indonesia](file:///c:/Users/lunox/Documents/Skillgapanalyzer/UNDERSTANDING_ID.md)
+
 ---
 
 ## 1. Executive Summary & System Overview
