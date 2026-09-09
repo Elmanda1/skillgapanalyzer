@@ -72,8 +72,6 @@ class ScrapingController extends Controller
         $validated = $request->validate([
             'domain_url' => 'required|string',
             'agent_code' => 'nullable|string',
-            'max_pages' => 'nullable|integer|min:1|max:50',
-            'max_jobs' => 'nullable|integer|min:1|max:100',
         ]);
 
         $rawUrl = trim($validated['domain_url']);
@@ -97,8 +95,8 @@ class ScrapingController extends Controller
             'status' => 'Syncing',
             'uptime' => 99.9,
             'volume_data' => 0.5,
-            'max_pages' => $validated['max_pages'] ?? 9999,
-            'max_jobs' => $validated['max_jobs'] ?? 999999,
+            'max_pages' => 0,
+            'max_jobs' => 0,
             'last_sync' => now(),
         ]);
 
