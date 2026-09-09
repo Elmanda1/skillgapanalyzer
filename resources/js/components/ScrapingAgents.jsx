@@ -2,12 +2,18 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useToast } from '../context/ToastContext';
 import Icon from '../components/Icon.jsx';
 
+const formatNowDDMMYYYYHHMMSS = () => {
+  const now = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+};
+
 const AGENTS = [
-  { id: 'JKT-Worker-01', source: 'LinkedIn Jobs', location: 'Jakarta',  status: 'Active',  uptime: '99.98%', data: '1.8 TB' },
-  { id: 'JKT-Worker-02', source: 'JobStreet',     location: 'Jakarta',  status: 'Active',  uptime: '99.95%', data: '2.4 TB' },
-  { id: 'SBY-Index-01',  source: 'Indeed ID',     location: 'Surabaya', status: 'Syncing', uptime: '99.50%', data: '1.2 TB' },
-  { id: 'BDG-Proxy-02',  source: 'Kalibrr',       location: 'Bandung',  status: 'Error',   uptime: '98.50%', data: '0.8 TB' },
-  { id: 'MLG-Scout-01',  source: 'TechInAsia',    location: 'Malang',   status: 'Active',  uptime: '99.90%', data: '0.6 TB' },
+  { id: 'AGENT-LOKERID-01',    source: 'loker.id',          status: 'Active',  data: '2.4 GB', lastScrap: '09/09/2026 23:30:15' },
+  { id: 'AGENT-JOBSTREET-01',  source: 'jobstreet.co.id',   status: 'Active',  data: '1.8 GB', lastScrap: '09/09/2026 23:15:00' },
+  { id: 'AGENT-INDEED-01',     source: 'id.indeed.com',     status: 'Syncing', data: '1.2 GB', lastScrap: '09/09/2026 22:45:10' },
+  { id: 'AGENT-KALIBRR-01',    source: 'kalibrr.com',       status: 'Active',  data: '0.8 GB', lastScrap: '09/09/2026 21:10:00' },
+  { id: 'AGENT-TECHINASIA-01', source: 'id.techinasia.com',  status: 'Active',  data: '0.6 GB', lastScrap: '09/09/2026 20:05:30' },
 ];
 
 const statusBadge = (s) => {
@@ -39,20 +45,32 @@ const parseLog = (log) => {
   return { timestamp, type: 'INFO', message: content };
 };
 
-export default function ScrapingAgents() {
+export default function ScrapingAgents({ dbAgents }) {
   const toast = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSyncing, setIsSyncing] = useState(false);
   const logContainerRef = useRef(null);
 
+  const initialAgents = (dbAgents && dbAgents.length > 0)
+    ? dbAgents.map(a => ({
+        id: a.id || a.id_code || 'AGENT-LOKERID-01',
+        source: a.sumber || a.source || 'loker.id',
+        status: a.status || 'Active',
+        data: a.data || '1.5 GB',
+        lastScrap: a.last_scrap || a.lastScrap || formatNowDDMMYYYYHHMMSS(),
+      }))
+    : AGENTS;
+
+  const [agentsList, setAgentsList] = useState(initialAgents);
+
   const [logs, setLogs] = useState([
-    '[SYSTEM] Inisiasi Jaringan Agen Scraping regional...',
-    '[INFO] JKT-Worker-01: Terhubung ke portal LinkedIn Jobs wilayah DKI Jakarta.',
-    '[INFO] JKT-Worker-02: Memulai crawl index portal JobStreet...',
-    '[INFO] MLG-Scout-01: Mengunduh data lowongan tech baru dari TechInAsia...',
-    '[SUCCESS] JKT-Worker-01: Berhasil mengekstraksi lowongan "DevOps Engineer" — Skill: Docker, K8s, Terraform.',
-    '[WARNING] BDG-Proxy-02: Penolakan akses HTTP 429. Mencoba retry mekanisme...',
-    '[INFO] SBY-Index-01: Mensinkronkan 120 lowongan terbaru ke basis data pusat...',
+    `[${formatNowDDMMYYYYHHMMSS()}] [SYSTEM] Inisiasi Jaringan Agen Scraping regional...`,
+    `[${formatNowDDMMYYYYHHMMSS()}] [INFO] AGENT-LOKERID-01: Terhubung ke portal loker.id.`,
+    `[${formatNowDDMMYYYYHHMMSS()}] [INFO] AGENT-JOBSTREET-01: Memulai crawl index portal jobstreet.co.id...`,
+    `[${formatNowDDMMYYYYHHMMSS()}] [INFO] AGENT-TECHINASIA-01: Mengunduh data lowongan tech baru dari id.techinasia.com...`,
+    `[${formatNowDDMMYYYYHHMMSS()}] [SUCCESS] AGENT-LOKERID-01: Berhasil mengekstraksi lowongan "DevOps Engineer" — Skill: Docker, K8s, Terraform.`,
+    `[${formatNowDDMMYYYYHHMMSS()}] [WARNING] AGENT-KALIBRR-01: Penolakan akses HTTP 429. Mencoba retry mekanisme...`,
+    `[${formatNowDDMMYYYYHHMMSS()}] [INFO] AGENT-INDEED-01: Mensinkronkan lowongan terbaru ke basis data pusat...`,
   ]);
 
   const handleDeploy = () => {
@@ -75,6 +93,12 @@ export default function ScrapingAgents() {
         if (data.done) {
           setIsSyncing(false);
           eventSource.close();
+          const nowStr = formatNowDDMMYYYYHHMMSS();
+          setAgentsList(prev => prev.map(a => 
+            a.source.includes('loker.id') || a.id.includes('LOKERID')
+              ? { ...a, status: 'Active', lastScrap: nowStr }
+              : a
+          ));
           toast.success('Sinkronisasi Ulang Selesai', 'Scraper Python & pengimporan data lowongan berhasil dieksekusi.');
         }
       } catch (err) {
@@ -92,35 +116,36 @@ export default function ScrapingAgents() {
 
   const jobTitles  = ['Backend Developer','Data Scientist','Frontend Engineer','Security Specialist','Cloud Architect'];
   const skillSets  = [['GraphQL','Node.js','PostgreSQL'],['Python','PyTorch','SQL'],['React','Tailwind','Vite'],['Zero Trust','SIEM','ISO27001'],['AWS','Kubernetes','CI/CD']];
-  const portals    = ['LinkedIn Jobs','JobStreet','Indeed ID','TechInAsia'];
+  const portals    = ['loker.id','jobstreet.co.id','id.indeed.com','id.techinasia.com'];
 
   useEffect(() => {
     if (isSyncing) return;
 
     const interval = setInterval(() => {
-      const agent  = AGENTS[Math.floor(Math.random() * AGENTS.length)];
+      const agent  = agentsList[Math.floor(Math.random() * agentsList.length)];
       const jobIdx = Math.floor(Math.random() * jobTitles.length);
       let newLog   = '';
+      const nowStr = formatNowDDMMYYYYHHMMSS();
       if (agent.status === 'Active') {
-        newLog = `[SUCCESS] ${agent.id}: Ekstraksi "${jobTitles[jobIdx]}" (${portals[Math.floor(Math.random()*portals.length)]}) — Skill: [${skillSets[jobIdx].join(', ')}].`;
+        newLog = `[${nowStr}] [SUCCESS] ${agent.id}: Ekstraksi "${jobTitles[jobIdx]}" (${portals[Math.floor(Math.random()*portals.length)]}) — Skill: [${skillSets[jobIdx].join(', ')}].`;
       } else if (agent.status === 'Syncing') {
-        newLog = `[INFO] ${agent.id}: Sinkronisasi silang kluster data dengan model normalisasi NLP...`;
+        newLog = `[${nowStr}] [INFO] ${agent.id}: Sinkronisasi silang kluster data dengan model normalisasi NLP...`;
       } else {
-        newLog = `[WARNING] ${agent.id}: Menguji gateway IP proxy alternatif karena rate limits...`;
+        newLog = `[${nowStr}] [WARNING] ${agent.id}: Menguji gateway IP proxy alternatif karena rate limits...`;
       }
       setLogs(prev => [newLog, ...prev.slice(0, 50)]);
     }, 6000);
     return () => clearInterval(interval);
-  }, [isSyncing]);
+  }, [isSyncing, agentsList]);
 
-  const filtered = AGENTS.filter(a =>
+  const filtered = agentsList.filter(a =>
     a.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    a.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    a.source.toLowerCase().includes(searchQuery.toLowerCase())
+    a.source.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    a.status.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const statCounts = { Active: 0, Syncing: 0, Error: 0 };
-  AGENTS.forEach(a => { if (statCounts[a.status] !== undefined) statCounts[a.status]++; });
+  agentsList.forEach(a => { if (statCounts[a.status] !== undefined) statCounts[a.status]++; });
 
   return (
     <div className="w-full p-6 md:p-8 animate-fade-in-up">
@@ -173,7 +198,7 @@ export default function ScrapingAgents() {
               <input
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Cari agen..."
+                placeholder="Cari domain / agen..."
                 className="w-full pl-8 pr-4 py-2 border border-border rounded-lg text-sm bg-gray-50 focus:outline-none focus:border-brand transition-all"
               />
             </div>
@@ -181,7 +206,7 @@ export default function ScrapingAgents() {
           <table className="w-full text-left text-sm">
             <thead>
               <tr className="bg-gray-50 border-b border-border">
-                {['AGEN / ID','SUMBER','LOKASI','STATUS','UPTIME','DATA'].map(h => (
+                {['AGEN / ID', 'SUMBER', 'STATUS', 'DATA', 'LAST SCRAP'].map(h => (
                   <th key={h} className="px-4 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wide whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -191,21 +216,20 @@ export default function ScrapingAgents() {
                 <tr key={a.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-lg bg-brand-light flex items-center justify-center">
+                      <div className="w-7 h-7 rounded-lg bg-brand-light flex items-center justify-center shrink-0">
                         <Icon className="text-brand text-[14px]" name="dns" />
                       </div>
                       <span className="font-mono text-xs font-semibold text-text">{a.id}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-text-secondary text-xs">{a.source}</td>
-                  <td className="px-4 py-3 text-text-secondary text-xs">{a.location}</td>
+                  <td className="px-4 py-3 text-text-secondary text-xs font-medium">{a.source}</td>
                   <td className="px-4 py-3">
-                    <span className={statusBadge(isSyncing && a.id === 'SBY-Index-01' ? 'Syncing' : a.status)}>
-                      {isSyncing && a.id === 'SBY-Index-01' ? 'Syncing' : a.status}
+                    <span className={statusBadge(isSyncing && (a.source.includes('loker.id') || a.id.includes('LOKERID')) ? 'Syncing' : a.status)}>
+                      {isSyncing && (a.source.includes('loker.id') || a.id.includes('LOKERID')) ? 'Syncing' : a.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3 font-mono text-xs font-semibold text-text">{a.uptime}</td>
                   <td className="px-4 py-3 font-mono text-xs text-text-secondary">{a.data}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-text-secondary whitespace-nowrap">{a.lastScrap}</td>
                 </tr>
               ))}
             </tbody>
