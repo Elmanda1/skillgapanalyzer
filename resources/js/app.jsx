@@ -13,7 +13,7 @@ createInertiaApp({
     // Assign AppLayout as default layout, except for public/auth pages
     return page().then(module => {
       const component = module.default
-      if (component.layout === undefined && !['LandingPage', 'LoginPage', 'RegisterPage'].includes(name)) {
+      if (component.layout === undefined && !['LandingPage', 'LoginPage', 'RegisterPage', 'ForgotPasswordPage'].includes(name)) {
         component.layout = pageComponent => <AppLayout>{pageComponent}</AppLayout>
       }
       return component

@@ -38,6 +38,13 @@ Route::get('/register', function () {
 })->name('register');
 Route::post('/register', [AuthController::class, 'registerStudent']);
 
+Route::get('/forgot-password', function () {
+    return inertia('ForgotPasswordPage');
+})->name('password.request');
+Route::post('/forgot-password', function () {
+    return back()->with('status', 'Tautan pemulihan kata sandi telah dikirimkan ke email Anda.');
+});
+
 Route::middleware(['auth'])->group(function () {
 
     Route::get('/dashboard', function () {

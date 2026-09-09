@@ -439,16 +439,12 @@ export default function LoginPage() {
                     Ingat saya
                   </Label>
                 </div>
-                <a
-                  href="#forgot"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    alert('Silakan gunakan salah satu tombol peran demo di atas untuk login langsung tanpa kata sandi khusus.');
-                  }}
+                <Link
+                  href="/forgot-password"
                   className="text-xs text-emerald-800 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 font-semibold"
                 >
                   Lupa sandi?
-                </a>
+                </Link>
               </div>
 
               <Button
