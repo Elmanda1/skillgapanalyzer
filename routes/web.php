@@ -550,6 +550,8 @@ Route::middleware(['auth'])->group(function () {
     })->name('analysis.run.web');
 
     Route::get('/scraping', [\App\Http\Controllers\ScrapingController::class, 'index'])->name('scraping');
+    Route::post('/scraping/deploy', [\App\Http\Controllers\ScrapingController::class, 'deployAgent'])->name('scraping.deploy');
+    Route::get('/scraping/deploy-stream', [\App\Http\Controllers\ScrapingController::class, 'deployStream'])->name('scraping.deploy-stream');
     Route::get('/scraping/sync-stream', [\App\Http\Controllers\ScrapingController::class, 'syncStream'])->name('scraping.sync-stream');
 
     Route::get('/settings', function () {

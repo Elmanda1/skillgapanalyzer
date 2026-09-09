@@ -13,27 +13,49 @@ class ScrapingController extends Controller
 {
     public function index()
     {
-        $agents = ScrapingAgent::all();
-        
-        $domains = [
-            ['id' => 'AGENT-LOKERID-01', 'sumber' => 'loker.id', 'data' => '2.4 GB'],
-            ['id' => 'AGENT-JOBSTREET-01', 'sumber' => 'jobstreet.co.id', 'data' => '1.8 GB'],
-            ['id' => 'AGENT-INDEED-01', 'sumber' => 'id.indeed.com', 'data' => '1.2 GB'],
-            ['id' => 'AGENT-KALIBRR-01', 'sumber' => 'kalibrr.com', 'data' => '0.8 GB'],
-            ['id' => 'AGENT-TECHINASIA-01', 'sumber' => 'id.techinasia.com', 'data' => '0.6 GB'],
-        ];
+        $dbAgents = ScrapingAgent::all();
 
-        $mappedAgents = collect($domains)->map(function ($dom, $idx) use ($agents) {
-            $dbAgent = $agents->get($idx);
-            $status = $dbAgent ? ($dbAgent->status === 'Aktif' ? 'Active' : ($dbAgent->status === 'Sinkronisasi' ? 'Syncing' : $dbAgent->status)) : 'Active';
-            $lastSync = $dbAgent?->last_sync ? $dbAgent->last_sync->format('d/m/Y H:i:s') : date('d/m/Y H:i:s', strtotime("-{$idx}5 minutes"));
+        if ($dbAgents->isEmpty()) {
+            $defaultDomains = [
+                ['code' => 'AGENT-LOKERID-01', 'domain' => 'https://www.loker.id', 'sumber' => 'loker.id', 'data' => 2.4, 'status' => 'Active'],
+                ['code' => 'AGENT-JOBSTREET-01', 'domain' => 'https://www.jobstreet.co.id', 'sumber' => 'jobstreet.co.id', 'data' => 1.8, 'status' => 'Active'],
+                ['code' => 'AGENT-INDEED-01', 'domain' => 'https://id.indeed.com', 'sumber' => 'id.indeed.com', 'data' => 1.2, 'status' => 'Syncing'],
+                ['code' => 'AGENT-KALIBRR-01', 'domain' => 'https://www.kalibrr.com', 'sumber' => 'kalibrr.com', 'data' => 0.8, 'status' => 'Active'],
+                ['code' => 'AGENT-TECHINASIA-01', 'domain' => 'https://id.techinasia.com', 'sumber' => 'id.techinasia.com', 'data' => 0.6, 'status' => 'Active'],
+            ];
+
+            foreach ($defaultDomains as $idx => $d) {
+                ScrapingAgent::create([
+                    'agent_code' => $d['code'],
+                    'domain_url' => $d['domain'],
+                    'sumber' => $d['sumber'],
+                    'wilayah' => "Nodus Agen ({$d['sumber']})",
+                    'status' => $d['status'],
+                    'uptime' => 99.9 - ($idx * 0.1),
+                    'volume_data' => $d['data'],
+                    'max_pages' => 10,
+                    'max_jobs' => 15,
+                    'last_sync' => now()->subMinutes($idx * 15),
+                ]);
+            }
+            $dbAgents = ScrapingAgent::all();
+        }
+
+        $mappedAgents = $dbAgents->map(function ($a) {
+            $code = $a->agent_code ?? ($a->id ? "AGENT-{$a->id}" : 'AGENT-01');
+            $sumber = $a->sumber ?? $a->wilayah ?? 'loker.id';
+            $lastSync = $a->last_sync ? $a->last_sync->format('d/m/Y H:i:s') : date('d/m/Y H:i:s');
 
             return [
-                'id' => $dom['id'],
-                'sumber' => $dom['sumber'],
-                'status' => $status,
-                'data' => $dom['data'],
+                'db_id' => $a->id,
+                'id' => $code,
+                'sumber' => $sumber,
+                'source' => $sumber,
+                'domain_url' => $a->domain_url ?? "https://{$sumber}",
+                'status' => $a->status === 'Aktif' ? 'Active' : ($a->status === 'Sinkronisasi' ? 'Syncing' : $a->status),
+                'data' => $a->volume_data ? "{$a->volume_data} GB" : '1.5 GB',
                 'last_scrap' => $lastSync,
+                'lastScrap' => $lastSync,
             ];
         });
 
@@ -45,10 +67,60 @@ class ScrapingController extends Controller
         ]);
     }
 
-    public function syncStream(Request $request): StreamedResponse
+    public function deployAgent(Request $request)
     {
-        return response()->stream(function () {
-            // Disable output buffering
+        $validated = $request->validate([
+            'domain_url' => 'required|string',
+            'agent_code' => 'nullable|string',
+            'max_pages' => 'nullable|integer|min:1|max:50',
+            'max_jobs' => 'nullable|integer|min:1|max:100',
+        ]);
+
+        $rawUrl = trim($validated['domain_url']);
+        if (! str_starts_with($rawUrl, 'http://') && ! str_starts_with($rawUrl, 'https://')) {
+            $rawUrl = 'https://' . $rawUrl;
+        }
+
+        $parsed = parse_url($rawUrl);
+        $domain = $parsed['host'] ?? $rawUrl;
+        $sumber = str_replace('www.', '', $domain);
+
+        $agentCode = ! empty($validated['agent_code'])
+            ? strtoupper(trim($validated['agent_code']))
+            : 'AGENT-' . strtoupper(explode('.', $sumber)[0]) . '-' . str_pad((string) (ScrapingAgent::count() + 1), 2, '0', STR_PAD_LEFT);
+
+        $agent = ScrapingAgent::create([
+            'agent_code' => $agentCode,
+            'domain_url' => $rawUrl,
+            'sumber' => $sumber,
+            'wilayah' => "Nodus Agen ({$sumber})",
+            'status' => 'Syncing',
+            'uptime' => 99.9,
+            'volume_data' => 0.5,
+            'max_pages' => $validated['max_pages'] ?? 10,
+            'max_jobs' => $validated['max_jobs'] ?? 15,
+            'last_sync' => now(),
+        ]);
+
+        return back()->with('status', "Agen {$agentCode} ({$sumber}) berhasil dideploy! Menghubungkan log live...");
+    }
+
+    public function deployStream(Request $request): StreamedResponse
+    {
+        $agentId = $request->input('agent_id');
+        $domainUrl = $request->input('domain_url', 'https://www.loker.id');
+
+        $agent = null;
+        if ($agentId) {
+            $agent = ScrapingAgent::find($agentId);
+        }
+
+        if ($agent) {
+            $agent->update(['status' => 'Syncing', 'last_sync' => now()]);
+            $domainUrl = $agent->domain_url ?: $domainUrl;
+        }
+
+        return response()->stream(function () use ($agent, $domainUrl) {
             if (ob_get_level()) {
                 ob_end_clean();
             }
@@ -67,36 +139,33 @@ class ScrapingController extends Controller
                 flush();
             };
 
-            $sendData("[SYSTEM] Memulai proses sinkronisasi ulang kluster agen scraping...");
+            $targetDomain = str_replace(['https://', 'http://', 'www.'], '', $domainUrl);
+            $sendData("[SYSTEM] Memulai deployment & eksekusi scraper AI untuk domain: {$targetDomain}...");
 
             $pythonBin = $this->findPythonBinary();
-            $scriptPath = base_path('data-engine/scrape_loker_enhanced.py');
-            if (!file_exists($scriptPath)) {
-                $scriptPath = base_path('data-engine/scrape_loker.py');
-            }
+            $maxPages = $agent->max_pages ?? 10;
+            $maxJobs = $agent->max_jobs ?? 15;
 
-            if (!file_exists($scriptPath)) {
-                $sendData("[WARNING] Script scraper Python tidak ditemukan di folder data-engine. Menggunakan runner simulasi sistem.");
-                $this->runFallbackSimulation($sendData);
-                return;
+            // Route execution engine: use scrape_loker_enhanced.py for loker.id, or Universal AI Scraper for other domains
+            if (str_contains($targetDomain, 'loker.id')) {
+                $scriptPath = base_path('data-engine/scrape_loker_enhanced.py');
+                $cmd = escapeshellarg($pythonBin) . ' ' . escapeshellarg($scriptPath) . ' --phase=all --max-pages=2 --max-jobs=' . $maxJobs;
+            } else {
+                $scriptPath = base_path('data-engine/universal/run_pipeline.py');
+                $cmd = escapeshellarg($pythonBin) . ' ' . escapeshellarg($scriptPath) . ' --domain=' . escapeshellarg($domainUrl) . ' --max-pages=' . $maxPages . ' --max-jobs=' . $maxJobs;
             }
-
-            $sendData("[INFO] Menggunakan runtime Python: {$pythonBin}");
-            $sendData("[INFO] Memulai crawler engine: " . basename($scriptPath) . " (Phase: all)");
 
             $descriptorspec = [
-                0 => ["pipe", "r"], // stdin
-                1 => ["pipe", "w"], // stdout
-                2 => ["pipe", "w"], // stderr
+                0 => ["pipe", "r"],
+                1 => ["pipe", "w"],
+                2 => ["pipe", "w"],
             ];
 
-            $cmd = escapeshellarg($pythonBin) . ' ' . escapeshellarg($scriptPath) . ' --phase=all --max-pages=1 --max-jobs=15 --workers=4 --interval=0.3';
+            $sendData("[INFO] Runner Command: {$cmd}");
             $process = proc_open($cmd, $descriptorspec, $pipes, base_path());
 
             if (is_resource($process)) {
                 fclose($pipes[0]);
-
-                // Set non-blocking mode for stdout and stderr
                 stream_set_blocking($pipes[1], false);
                 stream_set_blocking($pipes[2], false);
 
@@ -107,7 +176,7 @@ class ScrapingController extends Controller
 
                     if ($stdout !== false && trim($stdout) !== '') {
                         $line = trim($stdout);
-                        $prefix = str_contains(strtolower($line), 'error') ? '[ERROR] ' : (str_contains(strtolower($line), 'success') || str_contains(strtolower($line), 'done') ? '[SUCCESS] ' : '[INFO] ');
+                        $prefix = str_contains(strtolower($line), 'error') ? '[ERROR] ' : (str_contains(strtolower($line), 'success') || str_contains(strtolower($line), 'complete') ? '[SUCCESS] ' : '[INFO] ');
                         if (str_starts_with($line, '[')) {
                             $sendData($line);
                         } else {
@@ -117,16 +186,16 @@ class ScrapingController extends Controller
 
                     if ($stderr !== false && trim($stderr) !== '') {
                         $line = trim($stderr);
-                        if (!str_contains(strtolower($line), 'warning:') && !str_contains(strtolower($line), 'userwarning')) {
+                        if (! str_contains(strtolower($line), 'warning:') && ! str_contains(strtolower($line), 'userwarning')) {
                             $sendData("[WARNING] " . $line);
                         }
                     }
 
-                    if (!$status['running'] && feof($pipes[1]) && feof($pipes[2])) {
+                    if (! $status['running'] && feof($pipes[1]) && feof($pipes[2])) {
                         break;
                     }
 
-                    usleep(30000); // 30ms responsive delay
+                    usleep(40000);
                 }
 
                 fclose($pipes[1]);
@@ -134,15 +203,15 @@ class ScrapingController extends Controller
                 $exitCode = proc_close($process);
 
                 if ($exitCode === 0) {
-                    $sendData("[SUCCESS] Scraper Python selesai dieksekusi dengan kode status 0.");
+                    $sendData("[SUCCESS] Engine Scraper AI untuk domain {$targetDomain} selesai dengan status 0.");
                 } else {
-                    $sendData("[WARNING] Scraper Python selesai dengan exit code {$exitCode}. Selesai dengan beberapa catatan.");
+                    $sendData("[WARNING] Scraper AI selesai dengan kode exit {$exitCode}. Selesai dengan beberapa catatan.");
                 }
             } else {
                 $sendData("[ERROR] Gagal membuka proses execution untuk scraper Python.");
             }
 
-            // Step 2: Run Laravel jobs:import
+            // Step 2: Import data to DB
             $sendData("[INFO] Memulai pengimporan data lowongan ke basis data SQLite pusat (jobs:import)...");
             $phpBin = $this->findPhpBinary();
             $importCmd = escapeshellarg($phpBin) . ' -d memory_limit=512M ' . escapeshellarg(base_path('artisan')) . ' jobs:import';
@@ -158,7 +227,7 @@ class ScrapingController extends Controller
                     if ($line !== false && trim($line) !== '') {
                         $sendData("[INFO] [ImportJobs] " . trim($line));
                     }
-                    if (!$status['running'] && feof($pipes[1])) {
+                    if (! $status['running'] && feof($pipes[1])) {
                         break;
                     }
                     usleep(100000);
@@ -168,22 +237,15 @@ class ScrapingController extends Controller
                 proc_close($importProcess);
             }
 
-            // Record log in DB
-            try {
-                $policy = ScrapingPolicy::first();
-                ScrapingLog::create([
-                    'scraping_policy_id' => $policy?->id,
-                    'url' => 'loker.id',
-                    'method' => 'LIVE_SYNC',
-                    'status' => 'success',
-                    'started_at' => now()->subMinutes(1),
-                    'completed_at' => now(),
+            if ($agent) {
+                $agent->update([
+                    'status' => 'Active',
+                    'last_sync' => now(),
+                    'volume_data' => round($agent->volume_data + 0.4, 1),
                 ]);
-            } catch (\Throwable $e) {
-                // Ignore log save errors
             }
 
-            $sendData("[SUCCESS] Sinkronisasi data lowongan & integrasi agen scraping selesai!", true);
+            $sendData("[SUCCESS] Deployment & sinkronisasi data lowongan domain {$targetDomain} berhasil diselesaikan!", true);
 
         }, 200, [
             'Content-Type' => 'text/event-stream',
@@ -193,22 +255,9 @@ class ScrapingController extends Controller
         ]);
     }
 
-    private function runFallbackSimulation(callable $sendData): void
+    public function syncStream(Request $request): StreamedResponse
     {
-        $simulations = [
-            '[INFO] JKT-Worker-01: Menghubungi endpoint API loker.id...',
-            '[INFO] JKT-Worker-02: Memeriksa kepatuhan robots.txt (Compliant)',
-            '[SUCCESS] SBY-Index-01: Berhasil menguraikan 15 lowongan baru.',
-            '[INFO] MLG-Scout-01: Memilih fitur ekstraksi skill NLP...',
-            '[SUCCESS] Sinkronisasi simulasi selesai.',
-        ];
-
-        foreach ($simulations as $msg) {
-            $sendData($msg);
-            usleep(300000);
-        }
-
-        $sendData("[SUCCESS] Sinkronisasi selesai.", true);
+        return $this->deployStream($request);
     }
 
     private function findPythonBinary(): string

@@ -5,7 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['wilayah', 'status', 'uptime', 'volume_data', 'last_sync'])]
+#[Fillable([
+    'agent_code',
+    'domain_url',
+    'sumber',
+    'wilayah',
+    'status',
+    'uptime',
+    'volume_data',
+    'max_pages',
+    'max_jobs',
+    'last_sync',
+])]
 class ScrapingAgent extends Model
 {
     /**
@@ -18,6 +29,8 @@ class ScrapingAgent extends Model
         return [
             'uptime' => 'float',
             'volume_data' => 'float',
+            'max_pages' => 'integer',
+            'max_jobs' => 'integer',
             'last_sync' => 'datetime',
         ];
     }
