@@ -35,8 +35,17 @@ class JobController extends Controller
             ->withQueryString();
 
         $jobs->getCollection()->transform(function ($job) {
-            $scrapedAt = $job->updated_at ?? $job->created_at ?? $job->published_at;
-            $job->last_scraped_at = $scrapedAt ? $scrapedAt->format('d/m/Y H:i:s') : date('d/m/Y H:i:s');
+            $scrapedAt = $job->updated_at ?? $job->created_at ?? $job->published_at ?? $job->tanggal_crawl;
+            $formatted = null;
+            if ($scrapedAt) {
+                try {
+                    $ts = is_string($scrapedAt) ? strtotime($scrapedAt) : $scrapedAt->timestamp;
+                    $formatted = date('d/m/Y H:i:s', $ts);
+                } catch (\Throwable) {
+                    $formatted = null;
+                }
+            }
+            $job->last_scraped_at = $formatted ?? date('d/m/Y H:i:s');
             return $job;
         });
 

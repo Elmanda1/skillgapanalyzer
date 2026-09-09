@@ -16,6 +16,18 @@ const formatSalary = (min, max) => {
   return lo || hi;
 };
 
+const formatDateDDMMYYYYHHMMSS = (rawDate) => {
+  if (!rawDate) return 'Terbaru';
+  const str = String(rawDate).trim();
+  if (/^\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2}:\d{2}$/.test(str)) {
+    return str;
+  }
+  const d = new Date(rawDate);
+  if (isNaN(d.getTime())) return str;
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+};
+
 const computeMatchRate = (userSkills, jobSkills) => {
   if (!userSkills?.length || !jobSkills?.length) return null;
   const userKeys = new Set(userSkills.map(s => s.toLowerCase()));
@@ -179,7 +191,7 @@ export default function JobBrowser() {
                     </div>
                     <div className="flex items-center gap-2 text-[11px] text-brand font-medium pt-2 border-t border-border/40 mt-1">
                       <Icon className="text-[14px] text-brand" name="history" />
-                      <span>Terakhir di-scrap: {job.last_scraped_at || job.tanggal_crawl || 'Terbaru'}</span>
+                      <span>Terakhir di-scrap: {formatDateDDMMYYYYHHMMSS(job.last_scraped_at || job.updated_at || job.created_at || job.tanggal_crawl)}</span>
                     </div>
                   </div>
 
