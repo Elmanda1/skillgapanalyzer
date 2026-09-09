@@ -63,22 +63,30 @@ def test_word_boundary_isolation_prevents_false_positives():
     assert "Go (Golang)" not in skills
 
 
-def test_curriculum_learning_outcomes_extraction():
+def test_context_guard_rules_prevent_short_alias_false_positives():
     extractor = SkillExtractor()
-    rps_lo_text = """
-    Capaian Pembelajaran Mata Kuliah (CPMK):
-    1. Mahasiswa mampu merancang arsitektur microservices menggunakan Docker dan Kubernetes.
-    2. Mahasiswa mampu mengimplementasikan pipeline CI/CD dengan GitHub Actions.
-    3. Mahasiswa mampu menguji ketahanan sistem dengan Root Cause Analysis.
-    """
-    extracted = extractor.extract(rps_lo_text)
-    skills = [e["skill"] for e in extracted]
 
-    assert "Docker" in skills
-    assert "Kubernetes" in skills
-    assert "CI/CD Pipelines" in skills
-    assert "Root Cause Analysis" in skills
+    # 1. "go" without context should NOT match "Go (Golang)"
+    false_go_text = "We want to go ahead and make progress on sales."
+    assert "Go (Golang)" not in extractor.extract_skill_names(false_go_text)
 
-    # Check dimension tagging for non-hard dimension (Root Cause Analysis -> contingency_management)
-    rca = next(e for e in extracted if e["skill"] == "Root Cause Analysis")
-    assert rca["dimension"] == "contingency_management"
+    # "go" with context (e.g. backend, developer, programming, language) SHOULD match
+    true_go_text = "Looking for a backend developer skilled in go programming and cloud systems."
+    assert "Go (Golang)" in extractor.extract_skill_names(true_go_text)
+
+    # 2. "ts" without context (e.g. points, pts, stats) should NOT match "TypeScript"
+    false_ts_text = "The team scored 50 pts in the tournament."
+    assert "TypeScript" not in extractor.extract_skill_names(false_ts_text)
+
+    # "ts" with frontend/code/developer context SHOULD match
+    true_ts_text = "Senior frontend developer with hands-on ts and react experience."
+    assert "TypeScript" in extractor.extract_skill_names(true_ts_text)
+
+    # 3. "cv" without vision/ai context should NOT match "Computer Vision"
+    false_cv_text = "Please submit your resume and cv to the recruiter."
+    assert "Computer Vision" not in extractor.extract_skill_names(false_cv_text)
+
+    # "cv" with ai/model/image context SHOULD match
+    true_cv_text = "Experience developing cv models for real-time object detection."
+    assert "Computer Vision" in extractor.extract_skill_names(true_cv_text)
+

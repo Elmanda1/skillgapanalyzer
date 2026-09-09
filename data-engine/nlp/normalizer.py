@@ -26,6 +26,7 @@ STOPWORDS = {
 def clean_text(text: str) -> str:
     """
     Clean raw HTML / markdown text, normalize spaces, and unescape entities.
+    Safely strips HTML tags while preserving mathematical/comparison symbols.
     """
     if not text or not isinstance(text, str):
         return ""
@@ -33,14 +34,15 @@ def clean_text(text: str) -> str:
     # Unescape HTML entities (&amp;, &lt;, etc.)
     text = html.unescape(text)
 
-    # Strip HTML tags
-    text = re.sub(r"<[^>]+>", " ", text)
+    # Strip HTML tags (matches tag-like structures starting with a tag name or comment)
+    text = re.sub(r"<(?:/?[a-zA-Z][a-zA-Z0-9:-]*\b[^>]*|!--.*?--)>", " ", text, flags=re.DOTALL)
 
     # Replace newlines, tabs, and multiple spaces with a single space
     text = re.sub(r"[\r\n\t]+", " ", text)
     text = re.sub(r"\s{2,}", " ", text)
 
     return text.strip()
+
 
 
 def normalize_skill_name(name: str) -> str:
