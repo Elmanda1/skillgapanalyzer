@@ -1,10 +1,7 @@
 import React, { useMemo } from 'react';
-import { usePage, Link } from '@inertiajs/react';
-import Icon from '../components/Icon.jsx';
+import Icon from './Icon.jsx';
 
-export default function MyCourses() {
-  const { courses = [], currentSemester = 1, studyProgram = null } = usePage().props;
-
+export default function MyCoursesSection({ courses = [], currentSemester = 1, studyProgram = null }) {
   const grouped = useMemo(() => {
     const map = new Map();
     courses.forEach((c) => {
@@ -18,9 +15,12 @@ export default function MyCourses() {
   const currentCount = courses.filter((c) => c.status === 'current').length;
 
   return (
-    <div className="w-full p-6 md:p-8 space-y-6">
+    <section className="lg:col-span-3 space-y-6">
       <div>
-        <h1 className="font-display text-2xl font-bold text-text">Matkul Saya</h1>
+        <h2 className="font-display text-lg font-bold text-text flex items-center gap-2">
+          <Icon className="text-brand text-[22px]" name="menu_book" />
+          Matkul Saya
+        </h2>
         <p className="text-sm text-text-secondary mt-1">
           {studyProgram ? `${studyProgram.jenjang} ${studyProgram.nama_prodi} — ` : ''}Semester {currentSemester} · {passedCount} lulus · {currentCount} berjalan
         </p>
@@ -35,10 +35,10 @@ export default function MyCourses() {
       {grouped.map(([semester, list]) => (
         <section key={semester} className="card overflow-hidden">
           <div className="px-5 py-3 border-b border-border bg-gray-50/60 flex items-center justify-between">
-            <h2 className="font-display text-sm font-bold text-text flex items-center gap-2">
+            <h3 className="font-display text-sm font-bold text-text flex items-center gap-2">
               <Icon className="text-brand text-[18px]" name="menu_book" />
               Semester {semester}
-            </h2>
+            </h3>
             <span className="text-xs text-text-muted">{list.length} MK</span>
           </div>
           <div className="divide-y divide-border">
@@ -66,10 +66,6 @@ export default function MyCourses() {
           </div>
         </section>
       ))}
-
-      <Link href="/dashboard" className="text-xs font-semibold text-brand hover:underline">
-        ← Kembali ke dashboard
-      </Link>
-    </div>
+    </section>
   );
 }

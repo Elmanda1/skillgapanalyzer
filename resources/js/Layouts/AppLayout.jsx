@@ -33,7 +33,6 @@ const NAV_BY_ROLE = {
   ],
   mahasiswa: [
     { id: 'dashboard',   label: 'Profil Skill',      icon: 'person', href: '/dashboard' },
-    { id: 'my-courses',  label: 'Matkul Saya',       icon: 'menu_book', href: '/my-courses' },
     { id: 'skills',      label: 'Manajemen Keahlian',icon: 'psychology', href: '/skills' },
     { id: 'competency',  label: 'Tren Industri',     icon: 'trending_up', href: '/competency' },
     { id: 'jobs',        label: 'Lowongan Kerja',    icon: 'work', href: '/jobs' },

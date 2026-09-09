@@ -25,9 +25,18 @@ const LOG_TYPES = {
 };
 
 const parseLog = (log) => {
-  const match = log.match(/^\[(\w+)\]\s+(.*)/);
-  if (match) return { type: match[1], message: match[2] };
-  return { type: 'INFO', message: log };
+  const tsMatch = log.match(/^\[(\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2}:\d{2})\]\s+(.*)/);
+  let timestamp = '';
+  let content = log;
+
+  if (tsMatch) {
+    timestamp = tsMatch[1];
+    content = tsMatch[2];
+  }
+
+  const match = content.match(/^\[(\w+)\]\s+(.*)/);
+  if (match) return { timestamp, type: match[1], message: match[2] };
+  return { timestamp, type: 'INFO', message: content };
 };
 
 export default function ScrapingAgents() {
@@ -214,12 +223,13 @@ export default function ScrapingAgents() {
           </div>
           <div ref={logContainerRef} className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-2 bg-gray-950 min-h-[360px] max-h-[480px] font-mono text-xs">
             {logs.map((log, i) => {
-              const { type, message } = parseLog(log);
+              const { timestamp, type, message } = parseLog(log);
               const cfg = LOG_TYPES[type] || LOG_TYPES.INFO;
               return (
-                <div key={i} className="flex gap-2 leading-relaxed animate-fade-in">
+                <div key={i} className="flex items-start gap-2 leading-relaxed animate-fade-in font-mono text-[11px]">
+                  {timestamp && <span className="text-gray-500 shrink-0">[{timestamp}]</span>}
                   <span className="flex-shrink-0 font-bold" style={{ color: cfg.color }}>[{cfg.label}]</span>
-                  <span className="text-gray-300">{message}</span>
+                  <span className="text-gray-300 break-all">{message}</span>
                 </div>
               );
             })}

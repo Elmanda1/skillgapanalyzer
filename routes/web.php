@@ -401,14 +401,33 @@ Route::middleware(['auth'])->group(function () {
     })->name('help');
 
     Route::get('/skills', function () {
-        return inertia('SkillManager');
+        $user = request()->user();
+
+        $courses = $user->acquiredCourses()
+            ->with('skills:id,nama')
+            ->orderBy('semester')
+            ->orderBy('code')
+            ->get()
+            ->map(fn ($c) => [
+                'id' => $c->id,
+                'code' => $c->code,
+                'name' => $c->name,
+                'semester' => $c->semester,
+                'credits' => $c->credits,
+                'status' => $c->semester < ($user->semester ?? 1) ? 'passed' : 'current',
+                'skills' => $c->skills->pluck('nama')->all(),
+            ])
+            ->values()
+            ->all();
+
+        return inertia('SkillManager', [
+            'courses' => $courses,
+            'currentSemester' => $user->semester ?? 1,
+            'studyProgram' => $user->studyProgram?->only(['id', 'nama_institusi', 'nama_prodi', 'jenjang']),
+        ]);
     })->name('skills');
 
     Route::get('/jobs', [JobController::class, 'index'])->name('jobs');
-
-    Route::get('/my-courses', [\App\Http\Controllers\MyCourseController::class, '__invoke'])
-        ->middleware(['role:mahasiswa'])
-        ->name('my-courses');
 
     Route::middleware(['role:kaprodi|super_admin|dosen'])->prefix('curriculum')->name('curriculum.')->group(function () {
         Route::get('/', [CurriculumController::class, 'index'])->name('index');
@@ -532,5 +551,15 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/scraping', [\App\Http\Controllers\ScrapingController::class, 'index'])->name('scraping');
     Route::get('/scraping/sync-stream', [\App\Http\Controllers\ScrapingController::class, 'syncStream'])->name('scraping.sync-stream');
+
+    Route::get('/settings', function () {
+        return inertia('Settings');
+    })->name('settings');
+
+    Route::get('/help', function () {
+        return inertia('Help');
+    })->name('help');
+
+    Route::get('/jobs', [JobController::class, 'index'])->name('jobs');
 
 });
