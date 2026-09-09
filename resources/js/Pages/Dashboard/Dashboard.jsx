@@ -63,17 +63,17 @@ function StatCard({ icon, label, value, tone = 'brand' }) {
 
 // ─── Dummy Data for Student ───
 const JOB_RECS = [
-  { title: 'Junior Backend Developer', company: 'Gojek',      location: 'Jakarta', match: 85, salary: 'Rp 8–12 jt/bln',  logo: '🚀' },
-  { title: 'Software Engineer',        company: 'Tokopedia',  location: 'Jakarta', match: 78, salary: 'Rp 10–15 jt/bln', logo: '🛒' },
-  { title: 'Node.js Developer',        company: 'Dana',       location: 'Jakarta', match: 72, salary: 'Rp 9–13 jt/bln',  logo: '💳' },
-  { title: 'Full-stack Dev (Junior)',   company: 'Tiket.com', location: 'Bali',    match: 68, salary: 'Rp 7–11 jt/bln',  logo: '✈️' },
+  { title: 'Junior Backend Developer', company: 'Gojek', location: 'Jakarta', match: 85, salary: 'Rp 8–12 jt/bln', logo: '🚀' },
+  { title: 'Software Engineer', company: 'Tokopedia', location: 'Jakarta', match: 78, salary: 'Rp 10–15 jt/bln', logo: '🛒' },
+  { title: 'Node.js Developer', company: 'Dana', location: 'Jakarta', match: 72, salary: 'Rp 9–13 jt/bln', logo: '💳' },
+  { title: 'Full-stack Dev (Junior)', company: 'Tiket.com', location: 'Bali', match: 68, salary: 'Rp 7–11 jt/bln', logo: '✈️' },
 ];
 
 const LEARNING_PATH = [
-  { step: 1, title: 'Selesaikan Modul Docker Basics',      platform: 'Dicoding',   duration: '2 minggu', done: true  },
-  { step: 2, title: 'Kubernetes for Beginners',             platform: 'Udemy',      duration: '3 minggu', done: false },
-  { step: 3, title: 'Build REST API with Node.js + Express',platform: 'YouTube/PJ', duration: '1 minggu', done: false },
-  { step: 4, title: 'CI/CD Pipeline with GitHub Actions',   platform: 'GitHub Docs',duration: '1 minggu', done: false },
+  { step: 1, title: 'Selesaikan Modul Docker Basics', platform: 'Dicoding', duration: '2 minggu', done: true },
+  { step: 2, title: 'Kubernetes for Beginners', platform: 'Udemy', duration: '3 minggu', done: false },
+  { step: 3, title: 'Build REST API with Node.js + Express', platform: 'YouTube/PJ', duration: '1 minggu', done: false },
+  { step: 4, title: 'CI/CD Pipeline with GitHub Actions', platform: 'GitHub Docs', duration: '1 minggu', done: false },
 ];
 
 export default function Dashboard() {
@@ -133,7 +133,7 @@ export default function Dashboard() {
       chartInstance.current = new Chart(ctx, {
         type: 'line',
         data: {
-          labels: ['00:00','02:00','04:00','06:00','08:00','10:00','12:00'],
+          labels: ['00:00', '02:00', '04:00', '06:00', '08:00', '10:00', '12:00'],
           datasets: [
             {
               label: 'Laju (GB/s)',
@@ -153,7 +153,7 @@ export default function Dashboard() {
               data: chartDelays,
               borderColor: '#d1d5db',
               borderWidth: 2,
-              borderDash: [5,5],
+              borderDash: [5, 5],
               pointRadius: 0,
               fill: false,
               tension: 0.4,
@@ -211,7 +211,7 @@ export default function Dashboard() {
               backgroundColor: 'rgba(59,130,246,0.08)',
               borderColor: '#3b82f6',
               borderWidth: 2,
-              borderDash: [4,4],
+              borderDash: [4, 4],
               pointBackgroundColor: '#3b82f6',
               pointRadius: 3,
             }
@@ -221,7 +221,7 @@ export default function Dashboard() {
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
-            legend: { 
+            legend: {
               position: 'bottom',
               labels: { font: { family: 'Inter', size: 11, weight: 'bold' }, padding: 15, boxWidth: 12 }
             },
@@ -319,7 +319,7 @@ export default function Dashboard() {
       {role === 'super_admin' && (
         <div className="space-y-6">
           {/* ── National Management Banner ── */}
-          <div className="bg-gradient-to-r from-brand-dark via-brand to-emerald-800 text-white rounded-2xl p-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 shadow-xl shadow-brand/10 border border-brand/20">
+          <div className="bg-gradient-to-r from-emerald-800 via-brand to-brand-dark text-white rounded-2xl p-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 shadow-xl shadow-brand/10 border border-emerald-700/40">
             <div className="flex items-start gap-4">
               <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center flex-shrink-0 text-white shadow-inner">
                 <Icon className="text-[32px]" name="shield" />
@@ -346,7 +346,7 @@ export default function Dashboard() {
             <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
               <Link
                 href="/management"
-                className="px-5 py-2.5 bg-white text-brand rounded-xl text-sm font-bold shadow-md hover:bg-gray-50 transition-all flex items-center gap-2 flex-1 lg:flex-initial justify-center"
+                className="px-5 py-2.5 bg-emerald-800 text-white rounded-xl text-sm font-bold shadow-md hover:bg-gray-50 transition-all flex items-center gap-2 flex-1 lg:flex-initial justify-center"
               >
                 <Icon className="text-[18px]" name="domain" />
                 Kelola Seluruh Kampus
@@ -362,7 +362,7 @@ export default function Dashboard() {
               change="+12.5%"
               changeType="up"
               note="di taksonomi nasional"
-              icon="data_object"
+              icon="code"
               iconBg="bg-cyan-50 text-cyan-600"
             />
             <MetricCard
@@ -380,7 +380,7 @@ export default function Dashboard() {
               change={`${stats.totalDataProcessed || 0} TB`}
               changeType="up"
               note="Volume data crawling"
-              icon="swap_vert"
+              icon="sync"
               iconBg="bg-blue-50 text-blue-600"
             />
             <MetricCard
@@ -529,7 +529,7 @@ export default function Dashboard() {
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="bg-gray-50 border-b border-border">
-                    {['WILAYAH / NODE','STATUS','UPTIME','DATA DIPROSES'].map(h => (
+                    {['WILAYAH / NODE', 'STATUS', 'UPTIME', 'DATA DIPROSES'].map(h => (
                       <th key={h} className="px-5 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wide">{h}</th>
                     ))}
                   </tr>
@@ -607,7 +607,7 @@ export default function Dashboard() {
               </Link>
               <Link
                 href="/management"
-                className="px-4 py-2.5 bg-white/15 hover:bg-white/25 border border-white/20 text-white rounded-xl text-sm font-semibold transition-all flex items-center gap-2 flex-1 lg:flex-initial justify-center backdrop-blur-sm"
+                className="px-4 py-2.5 bg-emerald-800 hover:bg-white/25 border border-white/20 text-white rounded-xl text-sm font-semibold transition-all flex items-center gap-2 flex-1 lg:flex-initial justify-center backdrop-blur-sm"
               >
                 <Icon className="text-[18px]" name="domain" />
                 Manajemen Institusi
@@ -644,7 +644,7 @@ export default function Dashboard() {
               title="Civitas Prodi"
               value={`${stats.totalDosen || 0} Dosen`}
               note={`${stats.totalMahasiswa || 0} Mahasiswa Terdaftar`}
-              icon="groups"
+              icon="group"
               iconBg="bg-purple-50 text-purple-600"
             />
           </div>
@@ -668,11 +668,11 @@ export default function Dashboard() {
                       const label = MISMATCH_LABELS[g.tipe_mismatch] ?? g.tipe_mismatch;
                       const total = stats.totalGaps || 1;
                       const pct = Math.round((g.total / total) * 100);
-                      const colorClass = g.tipe_mismatch === 'aligned' 
-                        ? 'bg-emerald-500' 
-                        : g.tipe_mismatch === 'under_skill' 
-                        ? 'bg-red-500' 
-                        : 'bg-blue-500';
+                      const colorClass = g.tipe_mismatch === 'aligned'
+                        ? 'bg-emerald-500'
+                        : g.tipe_mismatch === 'under_skill'
+                          ? 'bg-red-500'
+                          : 'bg-blue-500';
 
                       return (
                         <div key={g.tipe_mismatch}>
@@ -810,7 +810,7 @@ export default function Dashboard() {
               </button>
               <Link
                 href="/ai-analysis"
-                className="px-4 py-2.5 bg-white/15 hover:bg-white/25 border border-white/20 text-white rounded-xl text-sm font-semibold transition-all flex items-center gap-2 flex-1 lg:flex-initial justify-center backdrop-blur-sm"
+                className="px-4 py-2.5 bg-emerald-800 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold transition-all flex items-center gap-2 flex-1 lg:flex-initial justify-center shadow-md border border-emerald-500/30"
               >
                 <Icon className="text-[18px]" name="auto_awesome" />
                 Analisis AI Kurikulum
@@ -847,7 +847,7 @@ export default function Dashboard() {
               title="Usulan Silabus Aktif"
               value={dosenProposals.length.toString()}
               note="1 disetujui, 1 menunggu"
-              icon="assignment_turned_in"
+              icon="fact_check"
               iconBg="bg-purple-50 text-purple-600"
             />
           </div>
@@ -870,9 +870,8 @@ export default function Dashboard() {
                     <button
                       key={c.id}
                       onClick={() => setActiveCourseIdx(idx)}
-                      className={`w-full text-left p-4 transition-all flex items-start justify-between gap-3 ${
-                        isSelected ? 'bg-brand/5 border-l-4 border-brand' : 'hover:bg-gray-50'
-                      }`}
+                      className={`w-full text-left p-4 transition-all flex items-start justify-between gap-3 ${isSelected ? 'bg-brand/5 border-l-4 border-brand' : 'hover:bg-gray-50'
+                        }`}
                     >
                       <div>
                         <div className="flex items-center gap-2 mb-1">
@@ -1194,7 +1193,7 @@ export default function Dashboard() {
             </div>
 
             {/* Target Role & Match Gauge */}
-            <div className="bg-white/10 border border-white/20 rounded-2xl p-4 backdrop-blur-md flex items-center gap-4 w-full lg:w-auto">
+            <div className="bg-emerald-800 border border-white/20 rounded-2xl p-4 backdrop-blur-md flex items-center gap-4 w-full lg:w-auto">
               <div className="text-right">
                 <p className="text-[10px] text-brand-light uppercase tracking-wider font-bold">Target Karier Aktif</p>
                 <p className="font-display text-sm font-bold text-white mt-0.5">{activeRoleData.name}</p>
@@ -1214,7 +1213,7 @@ export default function Dashboard() {
               change="+6%"
               changeType="up"
               note="vs bulan lalu"
-              icon="verified"
+              icon="workspace_premium"
               iconBg="bg-brand-light text-brand"
             />
             <MetricCard
@@ -1235,7 +1234,7 @@ export default function Dashboard() {
               title="Lowongan Cocok"
               value={`${stats.scrapedJobs?.length || 4} Rekomendasi`}
               note="Scraped dari Tech Hubs"
-              icon="work_history"
+              icon="work"
               iconBg="bg-purple-50 text-purple-600"
             />
           </div>
@@ -1268,11 +1267,10 @@ export default function Dashboard() {
                       setSelectedRoleIdx(idx);
                       toast.info('Target Karier Diubah', `Menampilkan analisis kompetensi untuk ${cr.name}`);
                     }}
-                    className={`p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between gap-2 ${
-                      isSelected
-                        ? 'bg-brand text-white border-brand shadow-md scale-[1.02]'
-                        : 'bg-gray-50/70 text-text-secondary border-border hover:bg-gray-100 hover:text-text'
-                    }`}
+                    className={`p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between gap-2 ${isSelected
+                      ? 'bg-brand text-white border-brand shadow-md scale-[1.02]'
+                      : 'bg-gray-50/70 text-text-secondary border-border hover:bg-gray-100 hover:text-text'
+                      }`}
                   >
                     <div className="flex items-center justify-between">
                       <Icon className="text-[20px]" name={cr.icon} />
@@ -1390,9 +1388,8 @@ export default function Dashboard() {
                   return (
                     <div
                       key={step.id}
-                      className={`p-3.5 rounded-xl border transition-all flex items-start gap-3.5 ${
-                        isDone ? 'bg-brand-light/60 border-brand-border' : 'bg-white border-border hover:border-brand/40'
-                      }`}
+                      className={`p-3.5 rounded-xl border transition-all flex items-start gap-3.5 ${isDone ? 'bg-brand-light/60 border-brand-border' : 'bg-white border-border hover:border-brand/40'
+                        }`}
                     >
                       <button
                         onClick={() => {
@@ -1405,9 +1402,8 @@ export default function Dashboard() {
                             `Progress modul "${step.skill}" telah diperbarui.`
                           );
                         }}
-                        className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold transition-all ${
-                          isDone ? 'bg-brand text-white shadow-sm' : 'bg-gray-100 text-text-secondary border border-gray-300 hover:bg-gray-200'
-                        }`}
+                        className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold transition-all ${isDone ? 'bg-brand text-white shadow-sm' : 'bg-gray-100 text-text-secondary border border-gray-300 hover:bg-gray-200'
+                          }`}
                       >
                         {isDone ? <Icon className="text-[16px]" name="check" /> : step.step}
                       </button>
