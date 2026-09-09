@@ -26,68 +26,53 @@ export function ThemeToggle({ className }) {
       return;
     }
 
-    // Measure exact center coordinates from physical button element dynamically
-    const vw = Math.max(document.documentElement?.clientWidth || 0, window.innerWidth || 0);
-    const vh = Math.max(document.documentElement?.clientHeight || 0, window.innerHeight || 0);
-
+    // Always measure exact physical center of the toggle button element
     const btn = buttonRef.current;
-    let x, y;
+    let x = window.innerWidth / 2;
+    let y = 40;
+
     if (btn) {
       const rect = btn.getBoundingClientRect();
-      x = rect.left + rect.width / 2;
-      y = rect.top + rect.height / 2;
+      if (rect.width > 0 && rect.height > 0) {
+        x = rect.left + rect.width / 2;
+        y = rect.top + rect.height / 2;
+      }
     } else if (e?.clientX && e.clientX > 0) {
       x = e.clientX;
       y = e.clientY;
-    } else {
-      x = vw / 2;
-      y = 40;
     }
+
+    const vw = Math.max(document.documentElement?.clientWidth || 0, window.innerWidth || 0);
+    const vh = Math.max(document.documentElement?.clientHeight || 0, window.innerHeight || 0);
 
     const endRadius = Math.hypot(
       Math.max(x, vw - x),
       Math.max(y, vh - y)
     );
 
-    // Light -> Dark: expands outwards. Dark -> Light: shrinks inwards into the button.
-    const isShrinking = isDark;
-
     // Suppress competing CSS transitions during view-transition snapshot to prevent jank
     document.documentElement.classList.add('theme-transitioning');
-    if (isShrinking) {
-      document.documentElement.classList.add('theme-transition-shrink');
-    } else {
-      document.documentElement.classList.remove('theme-transition-shrink');
-    }
 
     const transition = document.startViewTransition(() => {
       setMode(nextTheme);
     });
 
     const cleanup = () => {
-      document.documentElement.classList.remove('theme-transition-shrink');
       document.documentElement.classList.remove('theme-transitioning');
     };
 
     transition.ready.then(() => {
-      const clipPath = isShrinking
-        ? [
-            `circle(${endRadius}px at ${x}px ${y}px)`,
-            `circle(0px at ${x}px ${y}px)`,
-          ]
-        : [
-            `circle(0px at ${x}px ${y}px)`,
-            `circle(${endRadius}px at ${x}px ${y}px)`,
-          ];
-
       const anim = document.documentElement.animate(
         {
-          clipPath: clipPath,
+          clipPath: [
+            `circle(0px at ${x}px ${y}px)`,
+            `circle(${endRadius}px at ${x}px ${y}px)`,
+          ],
         },
         {
-          duration: 520,
-          easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)',
-          pseudoElement: isShrinking ? '::view-transition-old(root)' : '::view-transition-new(root)',
+          duration: 480,
+          easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+          pseudoElement: '::view-transition-new(root)',
         }
       );
 

@@ -321,15 +321,6 @@
   z-index: 9999;
 }
 
-/* When shrinking back: old layer collapses on top */
-html.theme-transition-shrink::view-transition-old(root) {
-  z-index: 9999;
-}
-
-html.theme-transition-shrink::view-transition-new(root) {
-  z-index: 1;
-}
-
 /* Suppress all competing CSS transitions during view-transition to eliminate hitch/freezing */
 html.theme-transitioning,
 html.theme-transitioning *,
