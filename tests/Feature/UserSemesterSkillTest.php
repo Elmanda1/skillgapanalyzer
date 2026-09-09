@@ -51,9 +51,9 @@ class UserSemesterSkillTest extends TestCase
             'status_verifikasi_ekstraksi' => true,
         ]);
 
-        $skill1 = Skill::create(['nama' => 'Basic Algorithm', 'kategori' => 'Backend Dev']);
-        $skill2 = Skill::create(['nama' => 'HTML & CSS', 'kategori' => 'Frontend Dev']);
-        $skill5 = Skill::create(['nama' => 'Kubernetes Cluster', 'kategori' => 'Cloud & DevOps']);
+        $skill1 = Skill::create(['nama' => 'Basic Algorithm', 'kategori' => 'Backend Dev', 'sektor_industri_terkait' => 'Teknologi Informasi']);
+        $skill2 = Skill::create(['nama' => 'HTML & CSS', 'kategori' => 'Frontend Dev', 'sektor_industri_terkait' => 'Teknologi Informasi']);
+        $skill5 = Skill::create(['nama' => 'Kubernetes Cluster', 'kategori' => 'Cloud & DevOps', 'sektor_industri_terkait' => 'Teknologi Informasi']);
 
         $courseSem1->skills()->attach($skill1->id);
         $courseSem2->skills()->attach($skill2->id);
@@ -124,8 +124,8 @@ class UserSemesterSkillTest extends TestCase
             'status_verifikasi_ekstraksi' => true,
         ]);
 
-        $skillA = Skill::create(['nama' => 'Cisco Networking', 'kategori' => 'Cybersecurity']);
-        $skillB = Skill::create(['nama' => 'Financial Auditing', 'kategori' => 'Akuntansi & Keuangan']);
+        $skillA = Skill::create(['nama' => 'Cisco Networking', 'kategori' => 'Cybersecurity', 'sektor_industri_terkait' => 'Teknologi Informasi']);
+        $skillB = Skill::create(['nama' => 'Financial Auditing', 'kategori' => 'Akuntansi & Keuangan', 'sektor_industri_terkait' => 'Keuangan']);
 
         $courseA->skills()->attach($skillA->id);
         $courseB->skills()->attach($skillB->id);

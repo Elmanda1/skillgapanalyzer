@@ -8,7 +8,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
-class MyCoursesTest extends TestCase
+class SkillManagerCoursesTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -52,7 +52,7 @@ class MyCoursesTest extends TestCase
         return $user;
     }
 
-    public function test_mahasiswa_sees_passed_and_current_courses_only(): void
+    public function test_skills_page_carries_passed_and_current_courses(): void
     {
         $prodi = $this->makeProdi();
         $this->makeCourse($prodi, 'TI101', 1);
@@ -61,17 +61,17 @@ class MyCoursesTest extends TestCase
         $this->makeCourse($prodi, 'TI401', 4);
         $this->actingAsMahasiswa($prodi, 3);
 
-        $this->get('/my-courses')
+        $this->get('/skills')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->component('MyCourses', false)
+                ->component('SkillManager', false)
                 ->has('courses', 3)
                 ->where('courses.0.status', 'passed')
                 ->where('courses.2.status', 'current')
                 ->where('currentSemester', 3));
     }
 
-    public function test_courses_are_scoped_to_own_study_program(): void
+    public function test_skills_courses_scoped_to_own_study_program(): void
     {
         $prodiA = $this->makeProdi('Teknik Informatika');
         $prodiB = $this->makeProdi('Akuntansi');
@@ -79,22 +79,15 @@ class MyCoursesTest extends TestCase
         $this->makeCourse($prodiB, 'AK101', 1);
         $this->actingAsMahasiswa($prodiA, 2);
 
-        $this->get('/my-courses')
+        $this->get('/skills')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->has('courses', 1)
                 ->where('courses.0.code', 'TI101'));
     }
 
-    public function test_guest_redirected_and_non_mahasiswa_forbidden(): void
+    public function test_guest_redirected_from_skills(): void
     {
-        $this->get('/my-courses')->assertRedirect('/login');
-
-        $prodi = $this->makeProdi();
-        $dosen = User::factory()->create(['study_program_id' => $prodi->id]);
-        $dosen->assignRole(Role::findOrCreate('dosen'));
-        $this->actingAs($dosen);
-
-        $this->get('/my-courses')->assertForbidden();
+        $this->get('/skills')->assertRedirect('/login');
     }
 }

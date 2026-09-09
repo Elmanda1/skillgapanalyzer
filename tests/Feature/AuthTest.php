@@ -45,6 +45,7 @@ class AuthTest extends TestCase
             'email' => 'mahasiswa@example.com',
             'password' => 'password123',
             'password_confirmation' => 'password123',
+            'semester' => 1,
         ]);
 
         $response->assertRedirect('/dashboard');
@@ -66,6 +67,7 @@ class AuthTest extends TestCase
             'email' => 'mahasiswa@example.com',
             'password' => 'password123',
             'password_confirmation' => 'password123',
+            'semester' => 1,
         ]);
 
         $response->assertSessionHasErrors('email');
