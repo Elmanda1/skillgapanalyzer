@@ -5,9 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['skill_id', 'alias_name'])]
+#[Fillable(['skill_id', 'alias_name', 'min_context_required', 'context_keywords'])]
 class SkillAlias extends Model
 {
+    protected $casts = [
+        'min_context_required' => 'boolean',
+        'context_keywords' => 'array',
+    ];
+
     protected static function booted(): void
     {
         static::created(fn () => app(\App\Services\Taxonomy\TaxonomySummary::class)->forget());
@@ -19,3 +24,4 @@ class SkillAlias extends Model
         return $this->belongsTo(Skill::class);
     }
 }
+
