@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { usePage } from '@inertiajs/react';
 import { useToast } from '../context/ToastContext';
 import { useSkills } from '../context/SkillContext';
 import Icon from '../components/Icon.jsx';
+import MyCoursesSection from '../components/MyCoursesSection.jsx';
 
 
 const TRENDING_SKILLS = [
@@ -18,6 +20,7 @@ export default function SkillManager() {
   const { mySkills, addSkill, removeSkill } = useSkills();
   const [newSkill, setNewSkill] = useState('');
   const [newLevel, setNewLevel] = useState('Dasar');
+  const { courses = [], currentSemester = 1, studyProgram = null } = usePage().props;
 
   const handleAddSkill = (e) => {
     e.preventDefault();
@@ -189,6 +192,8 @@ export default function SkillManager() {
             
           </div>
         </div>
+
+        <MyCoursesSection courses={courses} currentSemester={currentSemester} studyProgram={studyProgram} />
 
       </div>
     </div>
