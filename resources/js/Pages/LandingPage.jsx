@@ -39,12 +39,11 @@ import {
 } from 'lucide-react';
 
 const navItems = [
-  { name: 'Beranda', id: 'hero', icon: Home },
-  { name: 'Urgensi', id: 'fitur', icon: Sparkles },
-  { name: 'Simulasi', id: 'live-demo', icon: PlayCircle },
-  { name: 'Untuk Siapa', id: 'untuk-siapa', icon: Users },
-  { name: 'Cara Kerja', id: 'cara-kerja', icon: Workflow },
-  { name: 'FAQ', id: 'faq', icon: HelpCircle },
+  { name: 'Beranda', id: 'hero' },
+  { name: 'Latar Belakang', id: 'fitur' },
+  { name: 'Simulasi', id: 'live-demo' },
+  { name: 'Peran', id: 'untuk-siapa' },
+  { name: 'Cara Kerja', id: 'cara-kerja' },
 ];
 
 
