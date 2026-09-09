@@ -402,6 +402,8 @@ Route::middleware(['auth'])->group(function () {
 
     Route::middleware(['role:kaprodi|super_admin|dosen'])->prefix('curriculum')->name('curriculum.')->group(function () {
         Route::get('/', [CurriculumController::class, 'index'])->name('index');
+        Route::get('/template', [CurriculumController::class, 'template'])->name('template');
+        Route::post('/import', [CurriculumController::class, 'import'])->name('import');
         Route::get('/courses/{course}', [CurriculumController::class, 'show'])->name('courses.show');
         Route::post('/courses', [CurriculumController::class, 'storeCourse'])->name('courses.store');
         Route::put('/courses/{course}', [CurriculumController::class, 'updateCourse'])->name('courses.update');
