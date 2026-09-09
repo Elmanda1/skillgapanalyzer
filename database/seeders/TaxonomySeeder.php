@@ -37,10 +37,16 @@ class TaxonomySeeder extends Seeder
 
             // ── AI & Data Science (hard) ──
             ['LLM Fine-tuning', 'AI & Data Science', $dim['hard'], true, ['large language model tuning', 'llm training', 'fine-tuning llm']],
-            ['Machine Learning', 'AI & Data Science', $dim['hard'], true, ['ml', 'ml models', 'predictive modeling']],
+            ['Machine Learning', 'AI & Data Science', $dim['hard'], true, [
+                'ml models', 'predictive modeling',
+                ['alias' => 'ml', 'min_context_required' => true, 'context_keywords' => ['machine', 'learning', 'model', 'ai', 'data', 'algorithm', 'engineer']],
+            ]],
             ['Deep Learning', 'AI & Data Science', $dim['hard'], true, ['neural networks', 'deep neural net']],
             ['PyTorch / TensorFlow', 'AI & Data Science', $dim['hard'], true, ['pytorch', 'tensorflow', 'tf', 'torch']],
-            ['Computer Vision', 'AI & Data Science', $dim['hard'], true, ['cv', 'image recognition', 'object detection']],
+            ['Computer Vision', 'AI & Data Science', $dim['hard'], true, [
+                'image recognition', 'object detection',
+                ['alias' => 'cv', 'min_context_required' => true, 'context_keywords' => ['vision', 'image', 'detection', 'ai', 'model', 'deep learning', 'opencv']],
+            ]],
             ['Natural Language Processing', 'AI & Data Science', $dim['hard'], true, ['nlp', 'text processing', 'language models']],
             ['Snowflake', 'AI & Data Science', $dim['hard'], true, ['snowflake data warehouse', 'snowflake db']],
             ['Pandas', 'AI & Data Science', $dim['hard'], true, ['python pandas', 'pandas dataframe']],
@@ -54,7 +60,10 @@ class TaxonomySeeder extends Seeder
             ['Next.js', 'Frontend Dev', $dim['hard'], true, ['nextjs', 'next js', 'react next']],
             ['Vue.js', 'Frontend Dev', $dim['hard'], true, ['vue', 'vuejs', 'vue js']],
             ['Angular', 'Frontend Dev', $dim['hard'], true, ['angularjs', 'angular framework']],
-            ['TypeScript', 'Frontend Dev', $dim['hard'], true, ['ts', 'typed javascript']],
+            ['TypeScript', 'Frontend Dev', $dim['hard'], true, [
+                'typed javascript',
+                ['alias' => 'ts', 'min_context_required' => true, 'context_keywords' => ['typescript', 'javascript', 'developer', 'frontend', 'code', 'typed', 'stack', 'framework']],
+            ]],
             ['Tailwind CSS', 'Frontend Dev', $dim['hard'], true, ['tailwind', 'tailwindcss']],
             ['CSS3', 'Frontend Dev', $dim['hard'], true, ['css', 'cascading style sheets']],
             ['HTML5', 'Frontend Dev', $dim['hard'], true, ['html', 'markup html']],
@@ -65,18 +74,33 @@ class TaxonomySeeder extends Seeder
             // ── Backend Dev (hard) ──
             ['Laravel', 'Backend Dev', $dim['hard'], true, ['laravel php', 'laravel framework']],
             ['Node.js', 'Backend Dev', $dim['hard'], true, ['node', 'nodejs', 'node js', 'express']],
-            ['Python', 'Backend Dev', $dim['hard'], true, ['python3', 'py']],
-            ['Go (Golang)', 'Backend Dev', $dim['hard'], true, ['go', 'golang']],
+            ['Python', 'Backend Dev', $dim['hard'], true, [
+                'python3',
+                ['alias' => 'py', 'min_context_required' => true, 'context_keywords' => ['python', 'developer', 'django', 'fastapi', 'flask', 'script', 'backend', 'data']],
+            ]],
+            ['Go (Golang)', 'Backend Dev', $dim['hard'], true, [
+                'golang', 'go language', 'go programming',
+                ['alias' => 'go', 'min_context_required' => true, 'context_keywords' => ['golang', 'language', 'developer', 'programming', 'backend', 'engineer', 'code', 'stack']],
+            ]],
             ['Java', 'Backend Dev', $dim['hard'], true, ['java se', 'spring boot', 'spring java']],
             ['PHP', 'Backend Dev', $dim['hard'], true, ['php8', 'php language']],
             ['GraphQL APIs', 'Backend Dev', $dim['hard'], true, ['graphql', 'gql', 'graph ql']],
-            ['REST APIs', 'Backend Dev', $dim['hard'], true, ['rest', 'restful api', 'restful']],
+            ['REST APIs', 'Backend Dev', $dim['hard'], true, [
+                'restful api', 'restful',
+                ['alias' => 'rest', 'min_context_required' => true, 'context_keywords' => ['api', 'restful', 'endpoints', 'json', 'http', 'backend', 'web service', 'services']],
+            ]],
             ['Microservices', 'Backend Dev', $dim['cont'], false, ['microservice', 'services architecture', 'soa']],
-            ['PostgreSQL', 'Database', $dim['hard'], true, ['postgres', 'pg', 'postgresql db']],
+            ['PostgreSQL', 'Database', $dim['hard'], true, [
+                'postgres', 'postgresql db',
+                ['alias' => 'pg', 'min_context_required' => true, 'context_keywords' => ['postgres', 'postgresql', 'database', 'sql', 'db', 'rdbms']],
+            ]],
             ['MySQL', 'Database', $dim['hard'], true, ['maria', 'mariadb', 'mysql db']],
             ['MongoDB', 'Database', $dim['hard'], true, ['mongo', 'mongodb nosql']],
             ['Redis', 'Database', $dim['hard'], true, ['redis cache', 'redis store']],
-            ['Elasticsearch', 'Database', $dim['hard'], true, ['elastic', 'elk search']],
+            ['Elasticsearch', 'Database', $dim['hard'], true, [
+                'elk search',
+                ['alias' => 'elastic', 'min_context_required' => true, 'context_keywords' => ['elasticsearch', 'search', 'elk', 'kibana', 'logstash', 'indexing', 'cluster']],
+            ]],
 
             // ── Cybersecurity (hard) ──
             ['Zero Trust Architecture', 'Cybersecurity', $dim['hard'], true, ['zero trust', 'ztna', 'zero trust network']],
@@ -87,7 +111,10 @@ class TaxonomySeeder extends Seeder
 
             // ── Mobile Dev (hard) ──
             ['Flutter', 'Mobile Dev', $dim['hard'], true, ['flutter dart', 'flutter sdk']],
-            ['React Native', 'Mobile Dev', $dim['hard'], true, ['rn', 'react native mobile']],
+            ['React Native', 'Mobile Dev', $dim['hard'], true, [
+                'react native mobile',
+                ['alias' => 'rn', 'min_context_required' => true, 'context_keywords' => ['react', 'native', 'mobile', 'app', 'developer', 'ios', 'android']],
+            ]],
             ['Kotlin', 'Mobile Dev', $dim['hard'], true, ['android kotlin']],
             ['Swift', 'Mobile Dev', $dim['hard'], true, ['ios swift', 'swift ios']],
             ['Android SDK', 'Mobile Dev', $dim['hard'], true, ['android dev', 'android development']],
@@ -95,7 +122,7 @@ class TaxonomySeeder extends Seeder
             // ── Non-hard competence dimensions (task / contingency / knowledge / social) ──
             ['Agile Project Management', 'Soft Skills', $dim['task'], false, ['agile', 'scrum', 'agile scrum']],
             ['Scrum Master', 'Soft Skills', $dim['task'], false, ['scrummaster', 'scrum facilitator']],
-            ['Stakeholder Communication', 'Soft Skills', $dim['soc'], false, ['communication skills', 'stakeholder mgmt']],
+            ['Stakeholder Communication', 'Soft Skills', $dim['soc'], false, ['communication skills', 'stakeholder mgmt', 'team collaboration', 'kerjasama tim']],
             ['Technical Writing', 'Soft Skills', $dim['know'], false, ['documentation', 'tech writing']],
             ['Requirements Analysis', 'Soft Skills', $dim['cont'], false, ['requirement gathering', 'business analysis']],
             ['Incident Response', 'Soft Skills', $dim['cont'], false, ['incident mgmt', 'oncall response']],
@@ -103,10 +130,19 @@ class TaxonomySeeder extends Seeder
             ['Problem Solving', 'Soft Skills', $dim['cont'], false, ['analytical thinking', 'troubleshooting']],
             ['Time Management', 'Soft Skills', $dim['task'], false, ['task prioritization']],
             ['Continuous Learning', 'Soft Skills', $dim['know'], false, ['self learning', 'upskilling']],
-            ['Debugging', 'Backend Dev', $dim['hard'], true, ['debug', 'bug fixing']],
+            ['Debugging', 'Backend Dev', $dim['hard'], true, [
+                'bug fixing',
+                ['alias' => 'debug', 'min_context_required' => true, 'context_keywords' => ['debugging', 'code', 'software', 'bug', 'developer', 'engineer', 'issue', 'fix']],
+            ]],
             ['Code Review', 'Backend Dev', $dim['cont'], false, ['peer review', 'review pr']],
-            ['Git Version Control', 'Backend Dev', $dim['hard'], true, ['git', 'github', 'gitlab']],
-            ['Unit Testing', 'Backend Dev', $dim['hard'], true, ['tests', 'tdd', 'unit tests']],
+            ['Git Version Control', 'Backend Dev', $dim['hard'], true, [
+                'github', 'gitlab',
+                ['alias' => 'git', 'min_context_required' => true, 'context_keywords' => ['github', 'gitlab', 'version', 'control', 'repository', 'commit', 'branch', 'vcs', 'pr']],
+            ]],
+            ['Unit Testing', 'Backend Dev', $dim['hard'], true, [
+                'tdd', 'unit tests',
+                ['alias' => 'tests', 'min_context_required' => true, 'context_keywords' => ['unit', 'testing', 'automation', 'qa', 'code', 'coverage', 'tdd', 'integration']],
+            ]],
         ];
 
         foreach ($rows as $row) {
@@ -129,11 +165,31 @@ class TaxonomySeeder extends Seeder
                 'is_hard_skill' => $isHard,
             ]);
 
-            foreach ($aliases as $alias) {
-                SkillAlias::firstOrCreate(
-                    ['alias_name' => trim($alias)],
-                    ['skill_id' => $skill->id]
+            foreach ($aliases as $aliasItem) {
+                if (is_array($aliasItem)) {
+                    $aliasName = trim($aliasItem['alias']);
+                    $minContext = (bool) ($aliasItem['min_context_required'] ?? false);
+                    $contextKeywords = $aliasItem['context_keywords'] ?? null;
+                } else {
+                    $aliasName = trim($aliasItem);
+                    $minContext = false;
+                    $contextKeywords = null;
+                }
+
+                $sa = SkillAlias::firstOrCreate(
+                    ['alias_name' => $aliasName],
+                    [
+                        'skill_id' => $skill->id,
+                        'min_context_required' => $minContext,
+                        'context_keywords' => $contextKeywords,
+                    ]
                 );
+
+                $sa->update([
+                    'skill_id' => $skill->id,
+                    'min_context_required' => $minContext,
+                    'context_keywords' => $contextKeywords,
+                ]);
             }
         }
     }
