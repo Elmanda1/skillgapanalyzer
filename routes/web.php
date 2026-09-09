@@ -422,10 +422,6 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/jobs', [JobController::class, 'index'])->name('jobs');
 
-    Route::get('/my-courses', [\App\Http\Controllers\MyCourseController::class, '__invoke'])
-        ->middleware(['role:mahasiswa'])
-        ->name('my-courses');
-
     Route::middleware(['role:kaprodi|super_admin|dosen'])->prefix('curriculum')->name('curriculum.')->group(function () {
         Route::get('/', [CurriculumController::class, 'index'])->name('index');
         Route::get('/template', [CurriculumController::class, 'template'])->name('template');
