@@ -149,6 +149,12 @@ def setup_logging(log_dir: Path, correlation_id: str = None) -> logging.Logger:
     """Setup structured JSON logging to file and console."""
     log_dir.mkdir(parents=True, exist_ok=True)
     
+    if hasattr(sys.stdout, 'reconfigure'):
+        try:
+            sys.stdout.reconfigure(line_buffering=True)
+        except Exception:
+            pass
+
     logger = logging.getLogger("scraper")
     logger.setLevel(logging.DEBUG)
     logger.handlers.clear()
@@ -340,11 +346,17 @@ class RateLimiter:
         self.min_interval = interval
     
     def wait(self):
+        sleep_time = 0.0
         with self._lock:
-            wait = self.min_interval - (time.time() - self._last_req)
+            now = time.time()
+            wait = self.min_interval - (now - self._last_req)
             if wait > 0:
-                time.sleep(wait)
-            self._last_req = time.time()
+                sleep_time = wait
+                self._last_req = now + wait
+            else:
+                self._last_req = now
+        if sleep_time > 0:
+            time.sleep(sleep_time)
 
 
 RATE_LIMITER = RateLimiter(MIN_INTERVAL)

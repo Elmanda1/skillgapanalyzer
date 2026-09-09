@@ -197,7 +197,7 @@ def enumerate_pages(policy: Dict[str, Any], logger, max_pages: int = None) -> Li
         if LAST and page >= LAST:
             break
         page += 1
-        time.sleep(policy.get('crawl_delay_seconds', 2.0))
+        RATE_LIMITER.wait()
 
     # dedupe by id
     seen = set()
