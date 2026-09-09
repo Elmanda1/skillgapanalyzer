@@ -7,6 +7,12 @@ import { InfiniteSlider } from '@/components/ui/infinite-slider';
 import { BrandLogo } from '@/components/BrandLogo';
 import { JOB_PORTALS, TECH_SKILLS } from '@/components/BrandLogosData';
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
+import {
   Home,
   Sparkles,
   PlayCircle,
@@ -843,110 +849,91 @@ function ProcessTimelineSection() {
 
 
 
-// ─── Component 7: FAQ Accordion Section ─────────────────────────────────────
+// ─── Component 7: FAQ Accordion Section (Hirael FAQ-05 Pattern) ───────────
+const FAQS = [
+  {
+    id: 'item-1',
+    q: 'Apakah Skill Gap Analyzer gratis digunakan oleh institusi pendidikan vokasi?',
+    a: 'Ya. Program Studi, Jurusan, maupun institusi Pendidikan Vokasi (Politeknik, D3/D4, S1 Terapan) dapat mengevaluasi keselarasan kurikulum internal secara mandiri tanpa biaya lisensi awal.',
+  },
+  {
+    id: 'item-2',
+    q: 'Dari mana basis data kebutuhan lowongan kerja dikumpulkan?',
+    a: 'Data dihimpun dan diperbarui secara otomatis dari berbagai portal lowongan kerja nasional (loker.id, Glints, JobStreet). Mesin scraping terdistribusi meng-ingest entitas kualifikasi teknis dan skill yang dibutuhkan industri secara realtime.',
+  },
+  {
+    id: 'item-3',
+    q: 'Bagaimana AI mengukur kesenjangan kurikulum secara ilmiah?',
+    a: 'Sistem memanfaatkan model NLP Semantic Vector Matching (Cosine Similarity) untuk memetakan teks Rencana Pembelajaran Semester (RPS) & CPL mata kuliah terhadap klaster keterampilan industri guna mengukur derajat keselarasan secara terukur.',
+  },
+  {
+    id: 'item-4',
+    q: 'Apakah hasil analisis dapat diekspor untuk akreditasi LAM-INFOKOM / BAN-PT?',
+    a: 'Tentu. Sistem menyediakan fitur ekspor otomatis matriks capaian CPL-Industri, laporan tren kompetensi, serta borang evaluasi kurikulum berbasis data pasar kerja yang dapat dilampirkan dalam evaluasi berkala dan borang akreditasi.',
+  },
+  {
+    id: 'item-5',
+    q: 'Bagaimana peran Dosen dan Mahasiswa di dalam platform ini?',
+    a: 'Dosen pengampu dapat mengidentifikasi topik praktikum terkini untuk memperbarui RPS. Mahasiswa dapat melihat kesesuaian mata kuliah yang telah diambil dengan kualifikasi bursa kerja aktif serta mendapat panduan portofolio mandiri.',
+  },
+  {
+    id: 'item-6',
+    q: 'Bagaimana cara memasukkan dokumen kurikulum prodi kami ke dalam sistem?',
+    a: 'Cukup unggah berkas RPS (format PDF/Word/JSON) atau masukkan ringkasan capaian mata kuliah pada dashboard prodi. Mesin AI akan langsung mengekstrak entitas kompetensi dan menyajikan peta kesenjangan kurikulum dalam hitungan detik.',
+  },
+];
+
 function FAQSection() {
-  const [openIndex, setOpenIndex] = useState(0);
-
-  const faqs = [
-    {
-      q: 'Apakah Skill Gap Analyzer gratis digunakan oleh kampus vokasi?',
-      a: 'Ya, program studi dan institusi pendidikan vokasi dapat menggunakan platform ini untuk menganalisis dan mengevaluasi keselarasan kurikulum internal secara mandiri.',
-    },
-    {
-      q: 'Dari mana sumber data lowongan kerja dikumpulkan?',
-      a: 'Data dihimpun secara periodik dari berbagai portal lowongan kerja terpercaya di Indonesia (seperti loker.id, Glints, JobStreet) dan diolah sebagai basis data kebutuhan keterampilan industri.',
-    },
-    {
-      q: 'Bagaimana AI mengukur kesenjangan kurikulum secara ilmiah?',
-      a: 'Sistem memanfaatkan model NLP Semantic Similarity untuk memetakan teks Rencana Pembelajaran Semester (RPS) dan capaian pembelajaran mata kuliah bersama kualifikasi industri guna mengukur derajat keselarasan secara objektif.',
-    },
-    {
-      q: 'Apakah hasil analisis dapat diekspor untuk akreditasi LAM-INFOKOM / BAN-PT?',
-      a: 'Ya. Sistem menyediakan fitur ekspor matriks capaian pembelajaran dan dokumen evaluasi kurikulum berbasis data pasar yang dapat dilampirkan dalam evaluasi berkala dan borang akreditasi.',
-    },
-    {
-      q: 'Bagaimana peran mahasiswa dalam platform ini?',
-      a: 'Mahasiswa dapat melihat kesesuaian mata kuliah yang telah diselesaikan dengan lowongan kerja aktif, mengetahui keterampilan teknis yang perlu ditingkatkan, serta merencanakan portofolio belajar mandiri.',
-    },
-  ];
-
   return (
-    <section id="faq" className="scroll-mt-24 py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-slate-950 transition-colors lazy-section">
-      <div className="max-w-3xl mx-auto">
-        <div className="text-center mb-12">
-          <span className="badge badge-gray mb-3 inline-flex">Paling Sering Ditanyakan</span>
-          <h2 className="font-display text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white tracking-tight">
-            Pertanyaan Umum seputar Platform
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400 mt-2 text-sm">
-            Semua yang perlu Anda ketahui sebelum menghubungkan kurikulum prodi Anda.
-          </p>
-        </div>
-
-        <div className="space-y-3">
-          {faqs.map((faq, idx) => {
-            const isOpen = openIndex === idx;
-            return (
-              <div
-                key={idx}
-                className="border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-2xl overflow-hidden transition-all duration-300 shadow-xs hover:border-gray-300 dark:hover:border-slate-700"
+    <section id="faq" data-slot="faq" className="scroll-mt-24 bg-white dark:bg-slate-950 py-16 md:py-24 border-t border-gray-200/90 dark:border-slate-800 transition-colors lazy-section">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid w-full grid-cols-1 border-y border-gray-200/90 dark:border-slate-800 md:grid-cols-12 md:border-x rounded-2xl overflow-hidden bg-white dark:bg-slate-900/60 shadow-xl">
+          <div
+            data-slot="faq-intro"
+            className="flex flex-col gap-4 border-b border-gray-200/90 dark:border-slate-800 px-6 pt-10 pb-8 md:col-span-5 md:border-b-0 md:border-e md:px-10 md:py-16 bg-gray-50/70 dark:bg-slate-900/80"
+          >
+            <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-emerald-800 dark:text-emerald-400 font-bold">
+              faq & bantuan
+            </span>
+            <h2 className="font-display text-3xl font-extrabold leading-[1.08] tracking-tight md:text-4xl text-gray-900 dark:text-white">
+              Pertanyaan, terjawab.
+            </h2>
+            <p className="max-w-sm text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+              Hal-hal yang paling sering ditanyakan seputar evaluasi kurikulum dan integrasi data pasar kerja. Masih ragu? Hubungi kami dan tim kami siap memandu Anda.
+            </p>
+            <div className="pt-4 mt-auto">
+              <a
+                href="mailto:support@skillgapanalyzer.id"
+                className="inline-flex items-center gap-2 text-xs font-bold text-emerald-800 dark:text-emerald-400 hover:underline"
               >
-                <button
-                  type="button"
-                  onClick={() => setOpenIndex(isOpen ? null : idx)}
-                  aria-expanded={isOpen}
-                  className="w-full text-left px-6 py-5 flex items-center justify-between font-display font-semibold text-gray-900 dark:text-white text-sm sm:text-base hover:bg-gray-50/70 dark:hover:bg-slate-800/50 transition-colors cursor-pointer select-none"
-                >
-                  <span className="pr-4 leading-snug">{faq.q}</span>
-                  <motion.div
-                    animate={{ rotate: isOpen ? 180 : 0 }}
-                    transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                    className={`p-1.5 rounded-full flex-shrink-0 transition-colors ${
-                      isOpen
-                        ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-400'
-                        : 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-400'
-                    }`}
-                  >
-                    <ChevronDown className="w-4 h-4" />
-                  </motion.div>
-                </button>
-                <AnimatePresence initial={false}>
-                  {isOpen && (
-                    <motion.div
-                      key="content"
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{
-                        height: 'auto',
-                        opacity: 1,
-                        transition: {
-                          height: { duration: 0.38, ease: [0.16, 1, 0.3, 1] },
-                          opacity: { duration: 0.26, delay: 0.04 },
-                        },
-                      }}
-                      exit={{
-                        height: 0,
-                        opacity: 0,
-                        transition: {
-                          height: { duration: 0.28, ease: [0.16, 1, 0.3, 1] },
-                          opacity: { duration: 0.16 },
-                        },
-                      }}
-                      className="overflow-hidden"
-                    >
-                      <div className="px-6 pb-5 pt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed border-t border-gray-100 dark:border-slate-800 bg-gray-50/40 dark:bg-slate-950/40">
-                        {faq.a}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            );
-          })}
+                Butuh konsultasi kurikulum prodi? Hubungi Tim Kemitraan &rarr;
+              </a>
+            </div>
+          </div>
+
+          <div
+            data-slot="faq-list"
+            className="flex flex-col justify-center px-6 py-6 md:col-span-7 md:px-8 bg-white dark:bg-slate-900"
+          >
+            <Accordion type="single" collapsible defaultValue="item-1" className="w-full">
+              {FAQS.map((item) => (
+                <AccordionItem key={item.id} value={item.id} className="py-1">
+                  <AccordionTrigger className="text-left text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100 hover:text-emerald-800 dark:hover:text-emerald-400">
+                    {item.q}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm leading-relaxed pb-4">
+                    {item.a}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </div>
         </div>
       </div>
     </section>
   );
 }
+
 
 // ─── Main LandingPage ──────────────────────────────────────────────────────
 export default function LandingPage() {
