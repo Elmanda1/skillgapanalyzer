@@ -96,8 +96,8 @@ async def run_pipeline(domain_url: str, max_pages: int = 15, max_jobs: int = 10,
 def main():
     parser = argparse.ArgumentParser(description="Universal AI-Driven Job Scraper & Aggregator Orchestrator")
     parser.add_argument("--domain", type=str, default="https://www.loker.id", help="Seed domain URL to crawl")
-    parser.add_argument("--max-pages", type=int, default=10, help="Max crawler pages limit")
-    parser.add_argument("--max-jobs", type=int, default=5, help="Max job extractions limit")
+    parser.add_argument("--max-pages", type=int, default=9999, help="Max crawler pages limit")
+    parser.add_argument("--max-jobs", type=int, default=999999, help="Max job extractions limit")
     parser.add_argument("--output", type=str, default="universal_master_jobs.json", help="Output JSON filename")
 
     args = parser.parse_args()

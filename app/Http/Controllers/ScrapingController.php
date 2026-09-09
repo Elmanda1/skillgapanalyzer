@@ -97,8 +97,8 @@ class ScrapingController extends Controller
             'status' => 'Syncing',
             'uptime' => 99.9,
             'volume_data' => 0.5,
-            'max_pages' => $validated['max_pages'] ?? 10,
-            'max_jobs' => $validated['max_jobs'] ?? 15,
+            'max_pages' => $validated['max_pages'] ?? 9999,
+            'max_jobs' => $validated['max_jobs'] ?? 999999,
             'last_sync' => now(),
         ]);
 
@@ -140,19 +140,19 @@ class ScrapingController extends Controller
             };
 
             $targetDomain = str_replace(['https://', 'http://', 'www.'], '', $domainUrl);
-            $sendData("[SYSTEM] Memulai deployment & eksekusi scraper AI untuk domain: {$targetDomain}...");
+            $sendData("[SYSTEM] Memulai deployment & eksekusi scraper AI (High-Speed Concurrent Mode) untuk domain: {$targetDomain}...");
 
             $pythonBin = $this->findPythonBinary();
-            $maxPages = $agent->max_pages ?? 10;
-            $maxJobs = $agent->max_jobs ?? 15;
+            $maxPages = $agent->max_pages ?? 9999;
+            $maxJobs = $agent->max_jobs ?? 999999;
 
             // Route execution engine: use scrape_loker_enhanced.py for loker.id, or Universal AI Scraper for other domains
             if (str_contains($targetDomain, 'loker.id')) {
                 $scriptPath = base_path('data-engine/scrape_loker_enhanced.py');
-                $cmd = escapeshellarg($pythonBin) . ' ' . escapeshellarg($scriptPath) . ' --phase=all --max-pages=2 --max-jobs=' . $maxJobs;
+                $cmd = escapeshellarg($pythonBin) . ' ' . escapeshellarg($scriptPath) . ' --phase=all --workers=16 --interval=0.05' . ($maxPages > 0 && $maxPages < 9999 ? ' --max-pages=' . $maxPages : '') . ($maxJobs > 0 && $maxJobs < 999999 ? ' --max-jobs=' . $maxJobs : '');
             } else {
                 $scriptPath = base_path('data-engine/universal/run_pipeline.py');
-                $cmd = escapeshellarg($pythonBin) . ' ' . escapeshellarg($scriptPath) . ' --domain=' . escapeshellarg($domainUrl) . ' --max-pages=' . $maxPages . ' --max-jobs=' . $maxJobs;
+                $cmd = escapeshellarg($pythonBin) . ' ' . escapeshellarg($scriptPath) . ' --domain=' . escapeshellarg($domainUrl) . ($maxPages > 0 && $maxPages < 9999 ? ' --max-pages=' . $maxPages : '') . ($maxJobs > 0 && $maxJobs < 999999 ? ' --max-jobs=' . $maxJobs : '');
             }
 
             $descriptorspec = [

@@ -413,11 +413,11 @@ def main():
     ap = argparse.ArgumentParser(description="Scraper loker.id - Legal Compliant")
     ap.add_argument("--phase", choices=["enumerate", "detail", "aggregate", "all"],
                     default="all")
-    ap.add_argument("--workers", type=int, default=4)
-    ap.add_argument("--max-jobs", type=int, default=None)
-    ap.add_argument("--max-pages", type=int, default=None)
+    ap.add_argument("--workers", type=int, default=16)
+    ap.add_argument("--max-jobs", type=int, default=999999)
+    ap.add_argument("--max-pages", type=int, default=9999)
     ap.add_argument("--sample", type=int, default=None)
-    ap.add_argument("--interval", type=float, default=2.0,
+    ap.add_argument("--interval", type=float, default=0.05,
                     help="minimum interval antar request (detik)")
     ap.add_argument("--out", default=None,
                     help="folder output (default database/datajson)")
@@ -441,7 +441,7 @@ def main():
 
     # Load policy
     policy = load_policy_from_env()
-    RATE_LIMITER.set_interval(policy.get('crawl_delay_seconds', 2.0))
+    RATE_LIMITER.set_interval(args.interval or 0.05)
 
     logger.info(f"Starting scraper for {policy['name']} (domain: {policy['domain']})")
     logger.info(f"Rate limit: {policy['rate_limit_per_minute']}/min, crawl delay: {policy['crawl_delay_seconds']}s")
