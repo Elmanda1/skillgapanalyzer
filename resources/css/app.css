@@ -301,9 +301,27 @@
    VIEW TRANSITIONS API: ULTRA-SMOOTH CIRCULAR RIPPLE
    ============================================ */
 
-/* Prevent the browser from capturing/animating the group itself */
+@keyframes theme-expand {
+  0% {
+    clip-path: circle(0px at var(--x, 50%) var(--y, 40px));
+  }
+  100% {
+    clip-path: circle(var(--r, 1000px) at var(--x, 50%) var(--y, 40px));
+  }
+}
+
+@keyframes theme-shrink {
+  0% {
+    clip-path: circle(var(--r, 1000px) at var(--x, 50%) var(--y, 40px));
+  }
+  100% {
+    clip-path: circle(0px at var(--x, 50%) var(--y, 40px));
+  }
+}
+
 ::view-transition-group(root) {
-  overflow: clip;
+  animation: none;
+  mix-blend-mode: normal;
 }
 
 ::view-transition-old(root),
@@ -312,16 +330,28 @@
   mix-blend-mode: normal;
 }
 
-/* Default stack: new expands on top */
+/* Default Expand (Light -> Dark): new expands from 0 to full screen */
 ::view-transition-old(root) {
   z-index: 1;
 }
 
 ::view-transition-new(root) {
   z-index: 9999;
+  animation: theme-expand 380ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Suppress all competing CSS transitions during view-transition to eliminate hitch/freezing */
+/* Shrink (Dark -> Light): old shrinks from full screen down to 0 */
+html.theme-transition-shrink::view-transition-old(root) {
+  z-index: 9999;
+  animation: theme-shrink 380ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+html.theme-transition-shrink::view-transition-new(root) {
+  z-index: 1;
+  animation: none;
+}
+
+/* Suppress all competing CSS transitions during view-transition */
 html.theme-transitioning,
 html.theme-transitioning *,
 html.theme-transitioning *::before,

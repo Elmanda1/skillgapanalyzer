@@ -26,7 +26,7 @@ export function ThemeToggle({ className }) {
       return;
     }
 
-    // Always measure exact physical center of the toggle button element
+    // Measure exact center coordinates from physical button element
     const btn = buttonRef.current;
     let x = window.innerWidth / 2;
     let y = 40;
@@ -50,39 +50,31 @@ export function ThemeToggle({ className }) {
       Math.max(y, vh - y)
     );
 
-    // Suppress competing CSS transitions during view-transition snapshot to prevent jank
-    document.documentElement.classList.add('theme-transitioning');
+    const isShrinking = isDark;
+
+    // Set CSS custom variables on root element before transition starts
+    const docEl = document.documentElement;
+    docEl.style.setProperty('--x', `${x}px`);
+    docEl.style.setProperty('--y', `${y}px`);
+    docEl.style.setProperty('--r', `${endRadius}px`);
+
+    docEl.classList.add('theme-transitioning');
+    if (isShrinking) {
+      docEl.classList.add('theme-transition-shrink');
+    } else {
+      docEl.classList.remove('theme-transition-shrink');
+    }
 
     const transition = document.startViewTransition(() => {
       setMode(nextTheme);
     });
 
     const cleanup = () => {
-      document.documentElement.classList.remove('theme-transitioning');
+      docEl.classList.remove('theme-transition-shrink');
+      docEl.classList.remove('theme-transitioning');
     };
 
-    transition.ready.then(() => {
-      const anim = document.documentElement.animate(
-        {
-          clipPath: [
-            `circle(0px at ${x}px ${y}px)`,
-            `circle(${endRadius}px at ${x}px ${y}px)`,
-          ],
-        },
-        {
-          duration: 480,
-          easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
-          pseudoElement: '::view-transition-new(root)',
-        }
-      );
-
-      anim.onfinish = cleanup;
-      anim.oncancel = cleanup;
-    }).catch(cleanup);
-
-    if (transition.finished) {
-      transition.finished.finally(cleanup);
-    }
+    transition.finished.finally(cleanup);
   };
 
   return (
