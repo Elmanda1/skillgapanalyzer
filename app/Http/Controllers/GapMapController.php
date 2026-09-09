@@ -48,14 +48,20 @@ class GapMapController extends Controller
             $period = $analysisResult['period'] ?? $period;
         }
 
-        // Fetch gap analyses with skills
-        $gaps = GapAnalysis::with(['skill.aliases'])
+        // Fetch gap analyses with skills, related courses (for SKS calculation), and job vacancies
+        $gaps = GapAnalysis::with(['skill.aliases', 'skill.jobVacancies', 'skill.courses' => function ($q) use ($selectedProgramId) {
+            $q->where('study_program_id', $selectedProgramId);
+        }])
             ->where('study_program_id', $selectedProgramId)
             ->where('periode_data', $period)
             ->orderBy('skor_urgensi', 'desc')
             ->orderBy('evidence_count', 'desc')
             ->get()
             ->map(function ($g) {
+                $realJobCount = $g->skill ? $g->skill->jobVacancies()->count() : 0;
+                $evidenceCount = max($realJobCount, (int) $g->evidence_count);
+                $totalSks = $g->skill ? $g->skill->courses->sum('credits') : 0;
+
                 return [
                     'id' => $g->id,
                     'skill_id' => $g->skill_id,
@@ -66,7 +72,8 @@ class GapMapController extends Controller
                     'tipe_mismatch' => $g->tipe_mismatch,
                     'skor_urgensi' => (int) $g->skor_urgensi,
                     'match_rate' => (float) $g->match_rate,
-                    'evidence_count' => (int) $g->evidence_count,
+                    'evidence_count' => $evidenceCount,
+                    'total_sks' => (int) $totalSks,
                     'aliases' => $g->skill?->aliases->pluck('alias_name')->all() ?? [],
                 ];
             });
@@ -163,6 +170,9 @@ class GapMapController extends Controller
             ->values()
             ->map(function ($g, $idx) {
                 $isShortage = $g->tipe_mismatch === 'skill_shortages';
+                $realJobCount = $g->skill ? $g->skill->jobVacancies()->count() : 0;
+                $evidenceCount = max($realJobCount, (int) $g->evidence_count);
+
                 return [
                     'id' => 'GAP-' . ($idx + 1),
                     'skill_id' => $g->skill_id,
@@ -173,11 +183,11 @@ class GapMapController extends Controller
                     'urgency' => $g->skor_urgensi >= 8 ? 'Kritis' : ($g->skor_urgensi >= 5 ? 'Menengah' : 'Rendah'),
                     'skor_urgensi' => $g->skor_urgensi,
                     'match_rate' => $g->match_rate,
-                    'evidence_count' => $g->evidence_count,
+                    'evidence_count' => $evidenceCount,
                     'action_title' => $isShortage ? 'Integrasi Modul ' . $g->skill?->nama : 'Penguatan Praktikum ' . $g->skill?->nama,
                     'body' => $isShortage
-                        ? "Ditemukan {$g->evidence_count} lowongan industri membutuhkan keahlian ini. Direkomendasikan penambahan modul praktikum 4 minggu."
-                        : "Kebutuhan industri tinggi ({$g->evidence_count} lowongan), bobot SKS saat ini perlu diselaraskan dengan standar industri.",
+                        ? "Ditemukan {$evidenceCount} lowongan industri membutuhkan keahlian ini. Direkomendasikan penambahan modul praktikum 4 minggu."
+                        : "Kebutuhan industri tinggi ({$evidenceCount} lowongan), bobot SKS saat ini perlu diselaraskan dengan standar industri.",
                     'impact' => '+' . rand(14, 26) . '%',
                     'proposed_tag' => $isShortage ? 'Modul Baru' : 'Pembaruan Materi',
                 ];

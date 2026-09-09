@@ -43,7 +43,7 @@ export default function Dashboard({ setActiveTab }) {
     chartInstance.current = new Chart(ctx, {
       type: 'line',
       data: {
-        labels: ['00:00','02:00','04:00','06:00','08:00','10:00','12:00'],
+        labels: ['00:00', '02:00', '04:00', '06:00', '08:00', '10:00', '12:00'],
         datasets: [
           {
             label: 'Laju (GB/s)',
@@ -60,10 +60,10 @@ export default function Dashboard({ setActiveTab }) {
           },
           {
             label: 'Delay (ms)',
-            data: [120,115,110,150,125,118,122],
+            data: [120, 115, 110, 150, 125, 118, 122],
             borderColor: '#d1d5db',
             borderWidth: 2,
-            borderDash: [5,5],
+            borderDash: [5, 5],
             pointRadius: 0,
             fill: false,
             tension: 0.4,
@@ -108,9 +108,9 @@ export default function Dashboard({ setActiveTab }) {
 
   const sectors = [
     { name: 'Teknologi & TI', pct: 45, color: '#064e3b' },
-    { name: 'Keuangan',        pct: 28, color: '#059669' },
-    { name: 'Kesehatan',       pct: 15, color: '#6b7280' },
-    { name: 'Manufaktur',      pct: 12, color: '#9ca3af' },
+    { name: 'Keuangan', pct: 28, color: '#059669' },
+    { name: 'Kesehatan', pct: 15, color: '#6b7280' },
+    { name: 'Manufaktur', pct: 12, color: '#9ca3af' },
   ];
 
   return (
@@ -153,7 +153,7 @@ export default function Dashboard({ setActiveTab }) {
             Sistem sekarang memiliki pusat kendali terintegrasi. Anda dapat mengelola akun pengguna, mereview usulan kurikulum dari dosen, dan mencetak laporan akreditasi.
           </p>
         </div>
-        <button 
+        <button
           onClick={() => setActiveTab('management')}
           className="px-5 py-2.5 bg-white text-brand rounded-lg text-sm font-bold shadow hover:bg-gray-50 transition-colors whitespace-nowrap"
         >
@@ -256,57 +256,6 @@ export default function Dashboard({ setActiveTab }) {
             ))}
           </div>
         </div>
-      </div>
-
-      {/* ── Scraping Nodes Table ── */}
-      <div className="card overflow-hidden">
-        <div className="px-5 py-4 border-b border-border flex justify-between items-center">
-          <div>
-            <h2 className="font-display text-base font-semibold text-text">Infrastruktur Agen Scraping</h2>
-            <p className="text-xs text-text-secondary mt-0.5">Status node pengumpulan data regional.</p>
-          </div>
-          <button
-            onClick={() => setActiveTab('scraping')}
-            className="text-sm font-semibold text-brand hover:underline"
-          >
-            Lihat Semua Agen →
-          </button>
-        </div>
-        <table className="w-full text-left text-sm">
-          <thead>
-            <tr className="bg-gray-50 border-b border-border">
-              {['WILAYAH / NODE','STATUS','UPTIME','DATA DIPROSES'].map(h => (
-                <th key={h} className="px-5 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wide">{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {[
-              { name: 'JKT-Node-01 (Jakarta)',  status: 'Aktif',        uptime: '99.98%', data: '4.2 TB', badge: 'badge-green' },
-              { name: 'SUB-Node-02 (Surabaya)', status: 'Aktif',        uptime: '99.95%', data: '2.8 TB', badge: 'badge-green' },
-              { name: 'BDO-Node-03 (Bandung)',  status: 'Sinkronisasi', uptime: '98.50%', data: '1.1 TB', badge: 'badge-yellow' },
-            ].map(row => (
-              <tr key={row.name} className="hover:bg-gray-50 transition-colors">
-                <td className="px-5 py-3.5">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-text-secondary">
-                      <Icon className="text-[16px]" name="dns" />
-                    </div>
-                    <span className="font-medium text-text">{row.name}</span>
-                  </div>
-                </td>
-                <td className="px-5 py-3.5">
-                  <span className={`badge ${row.badge}`}>
-                    <span className="w-1.5 h-1.5 rounded-full bg-current inline-block" />
-                    {row.status}
-                  </span>
-                </td>
-                <td className="px-5 py-3.5 font-mono font-semibold text-text">{row.uptime}</td>
-                <td className="px-5 py-3.5 font-mono text-text-secondary">{row.data}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
       </div>
     </div>
   );

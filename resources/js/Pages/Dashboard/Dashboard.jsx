@@ -508,62 +508,6 @@ export default function Dashboard() {
               </div>
             </div>
           )}
-
-          {/* ── Scraping Nodes Table ── */}
-          <div className="card overflow-hidden bg-white">
-            <div className="px-5 py-4 border-b border-border flex justify-between items-center">
-              <div>
-                <h2 className="font-display text-base font-semibold text-text">Infrastruktur Agen Scraping Regional</h2>
-                <p className="text-xs text-text-secondary mt-0.5">Status operasional node crawling data lowongan kerja di berbagai wilayah.</p>
-              </div>
-              <Link
-                href="/scraping"
-                className="text-sm font-semibold text-brand hover:underline"
-              >
-                Lihat Semua Agen →
-              </Link>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="bg-gray-50 border-b border-border">
-                    {['WILAYAH / NODE', 'STATUS', 'UPTIME', 'DATA DIPROSES'].map(h => (
-                      <th key={h} className="px-5 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wide">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {stats.scrapingAgents?.map(row => (
-                    <tr key={row.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-5 py-3.5">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-text-secondary">
-                            <Icon className="text-[16px]" name="dns" />
-                          </div>
-                          <span className="font-medium text-text">{row.wilayah}</span>
-                        </div>
-                      </td>
-                      <td className="px-5 py-3.5">
-                        <span className={`badge ${row.status === 'Aktif' ? 'badge-green' : 'badge-yellow'}`}>
-                          <span className="w-1.5 h-1.5 rounded-full bg-current inline-block" />
-                          {row.status}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3.5 font-mono font-semibold text-text">{row.uptime}%</td>
-                      <td className="px-5 py-3.5 font-mono text-text-secondary">{row.volume_data} TB</td>
-                    </tr>
-                  ))}
-                  {(!stats.scrapingAgents || stats.scrapingAgents.length === 0) && (
-                    <tr>
-                      <td colSpan="4" className="px-5 py-8 text-center text-xs text-text-muted">
-                        Tidak ada agen scraping terdaftar.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
         </div>
       )}
 
@@ -1083,7 +1027,7 @@ export default function Dashboard() {
 
           {/* ── Proposal Modal ── */}
           {showProposalModal && (
-            <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
               <div className="bg-white rounded-2xl border border-border shadow-2xl max-w-lg w-full p-6 animate-fade-in-up">
                 <div className="flex items-center justify-between pb-4 border-b border-border mb-4">
                   <h3 className="font-display text-base font-bold text-text flex items-center gap-2">

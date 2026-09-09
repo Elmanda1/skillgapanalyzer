@@ -395,8 +395,12 @@ export default function CompetencyMap({
                         />
                       </div>
                       <div className="flex justify-between text-[10px] text-text-muted pt-1">
-                        <span>Match: {item.match_rate}%</span>
-                        <span>{item.evidence_count} Lowongan Industri</span>
+                        <span className="font-semibold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                          📚 {item.total_sks || 0} Total SKS Diajarkan
+                        </span>
+                        <span className="font-semibold text-brand bg-brand-light/50 px-1.5 py-0.5 rounded border border-brand/20">
+                          💼 {item.evidence_count} Lowongan Industri
+                        </span>
                       </div>
                     </div>
                   </div>

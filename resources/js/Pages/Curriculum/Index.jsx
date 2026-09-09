@@ -7,23 +7,44 @@ import Icon from '../../components/Icon.jsx';
 function CourseCard({ course }) {
   const sp = course.study_program;
   const verified = Boolean(course.status_verifikasi_ekstraksi);
+  const isOverridden = Boolean(course.is_overridden);
+  const auditorName = isOverridden
+    ? (course.overridden_by_user?.name ? `Kaprodi (${course.overridden_by_user.name})` : 'Kaprodi')
+    : 'Dosen (Default)';
 
   return (
     <Link
       href={`/curriculum/courses/${course.id}`}
-      className="card p-5 flex items-start justify-between gap-4 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group"
+      className={`card p-5 flex items-start justify-between gap-4 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group ${
+        isOverridden ? 'border-purple-200/80 bg-purple-50/30' : ''
+      }`}
     >
       <div className="flex items-start gap-4">
-        <div className="w-11 h-11 rounded-xl bg-brand-light flex items-center justify-center flex-shrink-0">
-          <Icon className="text-brand text-[22px]" name="book_2" />
+        <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${
+          isOverridden ? 'bg-purple-100 text-purple-700' : 'bg-brand-light text-brand'
+        }`}>
+          <Icon className="text-[22px]" name="book_2" />
         </div>
         <div>
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
             <span className="badge badge-gray font-mono">{course.code}</span>
             <span className={`badge ${verified ? 'badge-green' : 'badge-yellow'}`}>
               <span className={`w-1.5 h-1.5 rounded-full ${verified ? 'bg-status-green-dot' : 'bg-status-yellow-dot'}`} />
               {verified ? 'Terverifikasi' : 'Belum Terverifikasi'}
             </span>
+            
+            {isOverridden ? (
+              <span className="inline-flex items-center gap-1 bg-purple-100 text-purple-900 border border-purple-300 font-bold px-2.5 py-0.5 rounded-md text-[11px]">
+                <svg className="w-3.5 h-3.5 text-purple-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                Audit: {auditorName}
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 border border-slate-200 font-medium px-2 py-0.5 rounded-md text-[10px]">
+                Audit: Dosen (Default)
+              </span>
+            )}
           </div>
           <h3 className="font-display text-base font-bold text-text group-hover:text-brand transition-colors">{course.name}</h3>
           <p className="text-xs text-text-muted mt-1">

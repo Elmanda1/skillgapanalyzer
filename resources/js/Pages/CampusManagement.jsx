@@ -110,7 +110,7 @@ export default function CampusManagement({
   }, [currentUser]);
 
   // Submit create course to Laravel backend
-  const handleCreateCourseDb = (e) => {
+  const handleAddCourseSubmit = (e) => {
     e.preventDefault();
     courseForm.post('/management/courses', {
       onSuccess: () => {
@@ -124,9 +124,10 @@ export default function CampusManagement({
       }
     });
   };
+  const handleCreateCourseDb = handleAddCourseSubmit;
 
   // Submit edit course to Laravel backend
-  const handleEditCourseDb = (e) => {
+  const handleEditCourseSubmit = (e) => {
     e.preventDefault();
     if (!selectedCourse?.db_id) return;
     editCourseForm.put(`/management/courses/${selectedCourse.db_id}`, {
@@ -140,9 +141,10 @@ export default function CampusManagement({
       }
     });
   };
+  const handleEditCourseDb = handleEditCourseSubmit;
 
   // Submit create user to Laravel backend
-  const handleCreateUserDb = (e) => {
+  const handleAddUserSubmit = (e) => {
     e.preventDefault();
     userForm.post('/management/users', {
       onSuccess: () => {
@@ -156,9 +158,10 @@ export default function CampusManagement({
       }
     });
   };
+  const handleCreateUserDb = handleAddUserSubmit;
 
   // Submit edit user to Laravel backend
-  const handleEditUserDb = (e) => {
+  const handleEditUserSubmit = (e) => {
     e.preventDefault();
     if (!selectedUser?.db_id) return;
     editUserForm.put(`/management/users/${selectedUser.db_id}`, {
@@ -172,6 +175,7 @@ export default function CampusManagement({
       }
     });
   };
+  const handleEditUserDb = handleEditUserSubmit;
 
   // Submit delete user to Laravel backend
   const handleDeleteUserDb = (user) => {
@@ -759,24 +763,33 @@ export default function CampusManagement({
 
       {/* ── Add Course Modal ── */}
       {showAddCourseModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] animate-fade-in p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full border border-border overflow-hidden animate-scale-in">
-            <div className="px-6 py-4 bg-gray-50 border-b border-border flex items-center justify-between">
-              <h3 className="font-display text-base font-bold text-text flex items-center gap-2">
-                <Icon className="text-brand" name="book_2" />
-                Tambah Mata Kuliah Baru
-              </h3>
+        <div 
+          className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-[9999] p-4 transition-all duration-200"
+          onClick={(e) => { if (e.target === e.currentTarget) setShowAddCourseModal(false); }}
+        >
+          <div className="bg-white rounded-2xl shadow-2xl shadow-slate-900/20 max-w-lg w-full border border-slate-200/80 overflow-hidden transform transition-all animate-scale-in">
+            <div className="px-6 py-5 bg-gradient-to-b from-slate-50 to-white border-b border-slate-100 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-brand/10 text-brand flex items-center justify-center font-bold shadow-2xs">
+                  <Icon className="text-[20px]" name="book_2" />
+                </div>
+                <div>
+                  <h3 className="font-display text-base font-bold text-slate-900">Tambah Mata Kuliah Baru</h3>
+                  <p className="text-xs text-slate-500">Masukkan rincian kurikulum & SKS mata kuliah</p>
+                </div>
+              </div>
               <button 
+                type="button"
                 onClick={() => setShowAddCourseModal(false)}
-                className="text-text-muted hover:text-text p-1 rounded-lg hover:bg-gray-200 transition-colors"
+                className="w-8 h-8 rounded-full bg-slate-100 text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition-colors flex items-center justify-center"
               >
-                <Icon className="text-[20px]" name="close" />
+                <Icon className="text-[18px]" name="close" />
               </button>
             </div>
             
             <form onSubmit={handleAddCourseSubmit} className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-bold text-text-secondary mb-1.5" htmlFor="modal-code">Kode MK</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5" htmlFor="modal-code">Kode Mata Kuliah</label>
                 <input
                   id="modal-code"
                   type="text"
@@ -784,12 +797,12 @@ export default function CampusManagement({
                   placeholder="cth: TI-401"
                   value={courseForm.data.code}
                   onChange={e => courseForm.setData('code', e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm bg-white focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/10 transition-all font-sans text-text"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:border-brand focus:ring-4 focus:ring-brand/15 transition-all outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-text-secondary mb-1.5" htmlFor="modal-name">Nama Mata Kuliah</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5" htmlFor="modal-name">Nama Mata Kuliah</label>
                 <input
                   id="modal-name"
                   type="text"
@@ -797,13 +810,13 @@ export default function CampusManagement({
                   placeholder="cth: Pemrograman Web Enterprise"
                   value={courseForm.data.name}
                   onChange={e => courseForm.setData('name', e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm bg-white focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/10 transition-all font-sans text-text"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:border-brand focus:ring-4 focus:ring-brand/15 transition-all outline-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-text-secondary mb-1.5" htmlFor="modal-semester">Semester</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5" htmlFor="modal-semester">Semester</label>
                   <input
                     id="modal-semester"
                     type="number"
@@ -813,11 +826,11 @@ export default function CampusManagement({
                     placeholder="cth: 4"
                     value={courseForm.data.semester}
                     onChange={e => courseForm.setData('semester', e.target.value)}
-                    className="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm bg-white focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/10 transition-all font-sans text-text"
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:border-brand focus:ring-4 focus:ring-brand/15 transition-all outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-text-secondary mb-1.5" htmlFor="modal-credits">SKS</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5" htmlFor="modal-credits">Bobot SKS</label>
                   <input
                     id="modal-credits"
                     type="number"
@@ -827,7 +840,7 @@ export default function CampusManagement({
                     placeholder="cth: 3"
                     value={courseForm.data.credits}
                     onChange={e => courseForm.setData('credits', e.target.value)}
-                    className="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm bg-white focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/10 transition-all font-sans text-text"
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:border-brand focus:ring-4 focus:ring-brand/15 transition-all outline-none"
                   />
                 </div>
               </div>
@@ -835,13 +848,13 @@ export default function CampusManagement({
               {/* Study Program select */}
               {userRole === 'super_admin' ? (
                 <div>
-                  <label className="block text-xs font-bold text-text-secondary mb-1.5" htmlFor="modal-prodi">Program Studi</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5" htmlFor="modal-prodi">Program Studi</label>
                   <select
                     id="modal-prodi"
                     required
                     value={courseForm.data.study_program_id}
                     onChange={e => courseForm.setData('study_program_id', e.target.value)}
-                    className="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm bg-white focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/10 transition-all cursor-pointer font-sans text-text"
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:border-brand focus:ring-4 focus:ring-brand/15 transition-all cursor-pointer outline-none"
                   >
                     <option value="">Pilih Program Studi</option>
                     {studyPrograms.map(sp => (
@@ -850,30 +863,31 @@ export default function CampusManagement({
                   </select>
                 </div>
               ) : (
-                <div className="bg-gray-50 border border-border rounded-lg p-3">
-                  <p className="text-[10px] font-bold text-text-muted uppercase">Program Studi Terpilih</p>
-                  <p className="text-sm font-semibold text-text mt-0.5">
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5">
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Program Studi Terkait</p>
+                  <p className="text-sm font-semibold text-slate-900 mt-0.5">
                     {studyPrograms.find(sp => sp.id === currentUser?.study_program_id)
                       ? `${studyPrograms.find(sp => sp.id === currentUser?.study_program_id).jenjang} ${studyPrograms.find(sp => sp.id === currentUser?.study_program_id).nama_prodi}`
-                      : 'Prodi Anda'}
+                      : 'Program Studi Anda'}
                   </p>
                 </div>
               )}
 
-              <div className="flex gap-3 border-t border-border pt-4 mt-2">
+              <div className="flex gap-3 border-t border-slate-100 pt-4 mt-4">
                 <button
                   type="button"
                   onClick={() => setShowAddCourseModal(false)}
-                  className="flex-1 px-4 py-2.5 border border-border hover:bg-gray-100 rounded-lg text-sm font-semibold text-text transition-colors"
+                  className="flex-1 px-4 py-2.5 border border-slate-200 hover:bg-slate-100 rounded-xl text-sm font-bold text-slate-700 transition-all"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={courseForm.processing}
-                  className="flex-1 btn-primary px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="flex-1 btn-primary px-5 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  {courseForm.processing ? 'Menyimpan...' : 'Simpan'}
+                  <Icon className="text-[16px]" name="check" />
+                  {courseForm.processing ? 'Menyimpan...' : 'Simpan Mata Kuliah'}
                 </button>
               </div>
             </form>
@@ -883,49 +897,58 @@ export default function CampusManagement({
 
       {/* ── Edit Course Modal ── */}
       {showEditCourseModal && selectedCourse && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] animate-fade-in p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full border border-border overflow-hidden animate-scale-in">
-            <div className="px-6 py-4 bg-gray-50 border-b border-border flex items-center justify-between">
-              <h3 className="font-display text-base font-bold text-text flex items-center gap-2">
-                <Icon className="text-brand" name="edit" />
-                Edit Mata Kuliah
-              </h3>
+        <div 
+          className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-[9999] p-4 transition-all duration-200"
+          onClick={(e) => { if (e.target === e.currentTarget) setShowEditCourseModal(false); }}
+        >
+          <div className="bg-white rounded-2xl shadow-2xl shadow-slate-900/20 max-w-lg w-full border border-slate-200/80 overflow-hidden transform transition-all animate-scale-in">
+            <div className="px-6 py-5 bg-gradient-to-b from-slate-50 to-white border-b border-slate-100 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold shadow-2xs">
+                  <Icon className="text-[20px]" name="edit" />
+                </div>
+                <div>
+                  <h3 className="font-display text-base font-bold text-slate-900">Edit Mata Kuliah</h3>
+                  <p className="text-xs text-slate-500">Perbarui rincian informasi & SKS mata kuliah</p>
+                </div>
+              </div>
               <button 
+                type="button"
                 onClick={() => setShowEditCourseModal(false)}
-                className="text-text-muted hover:text-text p-1 rounded-lg hover:bg-gray-200 transition-colors"
+                className="w-8 h-8 rounded-full bg-slate-100 text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition-colors flex items-center justify-center"
               >
-                <Icon className="text-[20px]" name="close" />
+                <Icon className="text-[18px]" name="close" />
               </button>
             </div>
             
             <form onSubmit={handleEditCourseSubmit} className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-bold text-text-secondary mb-1.5" htmlFor="edit-modal-code">Kode MK</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5" htmlFor="edit-modal-code">Kode Mata Kuliah</label>
                 <input
                   id="edit-modal-code"
                   type="text"
                   required
                   value={editCourseForm.data.code}
                   onChange={e => editCourseForm.setData('code', e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm bg-white focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/10 transition-all font-sans text-text"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:border-brand focus:ring-4 focus:ring-brand/15 transition-all outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-text-secondary mb-1.5" htmlFor="edit-modal-name">Nama Mata Kuliah</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5" htmlFor="edit-modal-name">Nama Mata Kuliah</label>
                 <input
                   id="edit-modal-name"
                   type="text"
                   required
                   value={editCourseForm.data.name}
                   onChange={e => editCourseForm.setData('name', e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm bg-white focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/10 transition-all font-sans text-text"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:border-brand focus:ring-4 focus:ring-brand/15 transition-all outline-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-text-secondary mb-1.5" htmlFor="edit-modal-semester">Semester</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5" htmlFor="edit-modal-semester">Semester</label>
                   <input
                     id="edit-modal-semester"
                     type="number"
@@ -934,11 +957,11 @@ export default function CampusManagement({
                     required
                     value={editCourseForm.data.semester}
                     onChange={e => editCourseForm.setData('semester', e.target.value)}
-                    className="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm bg-white focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/10 transition-all font-sans text-text"
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:border-brand focus:ring-4 focus:ring-brand/15 transition-all outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-text-secondary mb-1.5" htmlFor="edit-modal-credits">SKS</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5" htmlFor="edit-modal-credits">Bobot SKS</label>
                   <input
                     id="edit-modal-credits"
                     type="number"
@@ -947,20 +970,20 @@ export default function CampusManagement({
                     required
                     value={editCourseForm.data.credits}
                     onChange={e => editCourseForm.setData('credits', e.target.value)}
-                    className="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm bg-white focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/10 transition-all font-sans text-text"
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:border-brand focus:ring-4 focus:ring-brand/15 transition-all outline-none"
                   />
                 </div>
               </div>
 
               {userRole === 'super_admin' ? (
                 <div>
-                  <label className="block text-xs font-bold text-text-secondary mb-1.5" htmlFor="edit-modal-prodi">Program Studi</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5" htmlFor="edit-modal-prodi">Program Studi</label>
                   <select
                     id="edit-modal-prodi"
                     required
                     value={editCourseForm.data.study_program_id}
                     onChange={e => editCourseForm.setData('study_program_id', e.target.value)}
-                    className="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm bg-white focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/10 transition-all cursor-pointer font-sans text-text"
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:border-brand focus:ring-4 focus:ring-brand/15 transition-all cursor-pointer outline-none"
                   >
                     <option value="">Pilih Program Studi</option>
                     {studyPrograms.map(sp => (
@@ -969,9 +992,9 @@ export default function CampusManagement({
                   </select>
                 </div>
               ) : (
-                <div className="bg-gray-50 border border-border rounded-lg p-3">
-                  <p className="text-[10px] font-bold text-text-muted uppercase">Program Studi</p>
-                  <p className="text-sm font-semibold text-text mt-0.5">
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5">
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Program Studi</p>
+                  <p className="text-sm font-semibold text-slate-900 mt-0.5">
                     {studyPrograms.find(sp => sp.id === editCourseForm.data.study_program_id)
                       ? `${studyPrograms.find(sp => sp.id === editCourseForm.data.study_program_id).jenjang} ${studyPrograms.find(sp => sp.id === editCourseForm.data.study_program_id).nama_prodi}`
                       : '—'}
@@ -979,20 +1002,21 @@ export default function CampusManagement({
                 </div>
               )}
 
-              <div className="flex gap-3 border-t border-border pt-4 mt-2">
+              <div className="flex gap-3 border-t border-slate-100 pt-4 mt-4">
                 <button
                   type="button"
                   onClick={() => setShowEditCourseModal(false)}
-                  className="flex-1 px-4 py-2.5 border border-border hover:bg-gray-100 rounded-lg text-sm font-semibold text-text transition-colors"
+                  className="flex-1 px-4 py-2.5 border border-slate-200 hover:bg-slate-100 rounded-xl text-sm font-bold text-slate-700 transition-all"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={editCourseForm.processing}
-                  className="flex-1 btn-primary px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="flex-1 btn-primary px-5 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  {editCourseForm.processing ? 'Menyimpan...' : 'Simpan'}
+                  <Icon className="text-[16px]" name="check" />
+                  {editCourseForm.processing ? 'Menyimpan...' : 'Simpan Perubahan'}
                 </button>
               </div>
             </form>
@@ -1002,37 +1026,46 @@ export default function CampusManagement({
 
       {/* ── Add User Modal ── */}
       {showAddUserModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] animate-fade-in p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full border border-border overflow-hidden animate-scale-in">
-            <div className="px-6 py-4 bg-gray-50 border-b border-border flex items-center justify-between">
-              <h3 className="font-display text-base font-bold text-text flex items-center gap-2">
-                <Icon className="text-brand" name="person_add" />
-                Tambah Pengguna Baru
-              </h3>
+        <div 
+          className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-[9999] p-4 transition-all duration-200"
+          onClick={(e) => { if (e.target === e.currentTarget) setShowAddUserModal(false); }}
+        >
+          <div className="bg-white rounded-2xl shadow-2xl shadow-slate-900/20 max-w-lg w-full border border-slate-200/80 overflow-hidden transform transition-all animate-scale-in">
+            <div className="px-6 py-5 bg-gradient-to-b from-slate-50 to-white border-b border-slate-100 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold shadow-2xs">
+                  <Icon className="text-[20px]" name="person_add" />
+                </div>
+                <div>
+                  <h3 className="font-display text-base font-bold text-slate-900">Tambah Civitas Akademika Baru</h3>
+                  <p className="text-xs text-slate-500">Daftarkan akun Dosen, Kaprodi, atau Mahasiswa</p>
+                </div>
+              </div>
               <button 
+                type="button"
                 onClick={() => setShowAddUserModal(false)}
-                className="text-text-muted hover:text-text p-1 rounded-lg hover:bg-gray-200 transition-colors"
+                className="w-8 h-8 rounded-full bg-slate-100 text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition-colors flex items-center justify-center"
               >
-                <Icon className="text-[20px]" name="close" />
+                <Icon className="text-[18px]" name="close" />
               </button>
             </div>
             
             <form onSubmit={handleAddUserSubmit} className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-bold text-text-secondary mb-1.5" htmlFor="user-name">Nama Lengkap</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5" htmlFor="user-name">Nama Lengkap</label>
                 <input
                   id="user-name"
                   type="text"
                   required
-                  placeholder="cth: Ahmad Fauzi"
+                  placeholder="cth: Dr. Ahmad Fauzi, M.T."
                   value={userForm.data.name}
                   onChange={e => userForm.setData('name', e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm bg-white focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/10 transition-all font-sans text-text"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:border-brand focus:ring-4 focus:ring-brand/15 transition-all outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-text-secondary mb-1.5" htmlFor="user-email">Email</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5" htmlFor="user-email">Alamat Email</label>
                 <input
                   id="user-email"
                   type="email"
@@ -1040,12 +1073,12 @@ export default function CampusManagement({
                   placeholder="cth: ahmad@pnj.ac.id"
                   value={userForm.data.email}
                   onChange={e => userForm.setData('email', e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm bg-white focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/10 transition-all font-sans text-text"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:border-brand focus:ring-4 focus:ring-brand/15 transition-all outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-text-secondary mb-1.5" htmlFor="user-password">Password</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5" htmlFor="user-password">Kata Sandi</label>
                 <input
                   id="user-password"
                   type="password"
@@ -1053,19 +1086,19 @@ export default function CampusManagement({
                   placeholder="Minimal 8 karakter"
                   value={userForm.data.password}
                   onChange={e => userForm.setData('password', e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm bg-white focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/10 transition-all font-sans text-text"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:border-brand focus:ring-4 focus:ring-brand/15 transition-all outline-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-text-secondary mb-1.5" htmlFor="user-role">Peran</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5" htmlFor="user-role">Peran Sistem</label>
                   <select
                     id="user-role"
                     required
                     value={userForm.data.role}
                     onChange={e => userForm.setData('role', e.target.value)}
-                    className="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm bg-white focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/10 transition-all cursor-pointer font-sans text-text"
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:border-brand focus:ring-4 focus:ring-brand/15 transition-all cursor-pointer outline-none"
                   >
                     <option value="super_admin">Super Admin</option>
                     <option value="kaprodi">Kaprodi</option>
@@ -1075,12 +1108,12 @@ export default function CampusManagement({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-text-secondary mb-1.5" htmlFor="user-prodi">Program Studi</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5" htmlFor="user-prodi">Program Studi</label>
                   <select
                     id="user-prodi"
                     value={userForm.data.study_program_id}
                     onChange={e => userForm.setData('study_program_id', e.target.value)}
-                    className="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm bg-white focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/10 transition-all cursor-pointer font-sans text-text"
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:border-brand focus:ring-4 focus:ring-brand/15 transition-all cursor-pointer outline-none"
                   >
                     <option value="">Pilih Program Studi (Opsional)</option>
                     {studyPrograms.map(sp => (
@@ -1090,20 +1123,21 @@ export default function CampusManagement({
                 </div>
               </div>
 
-              <div className="flex gap-3 border-t border-border pt-4 mt-2">
+              <div className="flex gap-3 border-t border-slate-100 pt-4 mt-4">
                 <button
                   type="button"
                   onClick={() => setShowAddUserModal(false)}
-                  className="flex-1 px-4 py-2.5 border border-border hover:bg-gray-100 rounded-lg text-sm font-semibold text-text transition-colors"
+                  className="flex-1 px-4 py-2.5 border border-slate-200 hover:bg-slate-100 rounded-xl text-sm font-bold text-slate-700 transition-all"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={userForm.processing}
-                  className="flex-1 btn-primary px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="flex-1 btn-primary px-5 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  {userForm.processing ? 'Menyimpan...' : 'Simpan'}
+                  <Icon className="text-[16px]" name="check" />
+                  {userForm.processing ? 'Menyimpan...' : 'Daftarkan Pengguna'}
                 </button>
               </div>
             </form>
@@ -1113,67 +1147,76 @@ export default function CampusManagement({
 
       {/* ── Edit User Modal ── */}
       {showEditUserModal && selectedUser && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] animate-fade-in p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full border border-border overflow-hidden animate-scale-in">
-            <div className="px-6 py-4 bg-gray-50 border-b border-border flex items-center justify-between">
-              <h3 className="font-display text-base font-bold text-text flex items-center gap-2">
-                <Icon className="text-brand" name="edit" />
-                Edit Data Pengguna
-              </h3>
+        <div 
+          className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-[9999] p-4 transition-all duration-200"
+          onClick={(e) => { if (e.target === e.currentTarget) setShowEditUserModal(false); }}
+        >
+          <div className="bg-white rounded-2xl shadow-2xl shadow-slate-900/15 max-w-lg w-full border border-slate-200/80 overflow-hidden transform transition-all animate-scale-in">
+            <div className="px-6 py-5 bg-gradient-to-b from-slate-50 to-white border-b border-slate-100 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold shadow-2xs">
+                  <Icon className="text-[20px]" name="manage_accounts" />
+                </div>
+                <div>
+                  <h3 className="font-display text-base font-bold text-slate-900">Edit Data Civitas Akademika</h3>
+                  <p className="text-xs text-slate-500">Ubah peran, prodi, atau perbarui kata sandi akun</p>
+                </div>
+              </div>
               <button 
+                type="button"
                 onClick={() => setShowEditUserModal(false)}
-                className="text-text-muted hover:text-text p-1 rounded-lg hover:bg-gray-200 transition-colors"
+                className="w-8 h-8 rounded-full bg-slate-100 text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition-colors flex items-center justify-center"
               >
-                <Icon className="text-[20px]" name="close" />
+                <Icon className="text-[18px]" name="close" />
               </button>
             </div>
             
             <form onSubmit={handleEditUserSubmit} className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-bold text-text-secondary mb-1.5" htmlFor="edit-user-name">Nama Lengkap</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5" htmlFor="edit-user-name">Nama Lengkap</label>
                 <input
                   id="edit-user-name"
                   type="text"
                   required
                   value={editUserForm.data.name}
                   onChange={e => editUserForm.setData('name', e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm bg-white focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/10 transition-all font-sans text-text"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:border-brand focus:ring-4 focus:ring-brand/15 transition-all outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-text-secondary mb-1.5" htmlFor="edit-user-email">Email</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5" htmlFor="edit-user-email">Alamat Email</label>
                 <input
                   id="edit-user-email"
                   type="email"
                   required
                   value={editUserForm.data.email}
                   onChange={e => editUserForm.setData('email', e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm bg-white focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/10 transition-all font-sans text-text"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:border-brand focus:ring-4 focus:ring-brand/15 transition-all outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-text-secondary mb-1.5" htmlFor="edit-user-password">Password Baru <span className="font-normal text-text-muted">(kosongkan jika tidak diubah)</span></label>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5" htmlFor="edit-user-password">Kata Sandi Baru <span className="font-normal text-slate-400">(opsional)</span></label>
                 <input
                   id="edit-user-password"
                   type="password"
-                  placeholder="Ketik password baru jika ingin mengubah"
+                  placeholder="Kosongkan jika tidak ingin mengubah password"
                   value={editUserForm.data.password}
                   onChange={e => editUserForm.setData('password', e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm bg-white focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/10 transition-all font-sans text-text"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:border-brand focus:ring-4 focus:ring-brand/15 transition-all outline-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-text-secondary mb-1.5" htmlFor="edit-user-role">Peran</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5" htmlFor="edit-user-role">Peran Sistem</label>
                   <select
                     id="edit-user-role"
                     required
                     value={editUserForm.data.role}
                     onChange={e => editUserForm.setData('role', e.target.value)}
-                    className="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm bg-white focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/10 transition-all cursor-pointer font-sans text-text"
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:border-brand focus:ring-4 focus:ring-brand/15 transition-all cursor-pointer outline-none"
                   >
                     <option value="super_admin">Super Admin</option>
                     <option value="kaprodi">Kaprodi</option>
@@ -1183,12 +1226,12 @@ export default function CampusManagement({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-text-secondary mb-1.5" htmlFor="edit-user-prodi">Program Studi</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5" htmlFor="edit-user-prodi">Program Studi</label>
                   <select
                     id="edit-user-prodi"
                     value={editUserForm.data.study_program_id}
                     onChange={e => editUserForm.setData('study_program_id', e.target.value)}
-                    className="w-full px-3.5 py-2.5 border border-border rounded-lg text-sm bg-white focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/10 transition-all cursor-pointer font-sans text-text"
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:border-brand focus:ring-4 focus:ring-brand/15 transition-all cursor-pointer outline-none"
                   >
                     <option value="">Pilih Program Studi (Opsional)</option>
                     {studyPrograms.map(sp => (
@@ -1198,20 +1241,21 @@ export default function CampusManagement({
                 </div>
               </div>
 
-              <div className="flex gap-3 border-t border-border pt-4 mt-2">
+              <div className="flex gap-3 border-t border-slate-100 pt-4 mt-4">
                 <button
                   type="button"
                   onClick={() => setShowEditUserModal(false)}
-                  className="flex-1 px-4 py-2.5 border border-border hover:bg-gray-100 rounded-lg text-sm font-semibold text-text transition-colors"
+                  className="flex-1 px-4 py-2.5 border border-slate-200 hover:bg-slate-100 rounded-xl text-sm font-bold text-slate-700 transition-all"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={editUserForm.processing}
-                  className="flex-1 btn-primary px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="flex-1 btn-primary px-5 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  {editUserForm.processing ? 'Menyimpan...' : 'Simpan'}
+                  <Icon className="text-[16px]" name="check" />
+                  {editUserForm.processing ? 'Menyimpan...' : 'Simpan Perubahan'}
                 </button>
               </div>
             </form>

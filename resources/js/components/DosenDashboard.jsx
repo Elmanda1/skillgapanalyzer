@@ -250,8 +250,8 @@ export default function DosenDashboard({ user }) {
 
       {/* Modal Tambah MK */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-fade-in-up">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
+        <div className="fixed inset-0 bg-black/5 flex items-center justify-center z-50 p-4 animate-fade-in-up" onClick={(e) => { if (e.target === e.currentTarget) setShowModal(false); }}>
+          <div className="bg-white rounded-2xl shadow-2xl shadow-slate-900/15 border border-slate-200/80 w-full max-w-md overflow-hidden">
             <div className="px-6 py-4 border-b border-border flex justify-between items-center">
               <h3 className="font-display font-bold text-lg text-text">Tambah Mata Kuliah</h3>
               <button onClick={() => setShowModal(false)} className="text-text-muted hover:text-text">

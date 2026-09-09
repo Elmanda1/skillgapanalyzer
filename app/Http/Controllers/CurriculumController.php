@@ -9,16 +9,13 @@ use App\Models\StudyProgram;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
-use PhpOffice\PhpSpreadsheet\IOFactory;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CurriculumController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Course::with('studyProgram');
+        $query = Course::with(['studyProgram', 'overriddenByUser']);
 
         if (! $request->user()->hasRole('super_admin')) {
             $query->where('study_program_id', $request->user()->study_program_id);
@@ -36,7 +33,14 @@ class CurriculumController extends Controller
     {
         $this->ensureCourseAccess($request, $course);
 
-        $course->load('studyProgram', 'skills', 'learningOutcomes');
+        $course->load([
+            'studyProgram',
+            'overriddenByUser',
+            'skills' => function ($q) {
+                $q->withPivot(['is_overridden', 'override_notes', 'overridden_by', 'overridden_at']);
+            },
+            'learningOutcomes.overriddenByUser',
+        ]);
 
         return inertia('Curriculum/Show', [
             'course' => $course,
@@ -148,42 +152,230 @@ class CurriculumController extends Controller
         return back();
     }
 
+    public function updateLearningOutcome(Request $request, Course $course, LearningOutcome $learningOutcome)
+    {
+        $this->ensureCourseAccess($request, $course);
+
+        if ($learningOutcome->course_id !== $course->id) {
+            abort(404);
+        }
+
+        $validated = $request->validate([
+            'text' => ['required', 'string', 'max:2000'],
+            'source_doc' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $user = $request->user();
+        $isKaprodiOrAdmin = $user->hasRole('super_admin') || $user->hasRole('kaprodi');
+
+        // Snapshot original text if updated by Kaprodi for the first time
+        $originalText = $learningOutcome->original_dosen_text;
+        if ($isKaprodiOrAdmin && ! $originalText) {
+            $originalText = $learningOutcome->text;
+        }
+
+        $updateData = [
+            'text' => $validated['text'],
+            'source_doc' => $validated['source_doc'] ?? $learningOutcome->source_doc,
+        ];
+
+        if ($isKaprodiOrAdmin) {
+            $updateData['is_overridden'] = true;
+            $updateData['override_notes'] = 'Teks CPMK di-edit & di-override oleh Kaprodi';
+            $updateData['overridden_by'] = $user->id;
+            $updateData['overridden_at'] = now();
+            $updateData['original_dosen_text'] = $originalText;
+        }
+
+        $learningOutcome->update($updateData);
+
+        return back();
+    }
+
+    public function destroyLearningOutcome(Request $request, Course $course, LearningOutcome $learningOutcome)
+    {
+        $this->ensureCourseAccess($request, $course);
+
+        if ($learningOutcome->course_id !== $course->id) {
+            abort(404);
+        }
+
+        $learningOutcome->delete();
+
+        return back();
+    }
+
+    public function toggleCourseOverride(Request $request, Course $course)
+    {
+        $this->ensureCourseAccess($request, $course);
+
+        $validated = $request->validate([
+            'override_notes' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $newState = ! $course->is_overridden;
+
+        $snapshot = $course->original_dosen_snapshot;
+        if ($newState && ! $snapshot) {
+            $snapshot = [
+                'code' => $course->code,
+                'name' => $course->name,
+                'semester' => $course->semester,
+                'credits' => $course->credits,
+                'versi' => $course->versi,
+            ];
+        }
+
+        $course->update([
+            'is_overridden' => $newState,
+            'override_notes' => $newState ? ($validated['override_notes'] ?? 'Disesuaikan oleh Kaprodi') : null,
+            'overridden_by' => $newState ? $request->user()->id : null,
+            'overridden_at' => $newState ? now() : null,
+            'original_dosen_snapshot' => $snapshot,
+        ]);
+
+        return back();
+    }
+
+    public function toggleLearningOutcomeOverride(Request $request, Course $course, LearningOutcome $learningOutcome)
+    {
+        $this->ensureCourseAccess($request, $course);
+
+        if ($learningOutcome->course_id !== $course->id) {
+            abort(404);
+        }
+
+        $validated = $request->validate([
+            'override_notes' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $newState = ! $learningOutcome->is_overridden;
+        $originalText = $learningOutcome->original_dosen_text;
+        if ($newState && ! $originalText) {
+            $originalText = $learningOutcome->text;
+        }
+
+        $learningOutcome->update([
+            'is_overridden' => $newState,
+            'override_notes' => $newState ? ($validated['override_notes'] ?? 'CPMK di-override oleh Kaprodi') : null,
+            'overridden_by' => $newState ? $request->user()->id : null,
+            'overridden_at' => $newState ? now() : null,
+            'original_dosen_text' => $originalText,
+        ]);
+
+        return back();
+    }
+
+    public function toggleSkillOverride(Request $request, Course $course, Skill $skill)
+    {
+        $this->ensureCourseAccess($request, $course);
+
+        $pivot = DB::table('course_skill')
+            ->where('course_id', $course->id)
+            ->where('skill_id', $skill->id)
+            ->first();
+
+        if (! $pivot) {
+            DB::table('course_skill')->insert([
+                'course_id' => $course->id,
+                'skill_id' => $skill->id,
+                'is_overridden' => true,
+                'override_notes' => 'Skill di-override oleh Kaprodi',
+                'overridden_by' => $request->user()->id,
+                'overridden_at' => now(),
+            ]);
+
+            return back();
+        }
+
+        $newState = ! (bool) ($pivot->is_overridden ?? false);
+
+        DB::table('course_skill')
+            ->where('course_id', $course->id)
+            ->where('skill_id', $skill->id)
+            ->update([
+                'is_overridden' => $newState,
+                'override_notes' => $newState ? 'Skill di-override oleh Kaprodi' : null,
+                'overridden_by' => $newState ? $request->user()->id : null,
+                'overridden_at' => $newState ? now() : null,
+            ]);
+
+        return back();
+    }
+
     public function template()
     {
-        $ss = new Spreadsheet();
-        $sheet = $ss->getActiveSheet();
-        $sheet->fromArray(
-            [['kode', 'nama', 'semester', 'sks', 'versi', 'study_program_id', 'skills', 'cpl_text', 'cpl_source']],
-            null,
-            'A1'
-        );
-        $sheet->fromArray([
-            ['TI-401', 'Cloud Computing', 5, 3, 'v1', '', 'Docker; Kubernetes', 'Mampu deploy container', 'RPS-2026'],
-            ['TI-402', 'Pemrograman Web', 4, 3, 'v1', '', 'React; Laravel', 'Mampu bangun API REST', 'RPS-2026'],
-        ], null, 'A2');
+        $headers = ['kode', 'nama', 'semester', 'sks', 'versi', 'study_program_id', 'skills', 'cpl_text', 'cpl_source'];
+        $sampleRows = [
+            ['PNJ-301', 'Pemrograman Web Enterprise', 3, 4, 'v1', '', 'React.js; Laravel; Node.js', 'Mahasiswa mampu membangun aplikasi web fullstack enterprise', 'RPS-TI-301.pdf'],
+            ['PNJ-302', 'Teknologi Cloud & DevOps', 4, 3, 'v1', '', 'Docker; Kubernetes; CI/CD', 'Mahasiswa mampu melakukan deployment container terdistribusi', 'RPS-TI-302.pdf'],
+            ['PNJ-303', 'Basis Data Terdistribusi', 3, 3, 'v1', '', 'PostgreSQL; Redis; SQL', 'Mahasiswa memahami arsitektur database terdistribusi & caching', 'RPS-TI-303.pdf'],
+        ];
 
-        return new StreamedResponse(function () use ($ss) {
-            (new Xlsx($ss))->save('php://output');
+        if (class_exists(\PhpOffice\PhpSpreadsheet\Spreadsheet::class)) {
+            $ss = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+            $sheet = $ss->getActiveSheet();
+            $sheet->fromArray([$headers], null, 'A1');
+            $sheet->fromArray($sampleRows, null, 'A2');
+
+            return new StreamedResponse(function () use ($ss) {
+                (new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($ss))->save('php://output');
+            }, 200, [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'Content-Disposition' => 'attachment; filename="template-kurikulum.xlsx"',
+            ]);
+        }
+
+        // Native CSV Fallback with UTF-8 BOM for Microsoft Excel
+        return new StreamedResponse(function () use ($headers, $sampleRows) {
+            $handle = fopen('php://output', 'w');
+            fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF));
+            fputcsv($handle, $headers);
+            foreach ($sampleRows as $row) {
+                fputcsv($handle, $row);
+            }
+            fclose($handle);
         }, 200, [
-            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'Content-Disposition' => 'attachment; filename="template-kurikulum.xlsx"',
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="template-kurikulum.csv"',
         ]);
     }
 
     public function import(Request $request)
     {
         $request->validate([
-            'file' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:5120'],
+            'file' => ['required', 'file', 'mimes:xlsx,xls,csv,txt', 'max:5120'],
             'dry_run' => ['nullable', 'boolean'],
         ]);
 
         $user = $request->user();
         $isSuperAdmin = $user->hasRole('super_admin');
         $dryRun = $request->boolean('dry_run');
+        $file = $request->file('file');
+        $extension = strtolower($file->getClientOriginalExtension());
 
-        $spreadsheet = IOFactory::load($request->file('file')->getRealPath());
-        $rows = $spreadsheet->getActiveSheet()->toArray(null, true, true, false);
-        array_shift($rows); // drop header
+        $rows = [];
+
+        if (class_exists(\PhpOffice\PhpSpreadsheet\IOFactory::class) && in_array($extension, ['xlsx', 'xls'])) {
+            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file->getRealPath());
+            $rows = $spreadsheet->getActiveSheet()->toArray(null, true, true, false);
+        } else {
+            // Native CSV parser
+            $handle = fopen($file->getRealPath(), 'r');
+            if ($handle !== false) {
+                while (($data = fgetcsv($handle, 4096, ',')) !== false) {
+                    if (isset($data[0])) {
+                        $data[0] = preg_replace('/\x{EF}\x{BB}\x{BF}/u', '', $data[0]);
+                    }
+                    $rows[] = $data;
+                }
+                fclose($handle);
+            }
+        }
+
+        if ($rows !== []) {
+            array_shift($rows); // drop header
+        }
 
         if (count($rows) > 1000) {
             return response()->json(['message' => 'Maksimal 1000 baris per import.'], 422);

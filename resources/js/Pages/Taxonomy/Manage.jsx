@@ -297,8 +297,8 @@ export default function TaxonomyManage({ skills, search = '' }) {
       </div>
 
       {showForm && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999] p-4" onClick={close}>
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg p-6" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/5 flex items-center justify-center z-[9999] p-4 transition-all duration-200" onClick={close}>
+          <div className="bg-white rounded-2xl shadow-2xl shadow-slate-900/15 border border-slate-200/80 w-full max-w-lg p-6 animate-scale-in" onClick={e => e.stopPropagation()}>
             <h3 className="font-display text-lg font-bold text-text mb-4">
               {editing ? 'Edit Skill' : 'Tambah Skill'}
             </h3>
