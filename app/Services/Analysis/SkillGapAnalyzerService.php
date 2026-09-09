@@ -49,22 +49,28 @@ class SkillGapAnalyzerService
             return true;
         }
 
-        // 3. Category sector mapping (fail-open for unmapped / newly discovered categories)
+        // 3. Category sector mapping
         $kategori = $skill->kategori ?? '';
-        if ($kategori === '' || $kategori === 'Umum') {
-            return true;
+        if ($kategori === '' || $kategori === 'Umum' || $kategori === 'Industri') {
+            return false;
         }
 
-        // If category is not in the map -> Fail-open (returns true so newly discovered skills aren't silently lost)
-        if (! isset(self::CATEGORY_SECTOR_MAP[$kategori])) {
-            return true;
+        if (isset(self::CATEGORY_SECTOR_MAP[$kategori])) {
+            $skillSector = self::CATEGORY_SECTOR_MAP[$kategori];
+            if ($skillSector === 'Umum') {
+                return true;
+            }
+            $programSectors = $program->getEffectiveSectors();
+            return in_array($skillSector, $programSectors, true);
         }
 
-        $skillSector = self::CATEGORY_SECTOR_MAP[$kategori];
-        $programSectors = $program->getEffectiveSectors();
+        // 4. Direct sektor_industri_terkait check if present
+        if (! empty($skill->sektor_industri_terkait) && $skill->sektor_industri_terkait !== 'Umum') {
+            $programSectors = $program->getEffectiveSectors();
+            return in_array($skill->sektor_industri_terkait, $programSectors, true);
+        }
 
-        // Check if skill sector intersects with program sectors
-        return in_array($skillSector, $programSectors, true);
+        return false;
     }
 
     /**
@@ -217,13 +223,15 @@ class SkillGapAnalyzerService
                 ? round(min(100.0, ($programMatchedWeights / $programTotalDemandWeights) * 100), 1)
                 : 0.0;
 
-            // Bulk upsert into gap_analyses
+            // Clean up previous gap analysis rows for this program & period before saving fresh evaluated skills
+            DB::table('gap_analyses')
+                ->where('study_program_id', $program->id)
+                ->where('periode_data', $period)
+                ->delete();
+
+            // Bulk insert into gap_analyses
             foreach (array_chunk($upsertRows, 250) as $chunk) {
-                DB::table('gap_analyses')->upsert(
-                    $chunk,
-                    ['study_program_id', 'skill_id', 'periode_data'],
-                    ['tipe_mismatch', 'skor_urgensi', 'match_rate', 'evidence_count', 'updated_at']
-                );
+                DB::table('gap_analyses')->insert($chunk);
                 $totalGapsRecorded += count($chunk);
             }
 
