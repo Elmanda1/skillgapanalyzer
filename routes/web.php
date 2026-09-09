@@ -558,6 +558,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/scraping/deploy', [\App\Http\Controllers\ScrapingController::class, 'deployAgent'])->name('scraping.deploy');
     Route::get('/scraping/deploy-stream', [\App\Http\Controllers\ScrapingController::class, 'deployStream'])->name('scraping.deploy-stream');
     Route::get('/scraping/sync-stream', [\App\Http\Controllers\ScrapingController::class, 'syncStream'])->name('scraping.sync-stream');
+    Route::post('/scraping/abort', [\App\Http\Controllers\ScrapingController::class, 'abortAgent'])->name('scraping.abort');
 
     Route::get('/settings', function () {
         return inertia('Settings');

@@ -52,9 +52,13 @@ class ImportJobs extends Command
 
     public function handle(): int
     {
+        if (DB::getDriverName() === 'sqlite') {
+            DB::statement('PRAGMA busy_timeout = 30000;');
+        }
+
         $path = $this->option('file') ?: database_path('datajson/lowongan_loker_id.json');
 
-        if (! is_file($path)) {
+        if (!is_file($path)) {
             $this->error("File tidak ditemukan: {$path}");
             return self::FAILURE;
         }
@@ -68,16 +72,16 @@ class ImportJobs extends Command
 
         $this->loadSkillIndex();
         $source = (string) ($this->option('source') ?? 'loker.id');
-        $filterEnabled = ! $this->option('no-filter');
+        $filterEnabled = !$this->option('no-filter');
 
         $this->info("Streaming import dari: {$path}");
         $this->info("Source: {$source} | Text filter: " . ($filterEnabled ? 'AKTIF' : 'NONAKTIF'));
 
         $started = microtime(true);
-        $processed = $this->streamObjects($path, fn (array $obj) => $this->processObject($obj, $source, $filterEnabled));
+        $processed = $this->streamObjects($path, fn(array $obj) => $this->processObject($obj, $source, $filterEnabled));
 
         // Perform Soft-Expiration for DB vacancies missing from active aggregate
-        if (! empty($this->importedSlugs)) {
+        if (!empty($this->importedSlugs)) {
             $this->softExpired = JobVacancy::where('sumber', $source)
                 ->where('status', 'active')
                 ->whereNotIn('slug', array_keys($this->importedSlugs))
@@ -204,13 +208,13 @@ class ImportJobs extends Command
         // 1. Process explicit tags from employer / portal
         foreach ((array) ($obj['job_skills'] ?? []) as $entry) {
             $name = is_array($entry) ? ($entry['name'] ?? null) : $entry;
-            if (! is_string($name) || trim($name) === '') {
+            if (!is_string($name) || trim($name) === '') {
                 continue;
             }
 
             $skillId = $this->resolveSkill($name);
 
-            if (! $filterEnabled) {
+            if (!$filterEnabled) {
                 $matchedSkillIds[$skillId] = true;
                 continue;
             }
@@ -234,11 +238,11 @@ class ImportJobs extends Command
         }
 
         // 2. NLP Discovery: Scan N-grams against curated taxonomy dictionary
-        if ($filterEnabled && ! empty($ngramMap)) {
+        if ($filterEnabled && !empty($ngramMap)) {
             foreach ($ngramMap as $ngram => $_) {
                 if (isset($this->discoveryTerms[$ngram])) {
                     $skillId = $this->discoveryTerms[$ngram];
-                    if (! isset($matchedSkillIds[$skillId])) {
+                    if (!isset($matchedSkillIds[$skillId])) {
                         $matchedSkillIds[$skillId] = true;
                         $this->discoveredFromText++;
                     }
@@ -295,7 +299,7 @@ class ImportJobs extends Command
 
                     $skillIds = $this->resolveSkillIds($obj, $filterEnabled);
 
-                    if (! empty($skillIds)) {
+                    if (!empty($skillIds)) {
                         $job->skills()->sync($skillIds);
                         $this->attachedSkills += count($skillIds);
                     } else {
@@ -304,7 +308,7 @@ class ImportJobs extends Command
                 });
                 break;
             } catch (\Illuminate\Database\QueryException $e) {
-                if ($attempt >= $maxAttempts || ! str_contains($e->getMessage(), 'database is locked')) {
+                if ($attempt >= $maxAttempts || !str_contains($e->getMessage(), 'database is locked')) {
                     throw $e;
                 }
                 usleep(300_000 * $attempt);
@@ -350,11 +354,15 @@ class ImportJobs extends Command
         $processed = 0;
         $limit = $this->option('limit') ? (int) $this->option('limit') : null;
 
-        while (($line = fgets($handle)) !== false) {
-            $len = strlen($line);
+        while (!feof($handle)) {
+            $chunk = fread($handle, 65536);
+            if ($chunk === false || $chunk === '') {
+                break;
+            }
+            $len = strlen($chunk);
 
             for ($i = 0; $i < $len; $i++) {
-                $c = $line[$i];
+                $c = $chunk[$i];
 
                 if ($inString) {
                     if ($escaped) {
@@ -422,7 +430,7 @@ class ImportJobs extends Command
     private function firstOf(array $obj, string $arrKey, string $field)
     {
         foreach ((array) ($obj[$arrKey] ?? []) as $item) {
-            if (is_array($item) && ! empty($item[$field])) {
+            if (is_array($item) && !empty($item[$field])) {
                 return $item[$field];
             }
         }

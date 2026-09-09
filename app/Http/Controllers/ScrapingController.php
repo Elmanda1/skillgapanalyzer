@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ScraperProfile;
 use App\Models\ScrapingAgent;
 use App\Models\ScrapingLog;
 use App\Models\ScrapingPolicy;
+use App\Services\Scraping\GenericFastScraper;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Process;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -106,17 +109,26 @@ class ScrapingController extends Controller
     public function deployStream(Request $request): StreamedResponse
     {
         $agentId = $request->input('agent_id');
+        $agentCode = $request->input('agent_code');
         $domainUrl = $request->input('domain_url', 'https://www.loker.id');
 
         $agent = null;
         if ($agentId) {
             $agent = ScrapingAgent::find($agentId);
+        } elseif ($agentCode) {
+            $agent = ScrapingAgent::where('agent_code', $agentCode)->first();
+        }
+
+        if (!$agent && $domainUrl) {
+            $cleanDomain = str_replace(['https://', 'http://', 'www.'], '', $domainUrl);
+            $agent = ScrapingAgent::where('sumber', 'like', "%{$cleanDomain}%")->first();
         }
 
         if ($agent) {
             $agent->update(['status' => 'Syncing', 'last_sync' => now()]);
             $domainUrl = $agent->domain_url ?: $domainUrl;
         }
+
 
         return response()->stream(function () use ($agent, $domainUrl) {
             set_time_limit(0);
@@ -150,95 +162,18 @@ class ScrapingController extends Controller
             $maxPages = $agent->max_pages ?? 9999;
             $maxJobs = $agent->max_jobs ?? 999999;
 
-            // Route execution engine: use scrape_loker_enhanced.py for loker.id, or Universal AI Scraper for other domains
-            if (str_contains($targetDomain, 'loker.id')) {
-                $scriptPath = base_path('data-engine/scrape_loker_enhanced.py');
-                $cmd = escapeshellarg($pythonBin) . ' -u ' . escapeshellarg($scriptPath) . ' --phase=all --workers=4 --interval=2.0' . ($maxPages > 0 && $maxPages < 9999 ? ' --max-pages=' . $maxPages : '') . ($maxJobs > 0 && $maxJobs < 999999 ? ' --max-jobs=' . $maxJobs : '');
+            // Check for fast PHP scraper profile first
+            $profile = ScraperProfile::findActiveForDomain($targetDomain);
+
+            if ($profile) {
+                $sendData("[INFO] Found ScraperProfile for {$targetDomain} (strategy: {$profile->strategy}). Using FAST PHP scraper...");
+                $this->runFastPhpScraper($profile, $agent, $sendData, $maxPages, $maxJobs);
+            } elseif (str_contains($targetDomain, 'loker.id')) {
+                $sendData("[INFO] Using loker.id enhanced Python scraper...");
+                $this->runPythonScraper($agent, $sendData, 'scrape_loker_enhanced.py', $maxPages, $maxJobs);
             } else {
-                $scriptPath = base_path('data-engine/universal/run_pipeline.py');
-                $cmd = escapeshellarg($pythonBin) . ' -u ' . escapeshellarg($scriptPath) . ' --domain=' . escapeshellarg($domainUrl) . ($maxPages > 0 && $maxPages < 9999 ? ' --max-pages=' . $maxPages : '') . ($maxJobs > 0 && $maxJobs < 999999 ? ' --max-jobs=' . $maxJobs : '');
-            }
-
-            $descriptorspec = [
-                0 => ["pipe", "r"],
-                1 => ["pipe", "w"],
-                2 => ["pipe", "w"],
-            ];
-
-            $sendData("[INFO] Runner Command: {$cmd}");
-            $process = proc_open($cmd, $descriptorspec, $pipes, base_path());
-
-            if (is_resource($process)) {
-                fclose($pipes[0]);
-                stream_set_blocking($pipes[1], false);
-                stream_set_blocking($pipes[2], false);
-
-                while (true) {
-                    $status = proc_get_status($process);
-                    $stdout = fgets($pipes[1]);
-                    $stderr = fgets($pipes[2]);
-
-                    if ($stdout !== false && trim($stdout) !== '') {
-                        $line = trim($stdout);
-                        $prefix = str_contains(strtolower($line), 'error') ? '[ERROR] ' : (str_contains(strtolower($line), 'success') || str_contains(strtolower($line), 'complete') ? '[SUCCESS] ' : '[INFO] ');
-                        if (str_starts_with($line, '[')) {
-                            $sendData($line);
-                        } else {
-                            $sendData($prefix . $line);
-                        }
-                    }
-
-                    if ($stderr !== false && trim($stderr) !== '') {
-                        $line = trim($stderr);
-                        if (! str_contains(strtolower($line), 'warning:') && ! str_contains(strtolower($line), 'userwarning')) {
-                            $sendData("[WARNING] " . $line);
-                        }
-                    }
-
-                    if (! $status['running'] && feof($pipes[1]) && feof($pipes[2])) {
-                        break;
-                    }
-
-                    usleep(40000);
-                }
-
-                fclose($pipes[1]);
-                fclose($pipes[2]);
-                $exitCode = proc_close($process);
-
-                if ($exitCode === 0) {
-                    $sendData("[SUCCESS] Engine Scraper AI untuk domain {$targetDomain} selesai dengan status 0.");
-                } else {
-                    $sendData("[WARNING] Scraper AI selesai dengan kode exit {$exitCode}. Selesai dengan beberapa catatan.");
-                }
-            } else {
-                $sendData("[ERROR] Gagal membuka proses execution untuk scraper Python.");
-            }
-
-            // Step 2: Import data to DB
-            $sendData("[INFO] Memulai pengimporan data lowongan ke basis data SQLite pusat (jobs:import)...");
-            $phpBin = $this->findPhpBinary();
-            $importCmd = escapeshellarg($phpBin) . ' -d memory_limit=512M ' . escapeshellarg(base_path('artisan')) . ' jobs:import';
-
-            $importProcess = proc_open($importCmd, $descriptorspec, $pipes, base_path());
-            if (is_resource($importProcess)) {
-                fclose($pipes[0]);
-                stream_set_blocking($pipes[1], false);
-
-                while (true) {
-                    $status = proc_get_status($importProcess);
-                    $line = fgets($pipes[1]);
-                    if ($line !== false && trim($line) !== '') {
-                        $sendData("[INFO] [ImportJobs] " . trim($line));
-                    }
-                    if (! $status['running'] && feof($pipes[1])) {
-                        break;
-                    }
-                    usleep(100000);
-                }
-                fclose($pipes[1]);
-                fclose($pipes[2]);
-                proc_close($importProcess);
+                $sendData("[INFO] No ScraperProfile found. Falling back to Universal AI Python scraper...");
+                $this->runPythonScraper($agent, $sendData, 'universal/run_pipeline.py', $maxPages, $maxJobs, $domainUrl);
             }
 
             if ($agent) {
@@ -263,6 +198,107 @@ class ScrapingController extends Controller
     {
         return $this->deployStream($request);
     }
+
+    public function abortAgent(Request $request)
+    {
+        $agentId = $request->input('agent_id');
+        $agentCode = $request->input('agent_code');
+        $domainUrl = $request->input('domain_url');
+
+        $agent = null;
+        if ($agentId) {
+            $agent = ScrapingAgent::find($agentId);
+        } elseif ($agentCode) {
+            $agent = ScrapingAgent::where('agent_code', $agentCode)->first();
+        } elseif ($domainUrl) {
+            $clean = str_replace(['https://', 'http://', 'www.'], '', $domainUrl);
+            $agent = ScrapingAgent::where('sumber', 'like', "%{$clean}%")->first();
+        }
+
+        $codeStr = $agent?->agent_code ?? ($agentCode ?: 'GLOBAL');
+        $targetStr = $domainUrl ?: ($agent?->domain_url ?? ($agent?->sumber ?? 'portal target'));
+
+        // Always set both global & agent-specific abort flags
+        Cache::put("abort_requested_global", true, 300);
+        if ($agent) {
+            $agent->update(['status' => 'Offline', 'last_sync' => now()]);
+            Cache::put("abort_requested_{$agent->id}", true, 300);
+        }
+        ScrapingAgent::where('status', 'Syncing')->update(['status' => 'Offline']);
+
+        $killedPids = [];
+
+        // 1. Kill PIDs recorded in file storage
+        $pidFile = storage_path('app/scraping_pids.json');
+        if (file_exists($pidFile)) {
+            $filePids = json_decode(file_get_contents($pidFile), true) ?: [];
+            foreach ($filePids as $pid) {
+                if ($pid && is_numeric($pid)) {
+                    if (str_contains(PHP_OS_FAMILY, 'Windows')) {
+                        exec("taskkill /F /T /PID {$pid} 2>NUL");
+                    } else {
+                        exec("kill -9 {$pid} 2>/dev/null");
+                    }
+                    $killedPids[] = (int) $pid;
+                }
+            }
+            @unlink($pidFile);
+        }
+
+        // 2. Kill PIDs recorded in Cache
+        $cachePids = Cache::get('active_scraping_pids', []);
+        foreach ($cachePids as $pid) {
+            if ($pid && is_numeric($pid) && !in_array((int)$pid, $killedPids)) {
+                if (str_contains(PHP_OS_FAMILY, 'Windows')) {
+                    exec("taskkill /F /T /PID {$pid} 2>NUL");
+                } else {
+                    exec("kill -9 {$pid} 2>/dev/null");
+                }
+                $killedPids[] = (int) $pid;
+            }
+        }
+        Cache::forget('active_scraping_pids');
+
+        // 3. Fallback OS force-kill via WMIC & Taskkill
+        try {
+            if (str_contains(PHP_OS_FAMILY, 'Windows')) {
+                exec('wmic process where "name=\'python.exe\' and (commandline like \'%run_pipeline.py%\' or commandline like \'%scrape_loker%\')" call terminate 2>NUL');
+                exec('taskkill /F /IM python.exe /T 2>NUL');
+            } else {
+                exec('pkill -9 -f "run_pipeline.py|scrape_loker" 2>/dev/null');
+            }
+        } catch (\Throwable $e) {
+            // Ignore if process already dead
+        }
+
+        $pidInfo = count($killedPids) > 0 ? " (Process ID: " . implode(', ', array_unique($killedPids)) . ")" : "";
+        $logMessage = "Penghentian scraper agen {$codeStr} ({$targetStr}) berhasil diselesaikan. Status agen diubah ke Offline{$pidInfo}.";
+
+        // 4. Log event to ScrapingLog table
+        try {
+            ScrapingLog::create([
+                'url' => $targetStr,
+                'method' => 'POST',
+                'status_code' => 499,
+                'error_message' => $logMessage,
+                'started_at' => now(),
+                'completed_at' => now(),
+                'status' => 'aborted',
+            ]);
+        } catch (\Throwable $e) {
+            // Ignore if DB write fails
+        }
+
+        return response()->json([
+            'success' => true,
+            'code' => $codeStr,
+            'killed_pids' => array_values(array_unique($killedPids)),
+            'log_message' => $logMessage,
+            'message' => "Penghentian scraper agen {$codeStr} berhasil diselesaikan.",
+        ]);
+    }
+
+
 
     private function findPythonBinary(): string
     {
@@ -313,6 +349,235 @@ class ScrapingController extends Controller
             return $process->successful();
         } catch (\Throwable) {
             return false;
+        }
+    }
+
+    private function runFastPhpScraper(ScraperProfile $profile, ?ScrapingAgent $agent, callable $sendData, int $maxPages, int $maxJobs): void
+    {
+        $scraper = new GenericFastScraper($profile, $profile->policy);
+        $outputFile = storage_path("app/imports/{$profile->domain}_jobs.json");
+
+        $sendData("[INFO] Starting FAST PHP scraper for {$profile->domain} (strategy: {$profile->strategy})...");
+
+        // Ensure output directory exists
+        $dir = dirname($outputFile);
+        if (!is_dir($dir)) {
+            mkdir($dir, 0775, true);
+        }
+
+        // Clear previous output file
+        if (file_exists($outputFile)) {
+            unlink($outputFile);
+        }
+
+        $count = 0;
+        $startTime = microtime(true);
+
+        foreach ($scraper->scrape($maxPages, $maxJobs) as $job) {
+            $json = json_encode($job, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n";
+            file_put_contents($outputFile, $json, FILE_APPEND | LOCK_EX);
+            
+            $count++;
+            
+            if ($count % 10 === 0) {
+                $sendData("[INFO] Extracted {$count} jobs so far...");
+            }
+        }
+
+        $elapsed = round(microtime(true) - $startTime, 2);
+        $sendData("[SUCCESS] Extracted {$count} jobs in {$elapsed}s. Starting import...");
+
+        if ($count > 0) {
+            $this->runImportJob($outputFile, $profile->domain, $sendData);
+        }
+    }
+
+    private function runPythonScraper(?ScrapingAgent $agent, callable $sendData, string $scriptName, int $maxPages, int $maxJobs, string $domainUrl = ''): void
+    {
+        $pythonBin = $this->findPythonBinary();
+        $scriptPath = base_path('data-engine/' . $scriptName);
+        
+        if (!file_exists($scriptPath)) {
+            $sendData("[ERROR] Python script not found: {$scriptPath}");
+            return;
+        }
+
+        $args = [
+            escapeshellarg($pythonBin),
+            '-u',
+            escapeshellarg($scriptPath),
+        ];
+
+        if ($scriptName === 'scrape_loker_enhanced.py') {
+            $args[] = '--phase=all';
+            $args[] = '--workers=4';
+            $args[] = '--interval=2.0';
+            if ($maxPages > 0 && $maxPages < 9999) {
+                $args[] = "--max-pages={$maxPages}";
+            }
+            if ($maxJobs > 0 && $maxJobs < 999999) {
+                $args[] = "--max-jobs={$maxJobs}";
+            }
+        } elseif ($scriptName === 'universal/run_pipeline.py') {
+            $args[] = '--domain=' . escapeshellarg($domainUrl);
+            if ($maxPages > 0 && $maxPages < 9999) {
+                $args[] = "--max-pages={$maxPages}";
+            }
+            if ($maxJobs > 0 && $maxJobs < 999999) {
+                $args[] = "--max-jobs={$maxJobs}";
+            }
+        }
+
+        $cmd = implode(' ', $args);
+        $sendData("[INFO] Runner Command: {$cmd}");
+
+        $descriptorspec = [
+            0 => ["pipe", "r"],
+            1 => ["pipe", "w"],
+            2 => ["pipe", "w"],
+        ];
+
+        $process = proc_open($cmd, $descriptorspec, $pipes, base_path());
+
+        if (is_resource($process)) {
+            $status = proc_get_status($process);
+            $pid = $status['pid'] ?? null;
+            if ($pid) {
+                $pids = Cache::get('active_scraping_pids', []);
+                $pids[] = $pid;
+                Cache::put('active_scraping_pids', array_unique($pids), 3600);
+
+                $pidFile = storage_path('app/scraping_pids.json');
+                $filePids = file_exists($pidFile) ? (json_decode(file_get_contents($pidFile), true) ?: []) : [];
+                $filePids[] = $pid;
+                @file_put_contents($pidFile, json_encode(array_values(array_unique($filePids))));
+            }
+
+
+            fclose($pipes[0]);
+            stream_set_blocking($pipes[1], false);
+            stream_set_blocking($pipes[2], false);
+
+            $wasAborted = false;
+
+            while (true) {
+                $status = proc_get_status($process);
+
+                // Check abort request flag
+                $abortGlobal = Cache::get("abort_requested_global", false);
+                $abortAgent = $agent ? Cache::get("abort_requested_{$agent->id}", false) : false;
+                $agentDbOffline = $agent ? (ScrapingAgent::find($agent->id)?->status === 'Offline') : false;
+
+                if ($abortGlobal || $abortAgent || $agentDbOffline) {
+                    $wasAborted = true;
+                    $sendData("[SYSTEM] 🛑 Sinyal Abort diterima! Menghentikan process tree Python (PID: {$pid})...");
+                    if ($pid) {
+                        if (str_contains(PHP_OS_FAMILY, 'Windows')) {
+                            exec("taskkill /F /T /PID {$pid} 2>NUL");
+                        } else {
+                            exec("kill -9 {$pid} 2>/dev/null");
+                        }
+                    }
+                    break;
+                }
+
+                $stdout = fgets($pipes[1]);
+                $stderr = fgets($pipes[2]);
+
+                if ($stdout !== false && trim($stdout) !== '') {
+                    $line = trim($stdout);
+                    $prefix = str_contains(strtolower($line), 'error') ? '[ERROR] ' : 
+                             (str_contains(strtolower($line), 'success') || str_contains(strtolower($line), 'complete') ? '[SUCCESS] ' : '[INFO] ');
+                    if (str_starts_with($line, '[')) {
+                        $sendData($line);
+                    } else {
+                        $sendData($prefix . $line);
+                    }
+                }
+
+                if ($stderr !== false && trim($stderr) !== '') {
+                    $line = trim($stderr);
+                    if (! str_contains(strtolower($line), 'warning:') && ! str_contains(strtolower($line), 'userwarning')) {
+                        $sendData("[WARNING] " . $line);
+                    }
+                }
+
+                if (! $status['running'] && feof($pipes[1]) && feof($pipes[2])) {
+                    break;
+                }
+
+                usleep(40000);
+            }
+
+            fclose($pipes[1]);
+            fclose($pipes[2]);
+            $exitCode = proc_close($process);
+
+            if ($wasAborted) {
+                $sendData("[SYSTEM] 🛑 Scraper Python berhasil di-terminate secara paksa.", true);
+                return;
+            }
+
+            if ($exitCode === 0) {
+                $sendData("[SUCCESS] Python scraper completed with exit code 0.");
+            } else {
+                $sendData("[WARNING] Python scraper exited with code {$exitCode}.");
+            }
+        } else {
+            $sendData("[ERROR] Failed to start Python scraper process.");
+            return;
+        }
+
+
+        // Import step for Python scrapers
+        $sendData("[INFO] Starting import (jobs:import)...");
+        $this->runImportJob(
+            base_path("database/datajson/lowongan_loker_id.json"), 
+            'loker.id', 
+            $sendData
+        );
+    }
+
+    private function runImportJob(string $filePath, string $source, callable $sendData): void
+    {
+        if (!file_exists($filePath)) {
+            $sendData("[WARNING] Import file not found: {$filePath}");
+            return;
+        }
+
+        $phpBin = $this->findPhpBinary();
+        $importCmd = escapeshellarg($phpBin) . ' -d memory_limit=512M ' . escapeshellarg(base_path('artisan')) . ' jobs:import --file=' . escapeshellarg($filePath) . ' --source=' . escapeshellarg($source);
+
+        $descriptorspec = [
+            0 => ["pipe", "r"],
+            1 => ["pipe", "w"],
+            2 => ["pipe", "w"],
+        ];
+
+        $importProcess = proc_open($importCmd, $descriptorspec, $pipes, base_path());
+        
+        if (is_resource($importProcess)) {
+            fclose($pipes[0]);
+            stream_set_blocking($pipes[1], false);
+
+            while (true) {
+                $status = proc_get_status($importProcess);
+                $line = fgets($pipes[1]);
+                
+                if ($line !== false && trim($line) !== '') {
+                    $sendData("[INFO] [ImportJobs] " . trim($line));
+                }
+                
+                if (! $status['running'] && feof($pipes[1])) {
+                    break;
+                }
+                
+                usleep(100000);
+            }
+            
+            fclose($pipes[1]);
+            fclose($pipes[2]);
+            proc_close($importProcess);
         }
     }
 }

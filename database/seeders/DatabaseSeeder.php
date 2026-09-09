@@ -17,5 +17,7 @@ class DatabaseSeeder extends Seeder
         $this->call(UserSeeder::class);
         $this->call(TaxonomySeeder::class);
         $this->call(SystemDataSeeder::class);
+        $this->call(ScrapingPolicySeeder::class);
+        $this->call(ScraperProfileSeeder::class);
     }
 }
