@@ -119,6 +119,12 @@ class ScrapingController extends Controller
         }
 
         return response()->stream(function () use ($agent, $domainUrl) {
+            set_time_limit(0);
+            ignore_user_abort(true);
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                session_write_close();
+            }
+
             if (ob_get_level()) {
                 ob_end_clean();
             }
