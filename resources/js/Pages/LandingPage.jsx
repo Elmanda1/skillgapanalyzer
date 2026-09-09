@@ -885,54 +885,32 @@ const FAQS = [
 function FAQSection() {
   return (
     <section id="faq" data-slot="faq" className="scroll-mt-24 py-20 px-4 sm:px-6 lg:px-8 bg-gray-50/70 dark:bg-slate-950/90 transition-colors lazy-section">
-      <div className="max-w-6xl mx-auto">
-        <div className="card p-6 sm:p-10 lg:p-12 bg-white dark:bg-slate-900 border border-gray-200/90 dark:border-slate-800 shadow-xl rounded-3xl">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-            
-            {/* Left Column: Intro & Context */}
-            <div data-slot="faq-intro" className="lg:col-span-5 space-y-6 text-left">
-              <div className="space-y-3">
-                <span className="badge badge-green text-xs font-semibold uppercase tracking-wider inline-flex items-center gap-1.5">
-                  <HelpCircle size={14} className="text-emerald-700 dark:text-emerald-400" />
-                  FAQ & Bantuan
-                </span>
-                <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 dark:text-white tracking-tight leading-tight">
-                  Pertanyaan, Terjawab.
-                </h2>
-                <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base leading-relaxed">
-                  Hal-hal yang paling sering ditanyakan seputar evaluasi kurikulum vokasi, analisis kesenjangan AI, dan borang akreditasi.
-                </p>
-              </div>
+      <div className="max-w-4xl mx-auto">
+        {/* Centered Header outside card */}
+        <div className="text-center max-w-2xl mx-auto mb-12">
+          <span className="badge badge-gray mb-3 inline-flex">FAQ & Bantuan</span>
+          <h2 className="font-display text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white tracking-tight">
+            Pertanyaan Umum seputar Platform
+          </h2>
+          <p className="text-gray-600 dark:text-gray-300 mt-3 text-sm sm:text-base">
+            Hal-hal yang paling sering ditanyakan seputar evaluasi kurikulum vokasi, analisis kesenjangan AI, dan borang akreditasi.
+          </p>
+        </div>
 
-              {/* Feature highlight card */}
-              <div className="p-4 sm:p-5 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40 flex items-center gap-3.5 mt-6">
-                <div className="w-10 h-10 rounded-xl bg-emerald-800 dark:bg-emerald-600 text-white flex items-center justify-center flex-shrink-0 shadow-xs">
-                  <Sparkles size={20} />
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-emerald-950 dark:text-emerald-200">Analisis Otomatis Real-time</p>
-                  <p className="text-[11px] text-emerald-700 dark:text-emerald-400">Didukung algoritma Semantic NLP & Vector Matching</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column: Accordion List */}
-            <div data-slot="faq-list" className="lg:col-span-7">
-              <Accordion type="single" collapsible defaultValue="item-1" className="w-full">
-                {FAQS.map((item) => (
-                  <AccordionItem key={item.id} value={item.id} className="py-0.5">
-                    <AccordionTrigger className="text-left text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100 hover:text-emerald-800 dark:hover:text-emerald-400">
-                      {item.q}
-                    </AccordionTrigger>
-                    <AccordionContent className="text-gray-600 dark:text-gray-300 text-sm sm:text-base leading-relaxed pb-5">
-                      {item.a}
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            </div>
-
-          </div>
+        {/* Clean Accordion Card */}
+        <div className="card p-6 sm:p-10 bg-white dark:bg-slate-900 border border-gray-200/90 dark:border-slate-800 shadow-xl rounded-3xl">
+          <Accordion type="single" collapsible defaultValue="item-1" className="w-full">
+            {FAQS.map((item) => (
+              <AccordionItem key={item.id} value={item.id} className="py-0.5">
+                <AccordionTrigger className="text-left text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100 hover:text-emerald-800 dark:hover:text-emerald-400">
+                  {item.q}
+                </AccordionTrigger>
+                <AccordionContent className="text-gray-600 dark:text-gray-300 text-sm sm:text-base leading-relaxed pb-5">
+                  {item.a}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         </div>
       </div>
     </section>
