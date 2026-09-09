@@ -26,7 +26,10 @@ export function ThemeToggle({ className }) {
       return;
     }
 
-    // Measure exact center coordinates from physical button element
+    // Measure exact center coordinates from physical button element dynamically
+    const vw = Math.max(document.documentElement?.clientWidth || 0, window.innerWidth || 0);
+    const vh = Math.max(document.documentElement?.clientHeight || 0, window.innerHeight || 0);
+
     const btn = buttonRef.current;
     let x, y;
     if (btn) {
@@ -37,13 +40,13 @@ export function ThemeToggle({ className }) {
       x = e.clientX;
       y = e.clientY;
     } else {
-      x = window.innerWidth / 2;
+      x = vw / 2;
       y = 40;
     }
 
     const endRadius = Math.hypot(
-      Math.max(x, window.innerWidth - x),
-      Math.max(y, window.innerHeight - y)
+      Math.max(x, vw - x),
+      Math.max(y, vh - y)
     );
 
     // Light -> Dark: expands outwards. Dark -> Light: shrinks inwards into the button.
@@ -82,8 +85,8 @@ export function ThemeToggle({ className }) {
           clipPath: clipPath,
         },
         {
-          duration: 340,
-          easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+          duration: 520,
+          easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)',
           pseudoElement: isShrinking ? '::view-transition-old(root)' : '::view-transition-new(root)',
         }
       );
