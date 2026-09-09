@@ -40,6 +40,8 @@ class SkillExtractorService
                 'dimension' => $skill->dimension ?? 'hard_technical',
                 'is_hard' => (bool) ($skill->is_hard_skill ?? true),
                 'is_alias' => false,
+                'min_context_required' => false,
+                'context_keywords' => [],
                 'raw_term' => $skill->nama,
             ];
 
@@ -53,6 +55,12 @@ class SkillExtractorService
                 if ($aliasKey !== '') {
                     $aliasMeta = $meta;
                     $aliasMeta['is_alias'] = true;
+                    $aliasMeta['min_context_required'] = (bool) $alias->min_context_required;
+                    $rawKeywords = $alias->context_keywords ?? [];
+                    if (is_string($rawKeywords)) {
+                        $rawKeywords = json_decode($rawKeywords, true) ?? [];
+                    }
+                    $aliasMeta['context_keywords'] = array_map(fn ($k) => $this->normalizeKey((string) $k), (array) $rawKeywords);
                     $aliasMeta['raw_term'] = $alias->alias_name;
                     $this->lookupMap[$aliasKey] = $aliasMeta;
                 }
@@ -117,7 +125,7 @@ class SkillExtractorService
     }
 
     /**
-     * Extract skills from unstructured text using high-performance n-gram hash lookup.
+     * Extract skills from unstructured text using Hybrid Layer 1 (Exact) and Layer 2 (Alias + Guard).
      *
      * @return array<int, array{id: int, name: string, category: string, dimension: string, matched_term: string, occurrences: int, confidence: float}>
      */
@@ -147,6 +155,34 @@ class SkillExtractorService
                     $item = $this->lookupMap[$key];
                     $skillId = $item['id'];
 
+                    // Layer 2 Proximity Guard check for ambiguous short aliases
+                    if ($item['is_alias'] && $item['min_context_required']) {
+                        $winStart = max(0, $i - 5);
+                        $winEnd = min($tokenCount - 1, $i + $n - 1 + 5);
+
+                        $contextFound = false;
+                        $keywords = $item['context_keywords'] ?? [];
+
+                        for ($k = $winStart; $k <= $winEnd; $k++) {
+                            // Skip the matched token slice itself
+                            if ($k >= $i && $k < $i + $n) {
+                                continue;
+                            }
+
+                            if (in_array($tokens[$k], $keywords, true)) {
+                                $contextFound = true;
+                                break;
+                            }
+                        }
+
+                        if (! $contextFound) {
+                            // Discard false-positive alias match
+                            continue;
+                        }
+                    }
+
+                    $isCanonical = ! $item['is_alias'];
+
                     if (! isset($matchedSkills[$skillId])) {
                         $matchedSkills[$skillId] = [
                             'id' => $skillId,
@@ -154,15 +190,27 @@ class SkillExtractorService
                             'category' => $item['category'],
                             'dimension' => $item['dimension'],
                             'matched_term' => $item['raw_term'],
+                            'has_canonical_match' => $isCanonical,
                             'occurrences' => 1,
-                            'confidence' => (! $item['is_alias'] ? 1.0 : 0.90),
+                            'confidence' => $isCanonical ? 1.0 : 0.90,
                         ];
                     } else {
                         $matchedSkills[$skillId]['occurrences']++;
-                        $matchedSkills[$skillId]['confidence'] = 1.0;
+                        if ($isCanonical) {
+                            $matchedSkills[$skillId]['has_canonical_match'] = true;
+                            $matchedSkills[$skillId]['matched_term'] = $item['raw_term'];
+                            $matchedSkills[$skillId]['confidence'] = 1.0;
+                        } elseif ($matchedSkills[$skillId]['occurrences'] >= 2) {
+                            $matchedSkills[$skillId]['confidence'] = 1.0;
+                        }
                     }
                 }
             }
+        }
+
+        // Clean up internal flags
+        foreach ($matchedSkills as &$m) {
+            unset($m['has_canonical_match']);
         }
 
         $results = array_filter($matchedSkills, fn ($m) => $m['confidence'] >= $minConfidence);
@@ -182,3 +230,4 @@ class SkillExtractorService
         return array_column($extracted, 'id');
     }
 }
+

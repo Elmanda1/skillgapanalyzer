@@ -65,6 +65,53 @@ class ETLProcessingTest extends TestCase
         $this->assertContains('React.js', $names);
     }
 
+    public function test_context_guard_rejects_ambiguous_alias_without_context(): void
+    {
+        $golang = Skill::create([
+            'nama' => 'Go (Golang)',
+            'kategori' => 'Backend Dev',
+            'sektor_industri_terkait' => 'Teknologi & TI',
+            'dimension' => 'hard_technical',
+            'is_hard_skill' => true,
+        ]);
+        SkillAlias::create([
+            'skill_id' => $golang->id,
+            'alias_name' => 'go',
+            'min_context_required' => true,
+            'context_keywords' => ['golang', 'language', 'developer', 'programming', 'backend', 'engineer'],
+        ]);
+
+        $service = app(SkillExtractorService::class);
+        $service->loadIndex(true);
+
+        // "go" without context should NOT match
+        $falseText = "We want to go ahead and expand our marketing reach.";
+        $falseExtracted = $service->extract($falseText);
+        $falseNames = array_column($falseExtracted, 'name');
+        $this->assertNotContains('Go (Golang)', $falseNames);
+
+        // "go" with backend/developer/programming context SHOULD match
+        $trueText = "We are hiring a backend developer experienced in go programming.";
+        $trueExtracted = $service->extract($trueText);
+        $trueNames = array_column($trueExtracted, 'name');
+        $this->assertContains('Go (Golang)', $trueNames);
+    }
+
+    public function test_exact_canonical_match_always_yields_high_confidence(): void
+    {
+        $service = app(SkillExtractorService::class);
+        $service->loadIndex(true);
+
+        $text = "Proficient in Docker and Laravel.";
+        $extracted = $service->extract($text);
+
+        $this->assertCount(2, $extracted);
+        foreach ($extracted as $item) {
+            $this->assertEquals(1.0, $item['confidence']);
+        }
+    }
+
+
     public function test_demand_trends_artisan_command_aggregates_data(): void
     {
         $docker = Skill::where('nama', 'Docker')->first();
