@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Skill Gap Analyzer — Software Design Document</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ---------- tokens ---------- */
+:root{
+  --bg:#f6f5f1; --panel:#ffffff; --panel-2:#efede7; --ink:#1c1a16; --muted:#6f6b61;
+  --border:#e2dfd6; --accent:#0e7c6b; --accent-ink:#0a5f52; --accent-soft:#e0f0ec;
+  --code-bg:#14141a; --code-ink:#e5e4ea; --code-border:#2a2a33;
+  --star:#c2811c; --shadow:0 1px 2px rgba(28,26,22,.05),0 8px 24px rgba(28,26,22,.06);
+  --font-head:"Space Grotesk",ui-sans-serif,system-ui,sans-serif;
+  --font-body:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+[data-theme="dark"]{
+  --bg:#101014; --panel:#18181d; --panel-2:#202026; --ink:#e8e6e0; --muted:#9b978c;
+  --border:#2b2b32; --accent:#2dd4bf; --accent-ink:#5eead4; --accent-soft:#12332d;
+  --code-bg:#0b0b0f; --code-ink:#d6d5dd; --code-border:#232329;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:var(--font-body); font-size:16px; line-height:1.7; -webkit-font-smoothing:antialiased;
+  transition:background .25s ease,color .25s ease;
+}
+/* ---------- masthead ---------- */
+.masthead{
+  position:relative; padding:64px 48px 48px; max-width:1280px; margin:0 auto;
+  border-bottom:1px solid var(--border);
+}
+.masthead .kicker{
+  font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:.22em;
+  text-transform:uppercase; color:var(--accent); margin:0 0 16px; display:flex; align-items:center; gap:10px;
+}
+.masthead .kicker::before{content:""; width:28px; height:2px; background:var(--accent); display:inline-block}
+.masthead h1{margin:0 0 18px; font-family:var(--font-head); font-weight:700; letter-spacing:-.03em; font-size:clamp(30px,5vw,46px); line-height:1.08}
+.masthead .sub{max-width:680px; color:var(--muted); margin:0 0 28px; font-size:16px}
+.masthead .meta{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+.chip{
+  font-family:var(--font-mono); font-size:11.5px; padding:5px 12px; border-radius:999px;
+  border:1px solid var(--border); background:var(--panel); color:var(--muted);
+}
+.chip.accent{color:var(--accent-ink); border-color:var(--accent); background:var(--accent-soft); font-weight:600}
+/* ---------- layout ---------- */
+.wrap{max-width:1280px; margin:0 auto; display:grid; grid-template-columns:300px minmax(0,1fr); gap:0}
+nav#TOC{
+  position:sticky; top:0; align-self:start; max-height:100vh; overflow-y:auto;
+  padding:36px 28px 36px 32px; font-size:13.5px; border-right:1px solid var(--border);
+  scrollbar-width:thin;
+}
+nav#TOC::before{
+  content:"Contents"; display:block; font-family:var(--font-head); font-weight:600; font-size:12px;
+  letter-spacing:.18em; text-transform:uppercase; color:var(--muted); margin:0 0 16px 4px;
+}
+nav#TOC ul{list-style:none; margin:0; padding:0}
+nav#TOC ul ul{margin:3px 0 8px 16px; padding-left:12px; border-left:1px solid var(--border)}
+nav#TOC a{
+  color:var(--ink); text-decoration:none; display:block; padding:5px 8px; border-radius:8px;
+  transition:background .15s ease,color .15s ease; min-height:28px; line-height:18px;
+}
+nav#TOC a:hover{background:var(--panel-2); color:var(--accent-ink)}
+nav#TOC li > a{font-weight:500}
+nav#TOC ul ul a{font-weight:400; color:var(--muted)}
+nav#TOC a.active{color:var(--accent-ink); background:var(--accent-soft); font-weight:600}
+main{min-width:0; padding:48px 64px 120px; max-width:860px}
+/* ---------- body type ---------- */
+main h2{
+  font-family:var(--font-head); font-size:26px; font-weight:700; letter-spacing:-.02em;
+  margin:64px 0 16px; padding-bottom:12px; border-bottom:2px solid var(--ink);
+  scroll-margin-top:24px;
+}
+main h2:first-child{margin-top:0}
+main h3{
+  font-family:var(--font-head); font-size:17px; font-weight:600; letter-spacing:-.01em;
+  margin:36px 0 10px; color:var(--accent-ink); scroll-margin-top:24px;
+}
+main h4{font-size:13px; margin:28px 0 8px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); font-weight:600}
+main p{margin:12px 0}
+main a{color:var(--accent-ink); text-underline-offset:3px; text-decoration-thickness:1px}
+main strong{font-weight:600}
+main ul,main ol{padding-left:22px; margin:12px 0}
+main li{margin:6px 0}
+main li::marker{color:var(--accent)}
+/* ---------- tables ---------- */
+main table{
+  width:100%; border-collapse:separate; border-spacing:0; margin:20px 0; font-size:14px;
+  border:1px solid var(--border); border-radius:12px; overflow:hidden; background:var(--panel);
+  box-shadow:var(--shadow);
+}
+main th{
+  text-align:left; background:var(--panel-2); font-family:var(--font-mono); font-size:10.5px;
+  font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--muted);
+  padding:12px 16px; border-bottom:1px solid var(--border); white-space:nowrap;
+}
+main td{padding:12px 16px; border-bottom:1px solid var(--border); vertical-align:top}
+main tr:last-child td{border-bottom:none}
+main tbody tr:nth-child(even){background:color-mix(in srgb, var(--bg) 55%, transparent)}
+main tr:hover td{background:var(--accent-soft)}
+main td:first-child{font-weight:500}
+/* ---------- code ---------- */
+main code{
+  font-family:var(--font-mono); font-size:.85em;
+  background:var(--panel-2); border:1px solid var(--border); padding:2px 6px; border-radius:6px;
+  color:var(--accent-ink);
+}
+main pre{
+  background:var(--code-bg); color:var(--code-ink); border:1px solid var(--code-border);
+  padding:20px 22px; border-radius:14px; overflow-x:auto; font-size:12.5px; line-height:1.6;
+  margin:20px 0; font-family:var(--font-mono); box-shadow:var(--shadow);
+}
+main pre code{background:none; border:none; padding:0; color:inherit; border-radius:0}
+/* ---------- callouts ---------- */
+blockquote{
+  margin:20px 0; padding:4px 0 4px 18px; border-left:3px solid var(--accent);
+  color:var(--muted);
+}
+hr{border:none; border-top:1px solid var(--border); margin:48px 0}
+/* ---------- theme toggle ---------- */
+#theme-toggle{
+  position:fixed; bottom:24px; right:24px; z-index:50; width:52px; height:52px; border-radius:999px;
+  border:1px solid var(--border); background:var(--panel); color:var(--ink); cursor:pointer;
+  font-size:18px; box-shadow:var(--shadow); transition:transform .15s ease,background .2s ease;
+  display:flex; align-items:center; justify-content:center;
+}
+#theme-toggle:hover{transform:translateY(-2px)}
+#theme-toggle:focus-visible{outline:3px solid var(--accent); outline-offset:2px}
+/* ---------- print ---------- */
+@media print{
+  nav#TOC,#theme-toggle{display:none}
+  .wrap{display:block}
+  main{padding:0; max-width:none}
+  .masthead{padding:0 0 24px; border-bottom:2px solid #000}
+  body{background:#fff; font-size:11pt}
+  main pre{background:#f5f5f5; color:#111; border-color:#ddd; box-shadow:none}
+  main h2{border-bottom-color:#000}
+  main table{box-shadow:none}
+}
+@media (max-width:960px){
+  .wrap{display:block}
+  nav#TOC{position:static; max-height:none; border-right:none; border-bottom:1px solid var(--border); padding:24px}
+  main{padding:32px 24px 96px}
+  .masthead{padding:44px 24px 32px}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  body,#theme-toggle,nav#TOC a{transition:none}
+}
+
+/* ---------- charts ---------- */
+.charts{display:grid; grid-template-columns:1fr 1fr; gap:24px; margin:28px 0}
+@media (max-width:960px){.charts{grid-template-columns:1fr}}
+.chart-card{background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:20px 22px; box-shadow:var(--shadow)}
+.chart-card h4{margin:0 0 4px; font-family:var(--font-head); font-size:15px; font-weight:600; letter-spacing:-.01em; text-transform:none; color:var(--ink)}
+.chart-card p{margin:0 0 14px; font-size:12.5px; color:var(--muted)}
+.chart-card svg{width:100%; height:auto; display:block}
+.gbar{height:22px; border-radius:6px; transition:width 1s cubic-bezier(.22,1,.36,1)}
+.legend{display:flex; flex-wrap:wrap; gap:12px; margin-top:12px; font-family:var(--font-mono); font-size:10.5px; color:var(--muted)}
+.legend span{display:inline-flex; align-items:center; gap:6px}
+.legend i{width:10px; height:10px; border-radius:3px; display:inline-block}
+
+</style>
+</head>
+<body>
+<header class="masthead">
+  <p class="kicker">Software Design Document</p>
+  <h1>Skill Gap Analyzer — Software Design Document</h1>
+  <p class="sub">Quantitative skill-gap analysis between vocational curricula (supply) and real job-market demand (demand). Hackathon KMIPN VIII — Politeknik Negeri Jakarta.</p>
+  <div class="meta">
+    <span class="chip">v1.0</span>
+    <span class="chip">2026-08-12</span>
+    <span class="chip accent">● Draft</span>
+    <span class="chip">KMIPN.pdf</span>
+    <span class="chip">MODULE_BREAKDOWN.md</span>
+  </div>
+</header>
+<div class="wrap">
+  <nav id="TOC" role="doc-toc">
+  <ul>
+<li><a href="#skill-gap-analyzer-software-design-document-sdd"
+id="toc-skill-gap-analyzer-software-design-document-sdd">Skill Gap
+Analyzer — Software Design Document (SDD)</a>
+<ul>
+<li><a href="#introduction" id="toc-introduction">1.
+Introduction</a></li>
+<li><a href="#system-overview" id="toc-system-overview">2. System
+Overview</a></li>
+<li><a href="#architecture" id="toc-architecture">3.
+Architecture</a></li>
+<li><a href="#module-specifications" id="toc-module-specifications">4.
+Module Specifications</a></li>
+<li><a href="#data-model" id="toc-data-model">5. Data Model</a></li>
+<li><a href="#mismatch-taxonomy-classification"
+id="toc-mismatch-taxonomy-classification">6. Mismatch Taxonomy
+(Classification)</a></li>
+<li><a href="#matching-scoring" id="toc-matching-scoring">7. Matching
+&amp; Scoring</a></li>
+<li><a href="#api-design-v1-contract" id="toc-api-design-v1-contract">8.
+API Design (v1 contract)</a></li>
+<li><a href="#non-functional-requirements"
+id="toc-non-functional-requirements">9. Non-Functional
+Requirements</a></li>
+<li><a href="#deployment-operations" id="toc-deployment-operations">10.
+Deployment &amp; Operations</a></li>
+<li><a href="#testing-validation" id="toc-testing-validation">11.
+Testing &amp; Validation</a></li>
+<li><a href="#risks-open-questions" id="toc-risks-open-questions">12.
+Risks &amp; Open Questions</a></li>
+<li><a href="#glossary" id="toc-glossary">13. Glossary</a></li>
+</ul></li>
+</ul>
+  </nav>
+  <main>
+  <h1 id="skill-gap-analyzer-software-design-document-sdd">Skill Gap
+  Analyzer — Software Design Document (SDD)</h1>
+  <table>
+  <colgroup>
+  <col style="width: 50%" />
+  <col style="width: 50%" />
+  </colgroup>
+  <tbody>
+  <tr>
+  <td><strong>Project</strong></td>
+  <td>Skill Gap Analyzer — AI &amp; Data Mining app for vocational
+  curriculum–industry synchronization</td>
+  </tr>
+  <tr>
+  <td><strong>Event</strong></td>
+  <td>Hackathon KMIPN VIII, Politeknik Negeri Jakarta</td>
+  </tr>
+  <tr>
+  <td><strong>Source docs</strong></td>
+  <td><code>KMIPN.pdf</code> (proposal),
+  <code>MODULE_BREAKDOWN.md</code> (module analysis)</td>
+  </tr>
+  <tr>
+  <td><strong>Version</strong></td>
+  <td>1.0</td>
+  </tr>
+  <tr>
+  <td><strong>Date</strong></td>
+  <td>2026-08-12</td>
+  </tr>
+  <tr>
+  <td><strong>Status</strong></td>
+  <td>Draft — for review before implementation</td>
+  </tr>
+  </tbody>
+  </table>
+  <hr />
+  
+<div class="charts">
+ <div class="chart-card">
+  <h4>Pipeline Architecture</h4>
+  <p>Data flow from collection to dashboard output</p>
+  <svg viewBox="0 0 340 300" role="img" aria-label="Pipeline architecture diagram">
+   <defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#a8a29e"/></marker></defs>
+   <g font-family="var(--font-head)" font-size="11" font-weight="600">
+    <rect x="20" y="10" width="140" height="34" rx="8" fill="#ccfbf1" stroke="#0d9488" stroke-width="1.5"/>
+    <text x="90" y="31" text-anchor="middle" fill="#0f766e">Web Scraper</text>
+    <rect x="180" y="10" width="140" height="34" rx="8" fill="#fed7aa" stroke="#ea580c" stroke-width="1.5"/>
+    <text x="250" y="31" text-anchor="middle" fill="#9a3412">Data Processing &amp; ETL</text>
+    <path d="M160 27 H180" stroke="#a8a29e" stroke-width="1.5" marker-end="url(#arr)"/>
+    <rect x="180" y="80" width="140" height="34" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+    <text x="250" y="101" text-anchor="middle" fill="#5b21b6">Main Database</text>
+    <path d="M250 44 V80" stroke="#a8a29e" stroke-width="1.5" marker-end="url(#arr)"/>
+    <rect x="100" y="150" width="140" height="34" rx="8" fill="#ffe4e6" stroke="#e11d48" stroke-width="1.5"/>
+    <text x="170" y="171" text-anchor="middle" fill="#9f1239">Analysis Engine</text>
+    <path d="M250 114 C 250 130, 240 140, 240 150" stroke="#a8a29e" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+    <rect x="20" y="150" width="60" height="34" rx="8" fill="#e7e5e4" stroke="#a8a29e" stroke-width="1.2" stroke-dasharray="3 2"/>
+    <text x="50" y="171" text-anchor="middle" fill="#57534e">Taxonomy</text>
+    <path d="M100 180 H80" stroke="#a8a29e" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arr)"/>
+    <rect x="20" y="230" width="140" height="34" rx="8" fill="#cffafe" stroke="#0891b2" stroke-width="1.5"/>
+    <text x="90" y="251" text-anchor="middle" fill="#155e75">Backend API</text>
+    <rect x="180" y="230" width="140" height="34" rx="8" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+    <text x="250" y="251" text-anchor="middle" fill="#075985">Dashboard (React)</text>
+    <path d="M170 167 C 200 200, 210 215, 210 230" stroke="#a8a29e" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+   </g>
+  </svg>
+  <div class="legend">
+   <span><i style="background:#0d9488"></i>Collect</span>
+   <span><i style="background:#ea580c"></i>Process</span>
+   <span><i style="background:#7c3aed"></i>Store</span>
+   <span><i style="background:#e11d48"></i>Analyze</span>
+   <span><i style="background:#0891b2"></i>Serve</span>
+  </div>
+ </div>
+ <div class="chart-card">
+  <h4>Module Complexity Ranking</h4>
+  <p>Relative implementation complexity, hardest → easiest</p>
+    <div style="display:flex; align-items:center; gap:10px; margin:7px 0">    <span style="flex:0 0 190px; font-size:12.5px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap">Analysis Engine</span>    <div style="flex:1; background:var(--panel-2); border-radius:6px; overflow:hidden"><div class="gbar" style="width:100%;background:#e11d48"></div></div>    <span style="flex:0 0 34px; font-family:var(--font-mono); font-size:11.5px; color:var(--ink)">5/5</span>  </div>  <div style="display:flex; align-items:center; gap:10px; margin:7px 0">    <span style="flex:0 0 190px; font-size:12.5px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap">Data Processing & ETL</span>    <div style="flex:1; background:var(--panel-2); border-radius:6px; overflow:hidden"><div class="gbar" style="width:80%;background:#f97316"></div></div>    <span style="flex:0 0 34px; font-family:var(--font-mono); font-size:11.5px; color:var(--ink)">4/5</span>  </div>  <div style="display:flex; align-items:center; gap:10px; margin:7px 0">    <span style="flex:0 0 190px; font-size:12.5px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap">Web Scraper</span>    <div style="flex:1; background:var(--panel-2); border-radius:6px; overflow:hidden"><div class="gbar" style="width:60%;background:#d97706"></div></div>    <span style="flex:0 0 34px; font-family:var(--font-mono); font-size:11.5px; color:var(--ink)">3/5</span>  </div>  <div style="display:flex; align-items:center; gap:10px; margin:7px 0">    <span style="flex:0 0 190px; font-size:12.5px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap">Main Database</span>    <div style="flex:1; background:var(--panel-2); border-radius:6px; overflow:hidden"><div class="gbar" style="width:60%;background:#7c3aed"></div></div>    <span style="flex:0 0 34px; font-family:var(--font-mono); font-size:11.5px; color:var(--ink)">3/5</span>  </div>  <div style="display:flex; align-items:center; gap:10px; margin:7px 0">    <span style="flex:0 0 190px; font-size:12.5px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap">Backend API</span>    <div style="flex:1; background:var(--panel-2); border-radius:6px; overflow:hidden"><div class="gbar" style="width:40%;background:#0d9488"></div></div>    <span style="flex:0 0 34px; font-family:var(--font-mono); font-size:11.5px; color:var(--ink)">2/5</span>  </div>  <div style="display:flex; align-items:center; gap:10px; margin:7px 0">    <span style="flex:0 0 190px; font-size:12.5px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap">Dashboard Output</span>    <div style="flex:1; background:var(--panel-2); border-radius:6px; overflow:hidden"><div class="gbar" style="width:40%;background:#0891b2"></div></div>    <span style="flex:0 0 34px; font-family:var(--font-mono); font-size:11.5px; color:var(--ink)">2/5</span>  </div>  <div style="display:flex; align-items:center; gap:10px; margin:7px 0">    <span style="flex:0 0 190px; font-size:12.5px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap">Curriculum Input</span>    <div style="flex:1; background:var(--panel-2); border-radius:6px; overflow:hidden"><div class="gbar" style="width:20%;background:#78716c"></div></div>    <span style="flex:0 0 34px; font-family:var(--font-mono); font-size:11.5px; color:var(--ink)">1/5</span>  </div>
+ </div>
+</div>
+<h2 id="introduction">1. Introduction</h2>
+  <h3 id="purpose">1.1 Purpose</h3>
+  <p>This document specifies the design of the Skill Gap Analyzer: a
+  Curriculum Intelligence system that quantitatively compares
+  <strong>supply</strong> (curriculum Learning Outcomes / RPS from
+  vocational programs) against <strong>demand</strong> (skill
+  requirements extracted from thousands of real job postings) and
+  classifies the resulting gaps using a standard mismatch taxonomy — not
+  a binary “gap / no gap” verdict.</p>
+  <p>The SDD is the reference for all implementation work. It fixes
+  module boundaries, data contracts, algorithms, and API surface so that
+  parallel workstreams (Python data engine, Laravel backend, React
+  frontend) can proceed independently.</p>
+  <h3 id="scope">1.2 Scope</h3>
+  <p>In scope: web scraping, NLP/ETL, main database, analysis engine
+  (matching + classification), Laravel backend API, React/Inertia
+  dashboard, curriculum input.</p>
+  <p>Out of scope for v1: automatic PDF parsing of RPS documents (manual
+  structured entry instead), multi-institution federation, real-time
+  streaming of job data (weekly batch is enough).</p>
+  <p><strong>Market scope (locked 2026-08-12):</strong> v1 is
+  constrained to the <strong>IT/technology job market</strong> as a
+  pilot slice. KMIPN.pdf names TI only as an example (“misalnya …
+  jurusan Teknologi Informasi”) and otherwise speaks generally of “pasar
+  kerja” incl. manufacturing; this SDD deliberately narrows the shipped
+  slice. The pipeline (scraper → ETL → DB → engine → API → dashboard) is
+  market-agnostic by design — the taxonomy seed list is the only
+  market-specific component, so adding
+  manufacturing/accounting/healthcare later is a second taxonomy slice,
+  not an architecture change. IT-only is the defensible demo scope; the
+  multi-market story stays in the proposal.</p>
+  <h3 id="references">1.3 References</h3>
+  <ul>
+  <li><code>KMIPN.pdf</code> — proposal: “Pengembangan Aplikasi Skill
+  Gap Analyzer Berbasis AI dan Data Mining untuk Sinkronisasi Kurikulum
+  Vokasi dengan Kebutuhan Industri”</li>
+  <li><code>MODULE_BREAKDOWN.md</code> — module table, complexity
+  ranking, dependency order</li>
+  <li>Vázquez-Villegas &amp; Borrego (2026) — 8-type mismatch
+  taxonomy</li>
+  <li>Isnandar et al. (2024) — 5 competence dimensions</li>
+  </ul>
+  <hr />
+  <h2 id="system-overview">2. System Overview</h2>
+  <h3 id="problem">2.1 Problem</h3>
+  <p>Vocational graduates face a structural skills mismatch with
+  industry. Prior approaches fail: tracer studies are retroactive and
+  subjective (~9.8% variance explained), manual link-and-match lacks
+  data, job portals give no analytic feedback. There is no objective,
+  measurable, updatable instrument for detecting skill gaps at per-skill
+  granularity.</p>
+  <h3 id="goals">2.2 Goals</h3>
+  <ol type="1">
+  <li>Extract and map Learning Outcomes from vocational curriculum
+  program structures.</li>
+  <li>Automatically collect and analyze competency demand from thousands
+  of job postings (text/data mining).</li>
+  <li>Produce an objective, periodically updatable skill gap map,
+  classifying mismatches per the international taxonomy.</li>
+  <li>Give concrete recommendations: which skills/topics to add or
+  deepen in the curriculum.</li>
+  </ol>
+  <h3 id="stakeholders">2.3 Stakeholders</h3>
+  <table>
+  <colgroup>
+  <col style="width: 50%" />
+  <col style="width: 50%" />
+  </colgroup>
+  <thead>
+  <tr>
+  <th>Stakeholder</th>
+  <th>Role</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr>
+  <td>Dev team (hackathon)</td>
+  <td>Build architecture, backend logic, NLP, UI</td>
+  </tr>
+  <tr>
+  <td>Vocational institutions (e.g. Politeknik)</td>
+  <td>Supply data: RPS, syllabi, Learning Outcomes</td>
+  </tr>
+  <tr>
+  <td>Industry / career platforms</td>
+  <td>Demand data source: job postings (scraped or via public API)</td>
+  </tr>
+  <tr>
+  <td>Students</td>
+  <td>End users of learning recommendations; UAT feedback</td>
+  </tr>
+  </tbody>
+  </table>
+  <h3 id="success-criteria">2.4 Success criteria</h3>
+  <ul>
+  <li>Match-rate percentage per study program is reproducible from the
+  same data snapshot.</li>
+  <li>Gap classification matches the 8-type taxonomy, not binary.</li>
+  <li>Weekly demand refresh is idempotent and does not corrupt
+  history.</li>
+  <li>Dashboard renders thousands of skill points without degrading
+  interaction.</li>
+  </ul>
+  <h3 id="locked-v1-decisions-2026-08-12">2.5 Locked v1 decisions
+  (2026-08-12)</h3>
+  <p>Decisions confirmed with the team; the SDD is updated as each is
+  locked. Anything not listed here is still open.</p>
+  <table>
+  <colgroup>
+  <col style="width: 33%" />
+  <col style="width: 33%" />
+  <col style="width: 33%" />
+  </colgroup>
+  <thead>
+  <tr>
+  <th>#</th>
+  <th>Decision</th>
+  <th>Rationale</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr>
+  <td>D1</td>
+  <td>Demo audience split: 60% lecturer (program-level gap reports), 40%
+  student (learning recommendations)</td>
+  <td>Lecturer story = the proposal’s novelty (objective, data-driven
+  curriculum revision); student view is the emotional close. One program
+  + one seeded student profile carry the whole demo.</td>
+  </tr>
+  <tr>
+  <td>D2</td>
+  <td>Demo data path: <strong>seed-first</strong> — real scraped data +
+  real ETL output loaded into the DB as a snapshot days before demo;
+  live re-scrape on jury demand</td>
+  <td>Decouples the demo moment from network/anti-bot risk while keeping
+  the pipeline real and demonstrable.</td>
+  </tr>
+  <tr>
+  <td>D3</td>
+  <td>Market scope: <strong>IT/technology only</strong> for v1 (see
+  §1.2)</td>
+  <td>Pilot slice; taxonomy is the only market-specific component.</td>
+  </tr>
+  <tr>
+  <td>D4</td>
+  <td>Volume: <strong>500–1,000 postings per run</strong>, single portal
+  source</td>
+  <td>Credible stats on stage without rate-limit/batch complexity.</td>
+  </tr>
+  <tr>
+  <td>D5</td>
+  <td>Timeline: 3 devs, Aug 12 → Aug 30 (18 days)</td>
+  <td>Phase plan in §10.1; team-split TBD.</td>
+  </tr>
+  <tr>
+  <td>D6</td>
+  <td>Trends: <strong>backfill ~3 months of postings</strong> on the
+  first scrape run, preserving real <code>posted_at</code> dates</td>
+  <td>Gives the trend chart real historical shape on demo day instead of
+  a 1–2 point line; still honest data.</td>
+  </tr>
+  <tr>
+  <td>D7</td>
+  <td>Demo runtime: <strong>own laptop (dev server) + ngrok
+  tunnel</strong>, phone hotspot as fallback; seeded snapshot DB
+  restorable by one command</td>
+  <td>No deploy pipeline or server cost; jury reaches the app via URL;
+  localhost fallback survives network death.</td>
+  </tr>
+  </tbody>
+  </table>
+  <hr />
+  <h2 id="architecture">3. Architecture</h2>
+  <h3 id="pipeline-top-level">3.1 Pipeline (top level)</h3>
+  <pre><code>                     ┌─────────────────┐
+                     │  Curriculum     │  (manual entry; PDF parsing later)
+                     │  Input          │
+                     └────────┬────────┘
+                              │ structured curriculum/skill profiles
+                              ▼
+┌──────────────┐   ┌──────────────────┐   ┌───────────────┐
+│ Web Scraper  │──►│ Data Processing  │──►│ Main Database │
+│ (LinkedIn,   │   │ &amp; ETL (NLP)      │   │ (versioned    │
+│  JobStreet)  │   │ extract/normalize│   │  snapshots)   │
+└──────────────┘   └──────────────────┘   └───────┬───────┘
+                                                  │ normalized supply + demand
+                                                  ▼
+                                        ┌───────────────────┐
+                                        │ Analysis Engine   │  ┌─────────────────────┐
+                                        │ matching +        │──► Taxonomy reference │
+                                        │ classification    │  │ (static, 8-type)   │
+                                        └─────────┬─────────┘  └─────────────────────┘
+                                                  ▼
+                                        ┌───────────────────┐
+                                        │ Backend API       │  (Laravel, auth, JSON)
+                                        └─────────┬─────────┘
+                                                  ▼
+                                        ┌───────────────────┐
+                                        │ Dashboard Output  │  (React + Inertia + Tailwind)
+                                        └───────────────────┘</code></pre>
+  <h3 id="tech-stack-3-layers-per-proposal">3.2 Tech stack (3 layers,
+  per proposal)</h3>
+  <table>
+  <colgroup>
+  <col style="width: 33%" />
+  <col style="width: 33%" />
+  <col style="width: 33%" />
+  </colgroup>
+  <thead>
+  <tr>
+  <th>Layer</th>
+  <th>Technology</th>
+  <th>Responsibility</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr>
+  <td>Data Engine</td>
+  <td>Python, Spacy/NLTK, TF-IDF or IndoBERT</td>
+  <td>Scraping, NLP extraction, normalization, ETL</td>
+  </tr>
+  <tr>
+  <td>Backend</td>
+  <td>Laravel</td>
+  <td>Relational queries, API, auth (2 roles)</td>
+  </tr>
+  <tr>
+  <td>Frontend</td>
+  <td>React.js via Inertia.js + Tailwind CSS</td>
+  <td>Dashboard, charts, gap map</td>
+  </tr>
+  </tbody>
+  </table>
+  <h3 id="module-dependency-order">3.3 Module dependency order</h3>
+  <ol type="1">
+  <li>Web Scraper + Curriculum Input (independent sources)</li>
+  <li>Data Processing &amp; ETL (consumes scraper output)</li>
+  <li>Main Database (consumes ETL + curriculum input)</li>
+  <li>Analysis Engine (consumes DB + static taxonomy)</li>
+  <li>Backend API (wraps engine results)</li>
+  <li>Dashboard (consumes API)</li>
+  </ol>
+  <p>Build order follows this chain; the Analysis Engine is the
+  highest-risk module and should get a spike earliest (see §12).</p>
+  <hr />
+  <h2 id="module-specifications">4. Module Specifications</h2>
+  <h3 id="web-scraper-data-collection-complexity">4.1 Web Scraper (Data
+  Collection) — complexity ★★★</h3>
+  <p><strong>Purpose:</strong> Scheduled, automated crawling of job
+  portals (LinkedIn, JobStreet) for job title + skill-requirement
+  text.</p>
+  <p><strong>Inputs:</strong> portal URLs/pages; scheduled trigger
+  (weekly); per-source scrape config. <strong>Outputs:</strong> raw job
+  postings (title + requirements text) with source + timestamp
+  metadata.</p>
+  <p><strong>Design decisions</strong> - Per-source adapter with
+  configurable selectors (portals have heterogeneous DOM). -
+  Partial-failure resilience: one dead source must not kill the batch;
+  per-source error isolation and retry with backoff. -
+  Anti-bot/rate-limit/ToS: polite crawl settings (rate limiting,
+  robots.txt respect, UA rotation only where lawful); prefer public APIs
+  where available. - Freshness: weekly scheduled re-run; each run tagged
+  with <code>scrape_batch_id</code>. - Selector churn: keep selectors in
+  config, not code; alert on zero-yield per source. - Volume (D4):
+  500–1,000 postings per run from a single portal source; no
+  queue/worker infrastructure — a single Python script completes one run
+  in minutes. - Trend backfill (D6): first run pulls postings dated over
+  the past ~3 months (per portal-provided date), preserving real
+  <code>posted_at</code>; subsequent runs are incremental (new/updated
+  only).</p>
+  <p><strong>Open questions:</strong> LinkedIn/JobStreet ToS — legal
+  scrape surface vs. API; which single source is primary (open — see
+  Q6); volume target per run (proposal says “ribuan lowongan”).</p>
+  <blockquote>
+  <p><strong>Locked (D2):</strong> demo day runs
+  <strong>seed-first</strong> — a real scrape + real ETL run is executed
+  days before and loaded into the DB as a snapshot. A
+  dashboard-triggered “Refresh data” job re-runs the batch live
+  <strong>on jury demand</strong>; this proves the pipeline without
+  making it load-bearing. <code>ponytail:</code> in v1 the refresh is a
+  demo-triggered job, not a scheduled cron — add the cron when the
+  system runs unattended post-hackathon.</p>
+  </blockquote>
+  <h3
+  id="data-processing-etl-nlp-extractionnormalization-complexity">4.2
+  Data Processing &amp; ETL (NLP extraction/normalization) — complexity
+  ★★★★</h3>
+  <p><strong>Purpose:</strong> Turn unstructured job text and curriculum
+  docs into clean, deduplicated, categorized skill entities.</p>
+  <p><strong>Inputs:</strong> raw job texts; raw curriculum docs (RPS /
+  Learning Outcomes); standard skill taxonomy + synonym dictionary.
+  <strong>Outputs:</strong> normalized skill entities; deduplicated
+  skill lists; structured records ready for DB load; historical demand
+  trend series.</p>
+  <p><strong>Design decisions</strong> - Normalization pipeline per
+  document: cleaning → tokenization → skill extraction → synonym
+  resolution → taxonomy mapping → dedup. - Extraction: TF-IDF keyword
+  scoring as baseline; IndoBERT NER for Indonesian text (no off-shelf
+  Indonesian skill extractor — Spacy/NLTK pipelines must be customized).
+  - Standard taxonomy (e.g. Docker ≡ containerization) is the single
+  source of truth; synonyms table drives resolution. - Idempotency:
+  re-running a batch produces identical DB state (upsert keyed by source
+  hash); batch ID on every record. - Weekly scheduled; incremental (only
+  new/updated postings) with full-history preserved.</p>
+  <p><strong>Open questions:</strong> taxonomy size/curation process for
+  v1; accuracy target for extraction (precision vs recall for gap
+  claims).</p>
+  <h3 id="main-database-complexity">4.3 Main Database — complexity
+  ★★★</h3>
+  <p><strong>Purpose:</strong> Unified, queryable, auditable store
+  modeling curriculum ↔︎ skill ↔︎ job-demand relations.</p>
+  <p><strong>Inputs:</strong> ETL output (skills, trends); manual
+  curriculum/profile input; analysis results. <strong>Outputs:</strong>
+  unified structured store; versioned snapshots for trend/reporting
+  queries.</p>
+  <p><strong>Design decisions</strong> - Relational model (see §5).
+  Laravel Eloquent as ORM. - Versioned snapshots of demand trends
+  (time-series of skill frequency per source/month) for trend queries. -
+  Auditability: immutable ingestion log; every row traceable to source
+  batch or manual entry user. - Integrity constraints (FKs, uniqueness
+  on taxonomy canonical names) enforced at DB level, not app level.</p>
+  <h3 id="analysis-engine-complexity">4.4 Analysis Engine — complexity
+  ★★★★★</h3>
+  <p><strong>Purpose:</strong> The “brain”. Match supply vs demand at
+  per-skill granularity, classify each gap into the mismatch taxonomy,
+  score match rate.</p>
+  <p><strong>Inputs:</strong> normalized curriculum skill profiles
+  (supply); normalized demand trends (demand); static taxonomy
+  reference. <strong>Outputs:</strong> skill gap map per program/skill;
+  match-rate %; mismatch-type classification per gap; prioritized gap
+  list.</p>
+  <p><strong>Design decisions</strong> - Matching: per-skill comparison
+  of supply (present in curriculum / student profile) vs demand
+  (frequency + trend in postings). Degree weights per study program
+  adjust how strongly each skill counts (e.g. core-course skill &gt;
+  elective skill). - Scoring: match rate = weighted matched skills /
+  weighted demanded skills (see §7). - Classification: rule-based
+  mapping onto the 8-type taxonomy (see §6), using demand trend + supply
+  presence/level. - 5 competence dimensions (incl. Task management,
+  Contingency management) covered via dimension tags on taxonomy
+  entries; non-hard-skill dimensions scored by manual/curriculum
+  evidence (they are hard to measure from text — explicitly flagged in
+  UI as estimate, not measurement). - Deterministic: same snapshot →
+  same result (no stochastic components), so results are auditable and
+  reproducible.</p>
+  <p><strong>Open questions:</strong> exact weight scheme per program;
+  threshold definitions per taxonomy type; how to source non-hard-skill
+  evidence in v1.</p>
+  <h3 id="backend-api-laravel-complexity">4.5 Backend API (Laravel) —
+  complexity ★★</h3>
+  <p><strong>Purpose:</strong> Bridge between analysis logic and UI;
+  serve analytic data; auth for two roles (lecturers / students).</p>
+  <p><strong>Inputs:</strong> HTTP requests (dashboard queries, auth);
+  Analysis Engine results. <strong>Outputs:</strong> JSON: gap maps,
+  trend series, reports, recommendations; session/auth tokens.</p>
+  <p><strong>Design decisions</strong> - API contract versioned and
+  stable while engine internals evolve (engine output → DTO layer → JSON
+  contract). - Roles: <code>lecturer</code> (program-level reports,
+  curriculum input) and <code>student</code> (personal recommendations).
+  Role-based middleware. - Complex relational queries for dashboard
+  aggregation run server-side; pagination for thousands of skill
+  points.</p>
+  <h3 id="dashboard-output-react-inertia.js-tailwind-complexity">4.6
+  Dashboard Output (React + Inertia.js + Tailwind) — complexity ★★</h3>
+  <p><strong>Purpose:</strong> Three output types in one UI: (1) trend
+  visualization of industry skill demand over time, (2) prioritized
+  learning recommendations for students, (3) detailed program-level gap
+  reports.</p>
+  <p><strong>Inputs:</strong> backend API responses.
+  <strong>Outputs:</strong> match-rate dashboard (proposal Gambar 1);
+  interactive Skill Gap Map rendering mismatch taxonomy (Gambar 2);
+  trend charts; learning recommendation list; gap report downloads.</p>
+  <p><strong>Design decisions</strong> - React via Inertia.js
+  (server-driven pages, no separate SPA API layer needed). - Interactive
+  skill gap map must stay responsive with thousands of skill points →
+  canvas/SVG aggregation, virtualized lists, server-side filtering.</p>
+  <h3 id="curriculum-input-complexity">4.7 Curriculum Input — complexity
+  ★</h3>
+  <p><strong>Purpose:</strong> Structured manual entry of RPS / Learning
+  Outcomes and student skill profiles by program staff.</p>
+  <p><strong>Inputs:</strong> RPS / Learning Outcome documents; student
+  skill profiles (manual entry). <strong>Outputs:</strong> structured
+  curriculum/skill profile records → Main Database (supply side).</p>
+  <p><strong>Design decisions</strong> - Forms + validation only. No
+  parsing intelligence in v1. - <code>ponytail:</code> PDF/doc parsing
+  can be layered on later, moving this module’s complexity up — add when
+  curriculum staff adoption requires it.</p>
+  <hr />
+  <h2 id="data-model">5. Data Model</h2>
+  <h3 id="entity-relationship-overview">5.1 Entity-relationship
+  overview</h3>
+  <pre><code>users (id, name, email, password_hash, role[lecturer|student], study_program_id?)
+  │
+study_programs (id, name, code, degree_weight_config)
+  │
+courses / mata_kuliah (id, study_program_id, code, name, semester, credits)
+  │
+learning_outcomes (id, course_id, text, source_doc)
+  │
+skill_taxonomy (id, canonical_name, category, dimension[5-dim], is_hard_skill)
+  │
+synonyms (id, taxonomy_id, alias)
+  │
+curriculum_skills (id, course_id | profile_id, taxonomy_id, level, weight)   -- supply side
+  │
+scrape_batches (id, source, started_at, finished_at, status, item_count)
+  │
+job_postings (id, scrape_batch_id, source, source_url UNIQUE, title, raw_text_hash, posted_at)
+  │
+job_skills (id, job_posting_id, taxonomy_id, confidence)                     -- demand side
+  │
+demand_trends (id, taxonomy_id, period, frequency, source)                   -- versioned snapshot
+  │
+gap_results (id, study_program_id, taxonomy_id, period, supply_level,
+             demand_level, match_rate, mismatch_type[8-taxonomy], score)
+  │
+recommendations (id, user_id | study_program_id, taxonomy_id, priority, rationale)</code></pre>
+  <h3 id="key-constraints">5.2 Key constraints</h3>
+  <ul>
+  <li><code>job_postings.source_url</code> unique → natural idempotency
+  key for ETL upserts.</li>
+  <li><code>skill_taxonomy.canonical_name</code> unique → single
+  normalization target.</li>
+  <li>FKs enforced at DB level; <code>gap_results</code> written once
+  per (program, skill, period) — upsert on re-analysis.</li>
+  <li><code>demand_trends</code> append-only; period + source +
+  taxonomy_id composite unique.</li>
+  </ul>
+  <hr />
+  <h2 id="mismatch-taxonomy-classification">6. Mismatch Taxonomy
+  (Classification)</h2>
+  <p>Adapted from Vázquez-Villegas &amp; Borrego (2026) 8-type
+  framework. Each gap is classified by a decision rule combining supply
+  presence, demand level, and demand trend.</p>
+  <table>
+  <colgroup>
+  <col style="width: 25%" />
+  <col style="width: 25%" />
+  <col style="width: 25%" />
+  <col style="width: 25%" />
+  </colgroup>
+  <thead>
+  <tr>
+  <th>#</th>
+  <th>Type</th>
+  <th>Signal (supply / demand)</th>
+  <th>Classification rule (v1)</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr>
+  <td>1</td>
+  <td>Overeducation</td>
+  <td>skill taught, not demanded</td>
+  <td>supply present, demand ≈ 0</td>
+  </tr>
+  <tr>
+  <td>2</td>
+  <td>Underskilling</td>
+  <td>skill demanded, taught insufficiently</td>
+  <td>demand &gt; 0, supply present but below threshold</td>
+  </tr>
+  <tr>
+  <td>3</td>
+  <td>Skill shortages</td>
+  <td>skill highly demanded, absent from curriculum</td>
+  <td>demand high + rising, supply absent</td>
+  </tr>
+  <tr>
+  <td>4</td>
+  <td>Skill gaps</td>
+  <td>demand present, supply partial</td>
+  <td>demand &gt; 0, supply present at low level (distinct from
+  underskilling by severity/threshold)</td>
+  </tr>
+  <tr>
+  <td>5–8</td>
+  <td>(remaining types per framework)</td>
+  <td>per framework definitions</td>
+  <td>map when reference taxonomy is fully imported</td>
+  </tr>
+  </tbody>
+  </table>
+  <p><strong>5 competence dimensions</strong> (Isnandar et al., 2024)
+  tag each taxonomy entry: hard/technical skills + non-hard dimensions
+  incl. Task management and Contingency management. Non-hard dimensions
+  are scored from curriculum/manual evidence and labeled “estimate” in
+  the UI.</p>
+  <p><strong>Open question:</strong> exact thresholds (demand frequency,
+  supply level) per type — set during Analysis Engine spike, validated
+  against a labeled sample.</p>
+  <hr />
+  <h2 id="matching-scoring">7. Matching &amp; Scoring</h2>
+  <p>Per program P, per period T:</p>
+  <pre><code>demand_set(P,T)   = skills demanded by industry (frequency ≥ threshold, weighted by degree relevance)
+supply_set(P,T)   = skills present in curriculum of P (weighted by credits/course level)
+
+match_rate(P,T)   = Σ weight(s) for s ∈ (supply ∩ demand)  /  Σ weight(s) for s ∈ demand
+gap(s, P, T)      = demand_level(s) − supply_level(s), per taxonomy type (§6)
+priority(s, P, T) = gap severity × demand trend slope × dimension weight</code></pre>
+  <ul>
+  <li>Weights: per study program (degree weights), per skill (course
+  credits / core vs elective).</li>
+  <li>Outputs: match-rate %, per-skill gap map, prioritized
+  recommendation list.</li>
+  <li>Determinism requirement: same snapshot in, same numbers out.</li>
+  </ul>
+  <hr />
+  <h2 id="api-design-v1-contract">8. API Design (v1 contract)</h2>
+  <p>Base: <code>/api/v1</code>. JSON. Auth: session tokens (Laravel
+  Sanctum), roles <code>lecturer</code> | <code>student</code>.</p>
+  <table>
+  <colgroup>
+  <col style="width: 25%" />
+  <col style="width: 25%" />
+  <col style="width: 25%" />
+  <col style="width: 25%" />
+  </colgroup>
+  <thead>
+  <tr>
+  <th>Method</th>
+  <th>Endpoint</th>
+  <th>Role</th>
+  <th>Purpose</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr>
+  <td>POST</td>
+  <td><code>/auth/login</code></td>
+  <td>public</td>
+  <td>authenticate</td>
+  </tr>
+  <tr>
+  <td>POST</td>
+  <td><code>/auth/logout</code></td>
+  <td>both</td>
+  <td>terminate session</td>
+  </tr>
+  <tr>
+  <td>GET</td>
+  <td><code>/dashboard/summary?study_program_id=</code></td>
+  <td>lecturer</td>
+  <td>match-rate % + headline stats (Gambar 1)</td>
+  </tr>
+  <tr>
+  <td>GET</td>
+  <td><code>/gap-map?program=&amp;period=&amp;dimension=</code></td>
+  <td>lecturer</td>
+  <td>skill gap map w/ mismatch types (Gambar 2)</td>
+  </tr>
+  <tr>
+  <td>GET</td>
+  <td><code>/trends?skill=&amp;period=</code></td>
+  <td>both</td>
+  <td>demand trend series</td>
+  </tr>
+  <tr>
+  <td>GET</td>
+  <td><code>/recommendations</code></td>
+  <td>student</td>
+  <td>prioritized learning list</td>
+  </tr>
+  <tr>
+  <td>GET</td>
+  <td><code>/reports/program/:id?period=</code></td>
+  <td>lecturer</td>
+  <td>gap report (downloadable)</td>
+  </tr>
+  <tr>
+  <td>CRUD</td>
+  <td><code>/curriculum/*</code></td>
+  <td>lecturer</td>
+  <td>curriculum / RPS / LO / profile entry</td>
+  </tr>
+  <tr>
+  <td>GET</td>
+  <td><code>/skills/taxonomy</code></td>
+  <td>both</td>
+  <td>taxonomy + synonyms reference</td>
+  </tr>
+  </tbody>
+  </table>
+  <hr />
+  <h2 id="non-functional-requirements">9. Non-Functional
+  Requirements</h2>
+  <ul>
+  <li><strong>Performance:</strong> dashboard interactions stay
+  responsive with thousands of skill points (server-side aggregation,
+  canvas/SVG rendering, pagination/virtualization).</li>
+  <li><strong>Security:</strong> role-based access (lecturer vs
+  student); student data scoped to own profile; DB-level integrity;
+  secrets (portal credentials, API keys) in env, never in code.</li>
+  <li><strong>Reliability:</strong> scraper partial-failure isolation;
+  ETL idempotent (re-run safe); scheduled jobs recover from missed
+  runs.</li>
+  <li><strong>Auditability:</strong> every analytical claim traceable to
+  scrape batch / manual entry / taxonomy version; snapshots
+  versioned.</li>
+  <li><strong>Maintainability:</strong> API contract decoupled from
+  engine internals; selectors/config externalized.</li>
+  </ul>
+  <hr />
+  <h2 id="deployment-operations">10. Deployment &amp; Operations</h2>
+  <h3 id="phase-plan-d5-3-devs-aug-12-aug-30">10.1 Phase plan (D5: 3
+  devs, Aug 12 → Aug 30)</h3>
+  <table>
+  <colgroup>
+  <col style="width: 33%" />
+  <col style="width: 33%" />
+  <col style="width: 33%" />
+  </colgroup>
+  <thead>
+  <tr>
+  <th>Phase</th>
+  <th>Dates</th>
+  <th>Work</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr>
+  <td>P1 Contract freeze</td>
+  <td>Aug 12–14</td>
+  <td>Schema + API contract + IT taxonomy seed list (all 3 devs
+  together)</td>
+  </tr>
+  <tr>
+  <td>P2 Parallel build</td>
+  <td>Aug 15–22</td>
+  <td>Scraper+ETL (Python) ‖ Laravel+DB+auth ‖ React dashboard</td>
+  </tr>
+  <tr>
+  <td>P3 Integration</td>
+  <td>Aug 23–27</td>
+  <td>Engine ↔︎ DB ↔︎ API, seed snapshot load, gap map polish</td>
+  </tr>
+  <tr>
+  <td>P4 Demo hardening</td>
+  <td>Aug 28–30</td>
+  <td>Scripted 60/40 demo run, fix, deploy, rehearse</td>
+  </tr>
+  </tbody>
+  </table>
+  <h3 id="runtime">10.2 Runtime</h3>
+  <ul>
+  <li>Demo runtime (D7): laptop dev server (MySQL + Laravel + Node build
+  all local), exposed via ngrok; phone hotspot as network fallback;
+  seeded snapshot DB restorable via one command
+  (<code>php artisan db:seed --class=DemoSnapshotSeeder</code> +
+  fixtures). APP_URL/CORS must accept both the ngrok host and localhost.
+  Secrets: none beyond local defaults.</li>
+  <li>Weekly scheduled jobs: scrape → ETL → re-analysis → dashboard
+  refresh (production posture; v1 demo uses the demo-triggered refresh
+  per D2).</li>
+  <li>Deployment: Laravel (PHP-FPM/Octane + MySQL) + Python workers
+  (scraper/ETL/engine) + Node build for Inertia assets. v1: single
+  server; separate worker queue for batch jobs.</li>
+  <li>Monitoring: per-source scrape yield, ETL error rate, engine run
+  duration, dashboard uptime.</li>
+  <li>Data updates: weekly cadence keeps trends fresh without real-time
+  streaming.</li>
+  </ul>
+  <hr />
+  <h2 id="testing-validation">11. Testing &amp; Validation</h2>
+  <table>
+  <colgroup>
+  <col style="width: 33%" />
+  <col style="width: 33%" />
+  <col style="width: 33%" />
+  </colgroup>
+  <thead>
+  <tr>
+  <th>Level</th>
+  <th>Scope</th>
+  <th>Method</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr>
+  <td>Unit</td>
+  <td>ETL normalization, taxonomy mapping, scoring formulas</td>
+  <td>pytest (Python), PHPUnit (Laravel)</td>
+  </tr>
+  <tr>
+  <td>Integration</td>
+  <td>pipeline: scrape→ETL→DB→engine</td>
+  <td>fixture postings + fixture curriculum</td>
+  </tr>
+  <tr>
+  <td>Classification validation</td>
+  <td>8-type rules</td>
+  <td>labeled sample of postings; precision/recall per type</td>
+  </tr>
+  <tr>
+  <td>Statistical</td>
+  <td>system vs. known gap cases</td>
+  <td>compare against prior research findings (e.g. Azalia et al. 2021
+  accounting case) as sanity check</td>
+  </tr>
+  <tr>
+  <td>UAT</td>
+  <td>dashboard usability, recommendation plausibility</td>
+  <td>limited session with campus stakeholders; academic review of
+  recommendations</td>
+  </tr>
+  <tr>
+  <td>E2E</td>
+  <td>dashboard flows</td>
+  <td>browser tests on Inertia routes</td>
+  </tr>
+  </tbody>
+  </table>
+  <hr />
+  <h2 id="risks-open-questions">12. Risks &amp; Open Questions</h2>
+  <table>
+  <colgroup>
+  <col style="width: 50%" />
+  <col style="width: 50%" />
+  </colgroup>
+  <thead>
+  <tr>
+  <th>Risk</th>
+  <th>Mitigation</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr>
+  <td>No off-shelf Indonesian skill extractor</td>
+  <td>Custom Spacy/NLTK + IndoBERT; TF-IDF baseline first</td>
+  </tr>
+  <tr>
+  <td>Taxonomy thresholds subjective</td>
+  <td>Set via spike, validate on labeled sample; expose as config</td>
+  </tr>
+  <tr>
+  <td>Scraper anti-bot / ToS / selector churn</td>
+  <td>Adapter pattern, config-driven selectors, polite crawling, API
+  preference</td>
+  </tr>
+  <tr>
+  <td>Non-hard-skill dimensions hard to measure from text</td>
+  <td>Manual/curriculum evidence + explicit “estimate” labeling</td>
+  </tr>
+  <tr>
+  <td>Weekly batch freshness</td>
+  <td>Idempotent incremental runs; partial-failure isolation</td>
+  </tr>
+  <tr>
+  <td>Degree-weight scheme unproven</td>
+  <td>Keep weights in DB config; A/B against validation set</td>
+  </tr>
+  </tbody>
+  </table>
+  <h3 id="decision-register-grill-session-2026-08-12">12.1 Decision
+  register (grill session, 2026-08-12)</h3>
+  <p>All questions raised during requirements grilling, with current
+  status. Status: 🔒 locked (D# = decision in §2.5) · ⏭ skipped by team
+  · ⚠ open.</p>
+  <table>
+  <colgroup>
+  <col style="width: 33%" />
+  <col style="width: 33%" />
+  <col style="width: 33%" />
+  </colgroup>
+  <thead>
+  <tr>
+  <th>#</th>
+  <th>Question</th>
+  <th>Status</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr>
+  <td>Q1</td>
+  <td>Who is the demo centerpiece user — lecturer or student?</td>
+  <td>🔒 D1: 60% lecturer / 40% student</td>
+  </tr>
+  <tr>
+  <td>Q2</td>
+  <td>Timeline + team split?</td>
+  <td>🔒 D5: 18 days (Aug 12–30); team-split TBD</td>
+  </tr>
+  <tr>
+  <td>Q3</td>
+  <td>What is the v1 deliverable — live pipeline, seed-first, or
+  fixtures?</td>
+  <td>🔒 D2: seed-first, re-scrape on jury demand</td>
+  </tr>
+  <tr>
+  <td>Q4</td>
+  <td>How many postings per run (“ribuan lowongan”)?</td>
+  <td>🔒 D4: 500–1,000, single source</td>
+  </tr>
+  <tr>
+  <td>Q5</td>
+  <td>Where does the demo run?</td>
+  <td>🔒 D7: laptop + ngrok, hotspot fallback</td>
+  </tr>
+  <tr>
+  <td>Q6</td>
+  <td>Which portal is scraped — LinkedIn or JobStreet?</td>
+  <td>⏭ skipped (ToS/anti-bot risk noted; single source per D4)</td>
+  </tr>
+  <tr>
+  <td>Q7</td>
+  <td>One source down mid-demo?</td>
+  <td>🔒 moot via D2 (snapshot pre-loaded)</td>
+  </tr>
+  <tr>
+  <td>Q8</td>
+  <td>Trend history — backfill or flat lines?</td>
+  <td>🔒 D6: backfill ~3 months, real <code>posted_at</code></td>
+  </tr>
+  <tr>
+  <td>Q9</td>
+  <td>TF-IDF or IndoBERT for extraction?</td>
+  <td>⏭ skipped (tech-stack question deferred)</td>
+  </tr>
+  <tr>
+  <td>Q10</td>
+  <td>Taxonomy source + size for v1?</td>
+  <td>⚠ open</td>
+  </tr>
+  <tr>
+  <td>Q11</td>
+  <td>Extraction accuracy bar / labeled test set?</td>
+  <td>⚠ open</td>
+  </tr>
+  <tr>
+  <td>Q12</td>
+  <td>5 competence dimensions — score, tag-only, or drop in v1?</td>
+  <td>⚠ open (options: tag-and-show w/o scoring / score from dictionary
+  / drop)</td>
+  </tr>
+  <tr>
+  <td>Q13</td>
+  <td>Full 8-type mismatch taxonomy — what are the other 4 types?</td>
+  <td>⚠ open — need full framework text from Vázquez-Villegas &amp;
+  Borrego (2026)</td>
+  </tr>
+  <tr>
+  <td>Q14</td>
+  <td>Degree weights — who defines them, config or hardcoded?</td>
+  <td>⚠ open</td>
+  </tr>
+  <tr>
+  <td>Q15</td>
+  <td>Classifier validation against known cases (Azalia et
+  al. 2021)?</td>
+  <td>⚠ open</td>
+  </tr>
+  <tr>
+  <td>Q16</td>
+  <td>Supply levels — where do they come from (LO verb, credits,
+  manual)?</td>
+  <td>⚠ open</td>
+  </tr>
+  <tr>
+  <td>Q17</td>
+  <td>DB engine — MySQL or Postgres?</td>
+  <td>⚠ open (Laravel default = MySQL)</td>
+  </tr>
+  <tr>
+  <td>Q18</td>
+  <td>Snapshot retention — keep all history or prune?</td>
+  <td>⚠ open</td>
+  </tr>
+  <tr>
+  <td>Q19</td>
+  <td>API versioning — real <code>/api/v1</code> or dead weight?</td>
+  <td>⚠ open</td>
+  </tr>
+  <tr>
+  <td>Q20</td>
+  <td>Auth — real registration or seeded accounts? Student-data privacy
+  boundary?</td>
+  <td>⚠ open</td>
+  </tr>
+  <tr>
+  <td>Q21</td>
+  <td>Chart library + what the skill gap map actually depicts?</td>
+  <td>⚠ open (tech-stack question, deferred)</td>
+  </tr>
+  <tr>
+  <td>Q22</td>
+  <td>Report downloads — PDF or CSV?</td>
+  <td>⚠ open</td>
+  </tr>
+  <tr>
+  <td>Q23</td>
+  <td>How many programs/courses entered for demo; who does data
+  entry?</td>
+  <td>⚠ open</td>
+  </tr>
+  <tr>
+  <td>Q24</td>
+  <td>Student profiles — self-reported or program-level only?</td>
+  <td>⚠ open</td>
+  </tr>
+  </tbody>
+  </table>
+  <p><strong>Open questions (from §12 header):</strong> exact portal
+  volume targets; taxonomy size for v1; whether lecturers also get
+  per-student views; report export format (PDF/CSV).</p>
+  
+  <h3 id="decision-resolutions">12.2 Decision Resolutions (Research-Backed)</h3>
+  <p>The following are resolutions and recommendations for the skipped and open questions from the grill session, based on industry best practices and research:</p>
+  
+  <h4>Phase 2: Core Engineering &amp; Tech Stack</h4>
+  <ul>
+    <li><strong>Q6 (Portal):</strong> JobStreet is recommended for Indonesian tech jobs due to lower ToS/anti-bot risks for batch scraping (500–1,000) compared to LinkedIn.</li>
+    <li><strong>Q9 (NLP Extraction):</strong> Hybrid approach: TF-IDF for baseline explicit keywords, and IndoBERT (e.g., IndoBERTSkill) for Named Entity Recognition to accurately extract implicit skills and score higher in the AI competition.</li>
+    <li><strong>Q10 (Taxonomy):</strong> Use a manageable subset of ESCO or O*NET (150–200 core IT skills) for v1 to ensure standard nomenclature.</li>
+    <li><strong>Q11 (Accuracy bar):</strong> Aim for &gt;85% precision on a manually labeled test set of 100 job postings.</li>
+    <li><strong>Q17 (DB Engine):</strong> PostgreSQL is recommended over MySQL due to its superior native JSON support and full-text search capabilities for NLP data.</li>
+    <li><strong>Q18 (Snapshot retention):</strong> Keep all history, but aggregate older data (roll up weekly into monthly averages after 6 months) for production.</li>
+    <li><strong>Q19 (API Versioning):</strong> Implement <code>/api/v1</code> as standard practice to show professional architecture.</li>
+  </ul>
+
+  <h4>Phase 3: Taxonomy &amp; Pedagogy Validations</h4>
+  <ul>
+    <li><strong>Q12 (5 Competence Dimensions):</strong> Tag and show non-hard skills (like Transfer Skills) as "Estimated" from curriculum inputs rather than strictly scoring them from job texts, as they are notoriously noisy to extract.</li>
+    <li><strong>Q13 (Mismatch Taxonomy):</strong> Use a standard framework focused on: 1. Overeducation, 2. Underskilling, 3. Skill Shortages, 4. Skill Gaps, 5. Overskilling, 6. Undereducation, 7. Field-of-study Mismatch, 8. Skill Obsolescence. Focus the algorithm on #2, #3, #4, and #8 for the demo.</li>
+    <li><strong>Q14 (Degree weights):</strong> Store as a JSON config (<code>degree_weight_config</code>) in the <code>study_programs</code> table, editable via the lecturer dashboard.</li>
+    <li><strong>Q15 (Validation against Azalia 2021):</strong> The system validates the finding that traditional skills match well, but specific modern IT/technical skills show undersupply.</li>
+    <li><strong>Q16 (Supply levels):</strong> Calculate a baseline using the Bloom's Taxonomy Verb mapped to a level, multiplied by course credits. Allow manual lecturer override.</li>
+  </ul>
+
+  <h4>Phase 4: UI/UX &amp; Demo Data</h4>
+  <ul>
+    <li><strong>Q20 (Auth):</strong> Seeded accounts only for v1 demo (1 Lecturer, 2 Students) to save time, with strict <code>user_id</code> scoping for student data privacy.</li>
+    <li><strong>Q21 (Chart library):</strong> Use Recharts or Chart.js for trends, and a Scatter Plot (X: Demand, Y: Supply) for the Skill Gap Map to visualize critical shortages (bottom-right quadrant).</li>
+    <li><strong>Q22 (Report export):</strong> PDF is highly recommended (via <code>dompdf</code> or <code>spatie/laravel-pdf</code>) to "wow" stakeholders and the jury.</li>
+    <li><strong>Q23 (Data entry scope):</strong> One (1) study program (e.g., D4 Teknik Informatika) with 5-10 core courses manually seeded by the dev team for perfect demo data quality.</li>
+    <li><strong>Q24 (Student profiles):</strong> Program-level baseline gap + 1 manually self-reported student profile to demonstrate personalized recommendations.</li>
+  </ul>
+  
+  <hr />
+  <h2 id="glossary">13. Glossary</h2>
+  <ul>
+  <li><strong>RPS</strong> — Rencana Pembelajaran Semester (semester
+  lesson plan)</li>
+  <li><strong>LO</strong> — Learning Outcome / Capaian Pembelajaran</li>
+  <li><strong>Supply</strong> — skills taught by the curriculum (or held
+  by a student profile)</li>
+  <li><strong>Demand</strong> — skills required by industry, extracted
+  from job postings</li>
+  <li><strong>Match rate</strong> — weighted share of demanded skills
+  covered by supply</li>
+  <li><strong>Mismatch taxonomy</strong> — 8-type classification
+  framework (Vázquez-Villegas &amp; Borrego, 2026)</li>
+  <li><strong>IndoBERT</strong> — Indonesian-language BERT model for
+  NER</li>
+  <li><strong>ETL</strong> — Extract, Transform, Load</li>
+  </ul>
+  </main>
+</div>
+<button id="theme-toggle" aria-label="Toggle dark mode">◐</button>
+<script>
+(function(){
+  var KEY='sga-sdd-theme';
+  var root=document.documentElement;
+  var stored=null;
+  try{stored=localStorage.getItem(KEY);}catch(e){}
+  var prefersDark=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;
+  var theme=stored||(prefersDark?'dark':'light');
+  root.setAttribute('data-theme',theme);
+  var btn=document.getElementById('theme-toggle');
+  btn.textContent=theme==='dark'?'☀':'◐';
+  btn.addEventListener('click',function(){
+    var next=root.getAttribute('data-theme')==='dark'?'light':'dark';
+    root.setAttribute('data-theme',next);
+    btn.textContent=next==='dark'?'☀':'◐';
+    try{localStorage.setItem(KEY,next);}catch(e){}
+  });
+  // scrollspy
+  var links=[].slice.call(document.querySelectorAll('nav#TOC a'));
+  var map={};
+  links.forEach(function(a){
+    var id=(a.getAttribute('href')||'').replace('#','');
+    if(id&&document.getElementById(id)) map[id]=a;
+  });
+  var ids=Object.keys(map);
+  var toc=document.querySelector('nav#TOC');
+  function spy(){
+    var pos=(window.scrollY||document.documentElement.scrollTop)+80;
+    var current=ids[0];
+    ids.forEach(function(id){
+      var el=document.getElementById(id);
+      if(el&&el.offsetTop<=pos) current=id;
+    });
+    links.forEach(function(a){a.classList.remove('active');});
+    if(map[current]) map[current].classList.add('active');
+  }
+  window.addEventListener('scroll',spy,{passive:true});
+  spy();
+})();
+</script>
+</body>
+</html>
