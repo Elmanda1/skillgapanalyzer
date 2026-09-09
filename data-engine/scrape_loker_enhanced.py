@@ -358,6 +358,45 @@ def build_aggregate() -> List[Dict]:
         records.append(row)
 
     records.sort(key=lambda r: int(r.get("id") or 0))
+    
+    # --------------------------------------------------------------------
+    # 1. Snapshot generation before overwrite
+    # --------------------------------------------------------------------
+    snapshots_dir = OUT_DIR / "snapshots"
+    snapshots_dir.mkdir(parents=True, exist_ok=True)
+    
+    old_records = []
+    if AGGREGATE_PATH.exists():
+        try:
+            with open(AGGREGATE_PATH, encoding="utf-8") as f:
+                old_records = json.load(f)
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            snapshot_path = snapshots_dir / f"lowongan_{timestamp}.json"
+            with open(snapshot_path, "w", encoding="utf-8") as sf:
+                json.dump(old_records, sf, ensure_ascii=False)
+            logging.getLogger("scraper").info(f"[SNAPSHOT] Salinan agregat lama disimpan ke {snapshot_path}")
+        except Exception as e:
+            logging.getLogger("scraper").warning(f"[SNAPSHOT] Gagal membuat snapshot: {e}")
+
+    # --------------------------------------------------------------------
+    # 2. Guard Rail Sanity Check (Prevent False Expiration on >50% drop)
+    # --------------------------------------------------------------------
+    n_old = len(old_records)
+    n_new = len(records)
+    
+    if n_old > 0 and n_new < (n_old * 0.50):
+        logging.getLogger("scraper").warning(
+            f"[WARNING] Guard Rail Triggered: Jumlah lowongan baru ({n_new}) turun drastis "
+            f"dibandingkan run sebelumnya ({n_old}). Menutup overwrite penuh untuk mencegah false expiration!"
+        )
+        # Merge new records into old records to protect active data
+        merged_dict = {str(r.get("id")): r for r in old_records if r.get("id")}
+        for r in records:
+            if r.get("id"):
+                merged_dict[str(r.get("id"))] = r
+        records = sorted(merged_dict.values(), key=lambda r: int(r.get("id") or 0))
+        logging.getLogger("scraper").info(f"[GUARD_RAIL] Data berhasil digabungkan (Total aman: {len(records)} records).")
+
     with open(AGGREGATE_PATH, "w", encoding="utf-8") as f:
         json.dump(records, f, ensure_ascii=False)
     

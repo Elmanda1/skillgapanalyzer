@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useToast } from '../context/ToastContext';
 import Icon from '../components/Icon.jsx';
-
 
 const AGENTS = [
   { id: 'JKT-Worker-01', source: 'LinkedIn Jobs', location: 'Jakarta',  status: 'Active',  uptime: '99.98%', data: '1.8 TB' },
@@ -10,7 +9,6 @@ const AGENTS = [
   { id: 'BDG-Proxy-02',  source: 'Kalibrr',       location: 'Bandung',  status: 'Error',   uptime: '98.50%', data: '0.8 TB' },
   { id: 'MLG-Scout-01',  source: 'TechInAsia',    location: 'Malang',   status: 'Active',  uptime: '99.90%', data: '0.6 TB' },
 ];
-
 
 const statusBadge = (s) => {
   if (s === 'Active')  return 'badge badge-green';
@@ -22,6 +20,7 @@ const LOG_TYPES = {
   SUCCESS: { color: '#10b981', label: 'SUCCESS' },
   INFO:    { color: '#3b82f6', label: 'INFO' },
   WARNING: { color: '#f59e0b', label: 'WARNING' },
+  ERROR:   { color: '#ef4444', label: 'ERROR' },
   SYSTEM:  { color: '#8b5cf6', label: 'SYSTEM' },
 };
 
@@ -34,14 +33,8 @@ const parseLog = (log) => {
 export default function ScrapingAgents() {
   const toast = useToast();
   const [searchQuery, setSearchQuery] = useState('');
-
-  const handleDeploy = () => {
-    toast.info('Deploy Agen', 'Permintaan deployment agen baru sedang diproses...');
-  };
-
-  const handleSyncAll = () => {
-    toast.info('Sinkronisasi', 'Mensinkronisasi ulang semua agen scraping...');
-  };
+  const [isSyncing, setIsSyncing] = useState(false);
+  const logContainerRef = useRef(null);
 
   const [logs, setLogs] = useState([
     '[SYSTEM] Inisiasi Jaringan Agen Scraping regional...',
@@ -53,11 +46,48 @@ export default function ScrapingAgents() {
     '[INFO] SBY-Index-01: Mensinkronkan 120 lowongan terbaru ke basis data pusat...',
   ]);
 
+  const handleDeploy = () => {
+    toast.info('Deploy Agen', 'Permintaan deployment agen baru sedang diproses...');
+  };
+
+  const handleSyncAll = () => {
+    if (isSyncing) return;
+    setIsSyncing(true);
+    toast.info('Sinkronisasi Ulang', 'Menghubungkan ke agen scraper Python real-time...');
+
+    const eventSource = new EventSource('/scraping/sync-stream');
+
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.line) {
+          setLogs(prev => [data.line, ...prev.slice(0, 100)]);
+        }
+        if (data.done) {
+          setIsSyncing(false);
+          eventSource.close();
+          toast.success('Sinkronisasi Ulang Selesai', 'Scraper Python & pengimporan data lowongan berhasil dieksekusi.');
+        }
+      } catch (err) {
+        console.error('Failed to parse SSE event data', err);
+      }
+    };
+
+    eventSource.onerror = (err) => {
+      console.error('SSE connection error:', err);
+      eventSource.close();
+      setIsSyncing(false);
+      toast.info('Stream Selesai', 'Sesi sinkronisasi ulang log live telah ditutup.');
+    };
+  };
+
   const jobTitles  = ['Backend Developer','Data Scientist','Frontend Engineer','Security Specialist','Cloud Architect'];
   const skillSets  = [['GraphQL','Node.js','PostgreSQL'],['Python','PyTorch','SQL'],['React','Tailwind','Vite'],['Zero Trust','SIEM','ISO27001'],['AWS','Kubernetes','CI/CD']];
   const portals    = ['LinkedIn Jobs','JobStreet','Indeed ID','TechInAsia'];
 
   useEffect(() => {
+    if (isSyncing) return;
+
     const interval = setInterval(() => {
       const agent  = AGENTS[Math.floor(Math.random() * AGENTS.length)];
       const jobIdx = Math.floor(Math.random() * jobTitles.length);
@@ -69,10 +99,10 @@ export default function ScrapingAgents() {
       } else {
         newLog = `[WARNING] ${agent.id}: Menguji gateway IP proxy alternatif karena rate limits...`;
       }
-      setLogs(prev => [newLog, ...prev.slice(0, 20)]);
-    }, 4000);
+      setLogs(prev => [newLog, ...prev.slice(0, 50)]);
+    }, 6000);
     return () => clearInterval(interval);
-  }, []);
+  }, [isSyncing]);
 
   const filtered = AGENTS.filter(a =>
     a.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -93,9 +123,13 @@ export default function ScrapingAgents() {
           <p className="text-sm text-text-secondary mt-1">Status operasional dan performa nodus crawling data mining lowongan kerja regional.</p>
         </div>
         <div className="flex gap-3 mt-4 md:mt-0">
-          <button className="btn-outline flex items-center gap-2" onClick={handleSyncAll}>
-            <Icon className="text-[16px]" name="refresh" />
-            Sinkronisasi Ulang
+          <button 
+            className={`btn-outline flex items-center gap-2 ${isSyncing ? 'opacity-70 cursor-not-allowed' : ''}`} 
+            onClick={handleSyncAll}
+            disabled={isSyncing}
+          >
+            <Icon className={`text-[16px] ${isSyncing ? 'animate-spin' : ''}`} name="refresh" />
+            {isSyncing ? 'Sinkronisasi Berjalan...' : 'Sinkronisasi Ulang'}
           </button>
           <button className="btn-primary flex items-center gap-2" onClick={handleDeploy}>
             <Icon className="text-[16px]" name="add" />
@@ -108,7 +142,7 @@ export default function ScrapingAgents() {
       <div className="grid grid-cols-3 gap-4 mb-5">
         {[
           { label: 'Agen Aktif',      val: statCounts.Active,  badge: 'badge-green' },
-          { label: 'Sinkronisasi',    val: statCounts.Syncing, badge: 'badge-yellow' },
+          { label: 'Sinkronisasi',    val: isSyncing ? statCounts.Syncing + 1 : statCounts.Syncing, badge: 'badge-yellow' },
           { label: 'Error / Offline', val: statCounts.Error,   badge: 'badge-red' },
         ].map(s => (
           <div key={s.label} className="card p-4 flex items-center gap-4">
@@ -156,7 +190,11 @@ export default function ScrapingAgents() {
                   </td>
                   <td className="px-4 py-3 text-text-secondary text-xs">{a.source}</td>
                   <td className="px-4 py-3 text-text-secondary text-xs">{a.location}</td>
-                  <td className="px-4 py-3"><span className={statusBadge(a.status)}>{a.status}</span></td>
+                  <td className="px-4 py-3">
+                    <span className={statusBadge(isSyncing && a.id === 'SBY-Index-01' ? 'Syncing' : a.status)}>
+                      {isSyncing && a.id === 'SBY-Index-01' ? 'Syncing' : a.status}
+                    </span>
+                  </td>
                   <td className="px-4 py-3 font-mono text-xs font-semibold text-text">{a.uptime}</td>
                   <td className="px-4 py-3 font-mono text-xs text-text-secondary">{a.data}</td>
                 </tr>
@@ -170,16 +208,16 @@ export default function ScrapingAgents() {
           <div className="px-5 py-4 border-b border-border flex items-center justify-between">
             <h2 className="font-display text-base font-semibold text-text">Log Live</h2>
             <span className="flex items-center gap-1.5 text-xs text-green-600 font-semibold">
-              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              Live
+              <span className={`w-2 h-2 rounded-full ${isSyncing ? 'bg-amber-500 animate-ping' : 'bg-green-500 animate-pulse'}`} />
+              {isSyncing ? 'Syncing Live...' : 'Live'}
             </span>
           </div>
-          <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-2 bg-gray-950 min-h-[360px] max-h-[480px] font-mono text-xs">
+          <div ref={logContainerRef} className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-2 bg-gray-950 min-h-[360px] max-h-[480px] font-mono text-xs">
             {logs.map((log, i) => {
               const { type, message } = parseLog(log);
               const cfg = LOG_TYPES[type] || LOG_TYPES.INFO;
               return (
-                <div key={i} className="flex gap-2 leading-relaxed">
+                <div key={i} className="flex gap-2 leading-relaxed animate-fade-in">
                   <span className="flex-shrink-0 font-bold" style={{ color: cfg.color }}>[{cfg.label}]</span>
                   <span className="text-gray-300">{message}</span>
                 </div>

@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Model;
     'job_type',
     'job_experience',
     'is_remote',
+    'status',
     'published_at',
     'closed_at',
 ])]

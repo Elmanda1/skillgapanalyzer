@@ -382,9 +382,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/competency', [\App\Http\Controllers\GapMapController::class, 'competencyMap'])->name('competency');
     Route::get('/ai-analysis', [\App\Http\Controllers\GapMapController::class, 'aiAnalysis'])->name('ai-analysis');
 
-    Route::get('/scraping', function () {
-        return inertia('ScrapingAgents');
-    })->name('scraping');
+    Route::get('/scraping', [\App\Http\Controllers\ScrapingController::class, 'index'])->name('scraping');
+    Route::get('/scraping/sync-stream', [\App\Http\Controllers\ScrapingController::class, 'syncStream'])->name('scraping.sync-stream');
 
     Route::get('/settings', function () {
         return inertia('Settings');
@@ -518,9 +517,7 @@ Route::middleware(['auth'])->group(function () {
         return back();
     })->name('analysis.run.web');
 
-    Route::get('/scraping', function () {
-        return inertia('ScrapingAgents');
-    })->name('scraping');
+    Route::get('/scraping', [\App\Http\Controllers\ScrapingController::class, 'index'])->name('scraping');
 
     Route::get('/settings', function () {
         return inertia('Settings');

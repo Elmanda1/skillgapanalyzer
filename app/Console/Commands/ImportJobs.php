@@ -47,6 +47,8 @@ class ImportJobs extends Command
     private int $attachedSkills = 0;
     private int $filteredNoiseSkills = 0;
     private int $discoveredFromText = 0;
+    private int $softExpired = 0;
+    private array $importedSlugs = [];
 
     public function handle(): int
     {
@@ -74,12 +76,21 @@ class ImportJobs extends Command
         $started = microtime(true);
         $processed = $this->streamObjects($path, fn (array $obj) => $this->processObject($obj, $source, $filterEnabled));
 
+        // Perform Soft-Expiration for DB vacancies missing from active aggregate
+        if (! empty($this->importedSlugs)) {
+            $this->softExpired = JobVacancy::where('sumber', $source)
+                ->where('status', 'active')
+                ->whereNotIn('slug', array_keys($this->importedSlugs))
+                ->update(['status' => 'expired']);
+        }
+
         $elapsed = round(microtime(true) - $started, 2);
         $this->newLine();
         $this->info("Selesai dalam {$elapsed}s — {$processed} lowongan diproses.");
         $this->info("  • Dibuat: {$this->created} | Diupdate: {$this->updated}");
         $this->info("  • Skill baru: {$this->createdSkills} | Attach pivot: {$this->attachedSkills}");
         $this->info("  • Noise difilter: {$this->filteredNoiseSkills} | Ditemukan dari teks: {$this->discoveredFromText}");
+        $this->info("  • Soft-expired: {$this->softExpired} lowongan");
 
         return self::SUCCESS;
     }
@@ -248,12 +259,15 @@ class ImportJobs extends Command
             ?? $this->value($obj, 'source_url')
             ?? 'https://www.loker.id/lowongan/' . $slug;
 
+        $this->importedSlugs[$slug] = true;
+
         $data = [
             'sumber' => $source,
             'tanggal_crawl' => $this->crawlDate($obj),
             'sektor' => $this->value($obj, 'industry') ?? $this->firstOf($obj, 'industries', 'name') ?? 'Umum',
             'lokasi' => $this->value($obj, 'location') ?? $this->firstOf($obj, 'locations', 'name') ?? '',
             'slug' => $slug,
+            'status' => 'active',
             'title' => $this->value($obj, 'title'),
             'company_name' => $this->value($obj, 'company_name'),
             'company_logo' => $this->value($obj, 'company_logo') ?? $this->value($obj, 'company_image'),
