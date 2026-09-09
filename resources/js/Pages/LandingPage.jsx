@@ -883,9 +883,13 @@ const FAQS = [
 ];
 
 function FAQSection() {
+  const midIndex = Math.ceil(FAQS.length / 2);
+  const leftFaqs = FAQS.slice(0, midIndex);
+  const rightFaqs = FAQS.slice(midIndex);
+
   return (
     <section id="faq" data-slot="faq" className="scroll-mt-24 py-20 px-4 sm:px-6 lg:px-8 bg-gray-50/70 dark:bg-slate-950/90 transition-colors lazy-section">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         {/* Centered Header outside card */}
         <div className="text-center max-w-2xl mx-auto mb-12">
           <span className="badge badge-gray mb-3 inline-flex">FAQ & Bantuan</span>
@@ -897,19 +901,38 @@ function FAQSection() {
           </p>
         </div>
 
-        {/* Clean Accordion Card */}
-        <div className="card p-6 sm:p-10 bg-white dark:bg-slate-900 border border-gray-200/90 dark:border-slate-800 shadow-xl rounded-3xl">
+        {/* 2-Column Accordion Card */}
+        <div className="card p-6 sm:p-10 lg:p-12 bg-white dark:bg-slate-900 border border-gray-200/90 dark:border-slate-800 shadow-xl rounded-3xl">
           <Accordion type="single" collapsible defaultValue="item-1" className="w-full">
-            {FAQS.map((item) => (
-              <AccordionItem key={item.id} value={item.id} className="py-0.5">
-                <AccordionTrigger className="text-left text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100 hover:text-emerald-800 dark:hover:text-emerald-400">
-                  {item.q}
-                </AccordionTrigger>
-                <AccordionContent className="text-gray-600 dark:text-gray-300 text-sm sm:text-base leading-relaxed pb-5">
-                  {item.a}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-2 items-start">
+              {/* Left Column */}
+              <div className="space-y-1">
+                {leftFaqs.map((item) => (
+                  <AccordionItem key={item.id} value={item.id} className="py-0.5">
+                    <AccordionTrigger className="text-left text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100 hover:text-emerald-800 dark:hover:text-emerald-400">
+                      {item.q}
+                    </AccordionTrigger>
+                    <AccordionContent className="text-gray-600 dark:text-gray-300 text-sm sm:text-base leading-relaxed pb-5">
+                      {item.a}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </div>
+
+              {/* Right Column */}
+              <div className="space-y-1">
+                {rightFaqs.map((item) => (
+                  <AccordionItem key={item.id} value={item.id} className="py-0.5">
+                    <AccordionTrigger className="text-left text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100 hover:text-emerald-800 dark:hover:text-emerald-400">
+                      {item.q}
+                    </AccordionTrigger>
+                    <AccordionContent className="text-gray-600 dark:text-gray-300 text-sm sm:text-base leading-relaxed pb-5">
+                      {item.a}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </div>
+            </div>
           </Accordion>
         </div>
       </div>
