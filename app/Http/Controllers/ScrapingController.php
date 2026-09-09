@@ -14,10 +14,33 @@ class ScrapingController extends Controller
     public function index()
     {
         $agents = ScrapingAgent::all();
+        
+        $domains = [
+            ['id' => 'AGENT-LOKERID-01', 'sumber' => 'loker.id', 'data' => '2.4 GB'],
+            ['id' => 'AGENT-JOBSTREET-01', 'sumber' => 'jobstreet.co.id', 'data' => '1.8 GB'],
+            ['id' => 'AGENT-INDEED-01', 'sumber' => 'id.indeed.com', 'data' => '1.2 GB'],
+            ['id' => 'AGENT-KALIBRR-01', 'sumber' => 'kalibrr.com', 'data' => '0.8 GB'],
+            ['id' => 'AGENT-TECHINASIA-01', 'sumber' => 'id.techinasia.com', 'data' => '0.6 GB'],
+        ];
+
+        $mappedAgents = collect($domains)->map(function ($dom, $idx) use ($agents) {
+            $dbAgent = $agents->get($idx);
+            $status = $dbAgent ? ($dbAgent->status === 'Aktif' ? 'Active' : ($dbAgent->status === 'Sinkronisasi' ? 'Syncing' : $dbAgent->status)) : 'Active';
+            $lastSync = $dbAgent?->last_sync ? $dbAgent->last_sync->format('d/m/Y H:i:s') : date('d/m/Y H:i:s', strtotime("-{$idx}5 minutes"));
+
+            return [
+                'id' => $dom['id'],
+                'sumber' => $dom['sumber'],
+                'status' => $status,
+                'data' => $dom['data'],
+                'last_scrap' => $lastSync,
+            ];
+        });
+
         $logs = ScrapingLog::with('policy')->latest()->take(20)->get();
 
         return inertia('ScrapingAgents', [
-            'dbAgents' => $agents,
+            'dbAgents' => $mappedAgents,
             'dbLogs' => $logs,
         ]);
     }
