@@ -34,7 +34,7 @@ class SystemDataSeeder extends Seeder
 
         $skills = [];
         foreach ($skillsData as $sd) {
-            $skills[$sd['nama']] = Skill::create($sd);
+            $skills[$sd['nama']] = Skill::firstOrCreate(['nama' => $sd['nama']], $sd);
         }
 
         // 2. Course templates per study program discipline

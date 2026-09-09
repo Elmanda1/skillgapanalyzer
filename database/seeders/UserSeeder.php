@@ -158,19 +158,21 @@ class UserSeeder extends Seeder
         ];
 
         // 3. Super Admin (National Administrator, Unaffiliated to any single campus)
-        $superAdmin = User::create([
-            'name' => 'Dewi Lestari',
-            'email' => 'admin@skillgap.id',
-            'password' => $hashedPassword,
-            'study_program_id' => null,
-        ]);
-        $superAdmin->assignRole('super_admin');
+        $superAdmin = User::firstOrCreate(
+            ['email' => 'admin@skillgap.id'],
+            [
+                'name' => 'Dewi Lestari',
+                'password' => $hashedPassword,
+                'study_program_id' => null,
+            ]
+        );
+        $superAdmin->syncRoles(['super_admin']);
 
         // 4. Seed Campuses, Programs, and Users
         foreach ($campuses as $cData) {
             $createdPrograms = [];
             foreach ($cData['programs'] as $p) {
-                $sp = StudyProgram::create([
+                $sp = StudyProgram::firstOrCreate([
                     'nama_institusi' => $cData['campus'],
                     'jenjang' => $p['jenjang'],
                     'nama_prodi' => $p['nama_prodi'],
@@ -181,35 +183,41 @@ class UserSeeder extends Seeder
             $mainProgram = $createdPrograms[0];
 
             // Seed Kaprodi
-            $kaprodi = User::create([
-                'name' => $cData['kaprodi']['name'],
-                'email' => $cData['kaprodi']['email'],
-                'password' => $hashedPassword,
-                'study_program_id' => $mainProgram->id,
-            ]);
-            $kaprodi->assignRole('kaprodi');
+            $kaprodi = User::firstOrCreate(
+                ['email' => $cData['kaprodi']['email']],
+                [
+                    'name' => $cData['kaprodi']['name'],
+                    'password' => $hashedPassword,
+                    'study_program_id' => $mainProgram->id,
+                ]
+            );
+            $kaprodi->syncRoles(['kaprodi']);
 
             // Seed Dosen
             foreach ($cData['dosen'] as $d) {
-                $dosen = User::create([
-                    'name' => $d['name'],
-                    'email' => $d['email'],
-                    'password' => $hashedPassword,
-                    'study_program_id' => $mainProgram->id,
-                ]);
-                $dosen->assignRole('dosen');
+                $dosen = User::firstOrCreate(
+                    ['email' => $d['email']],
+                    [
+                        'name' => $d['name'],
+                        'password' => $hashedPassword,
+                        'study_program_id' => $mainProgram->id,
+                    ]
+                );
+                $dosen->syncRoles(['dosen']);
             }
 
             // Seed Mahasiswa
             foreach ($cData['mahasiswa'] as $idx => $m) {
-                $mahasiswa = User::create([
-                    'name' => $m['name'],
-                    'email' => $m['email'],
-                    'password' => $hashedPassword,
-                    'study_program_id' => $mainProgram->id,
-                    'semester' => ($idx % 8) + 1,
-                ]);
-                $mahasiswa->assignRole('mahasiswa');
+                $mahasiswa = User::firstOrCreate(
+                    ['email' => $m['email']],
+                    [
+                        'name' => $m['name'],
+                        'password' => $hashedPassword,
+                        'study_program_id' => $mainProgram->id,
+                        'semester' => ($idx % 8) + 1,
+                    ]
+                );
+                $mahasiswa->syncRoles(['mahasiswa']);
             }
         }
     }
