@@ -31,10 +31,12 @@ class ScrapingController extends Controller
             }
 
             $sendData = function (string $line, bool $done = false) {
+                $timestamp = date('d/m/Y H:i:s');
+                $formattedLine = "[{$timestamp}] " . $line;
                 echo "data: " . json_encode([
-                    'line' => $line,
+                    'line' => $formattedLine,
                     'done' => $done,
-                    'time' => date('H:i:s')
+                    'timestamp' => $timestamp
                 ]) . "\n\n";
                 if (ob_get_level() > 0) {
                     ob_flush();
