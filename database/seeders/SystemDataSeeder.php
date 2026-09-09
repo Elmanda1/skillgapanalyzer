@@ -37,72 +37,65 @@ class SystemDataSeeder extends Seeder
             $skills[$sd['nama']] = Skill::create($sd);
         }
 
-        // 2. Course templates per field
-        $courseTemplates = [
-            [
-                'code' => 'TI-301',
-                'name' => 'Pemrograman Web Enterprise',
-                'semester' => 3,
-                'credits' => 4,
-                'skills' => ['React.js', 'Laravel', 'GraphQL APIs'],
-                'gap' => [
-                    ['skill' => 'React.js', 'type' => 'aligned', 'urgency' => 0, 'match' => 95.0, 'count' => 45],
-                    ['skill' => 'Laravel', 'type' => 'aligned', 'urgency' => 2, 'match' => 90.0, 'count' => 38],
-                ]
+        // 2. Course templates per study program discipline
+        $prodiTemplates = [
+            'informatika' => [
+                ['name' => 'Pemrograman Web Enterprise', 'credits' => 4, 'semester' => 3, 'skills' => ['React.js', 'Next.js', 'Laravel', 'Node.js', 'HTML5', 'CSS3']],
+                ['name' => 'Teknologi Cloud & DevOps', 'credits' => 3, 'semester' => 4, 'skills' => ['Docker', 'Kubernetes', 'AWS Cloud', 'CI/CD Pipelines', 'Linux Administration']],
+                ['name' => 'Basis Data & Sistem Terdistribusi', 'credits' => 3, 'semester' => 3, 'skills' => ['PostgreSQL', 'MySQL', 'Redis', 'REST APIs', 'Microservices']],
+                ['name' => 'Pengembangan Aplikasi Mobile Terapan', 'credits' => 3, 'semester' => 4, 'skills' => ['Flutter', 'React Native', 'Kotlin']],
+                ['name' => 'Keamanan Siber & Aplikasi', 'credits' => 3, 'semester' => 5, 'skills' => ['Zero Trust Architecture', 'Penetration Testing', 'Network Security']],
+                ['name' => 'Manajemen Agile & Soft Skills', 'credits' => 2, 'semester' => 2, 'skills' => ['Agile Project Management', 'Stakeholder Communication', 'Problem Solving']],
             ],
-            [
-                'code' => 'TI-402',
-                'name' => 'Teknologi Cloud & DevOps',
-                'semester' => 4,
-                'credits' => 3,
-                'skills' => ['Docker', 'Kubernetes', 'AWS Cloud', 'CI/CD Pipelines'],
-                'gap' => [
-                    ['skill' => 'Docker', 'type' => 'under_skill', 'urgency' => 8, 'match' => 55.0, 'count' => 28],
-                    ['skill' => 'Kubernetes', 'type' => 'under_skill', 'urgency' => 9, 'match' => 35.0, 'count' => 22],
-                    ['skill' => 'AWS Cloud', 'type' => 'under_skill', 'urgency' => 7, 'match' => 60.0, 'count' => 19],
-                ]
+            'elektronika' => [
+                ['name' => 'Mikrokontroler & Embedded Systems', 'credits' => 4, 'semester' => 3, 'skills' => ['Linux Administration', 'Python', 'Debugging', 'Unit Testing']],
+                ['name' => 'Elektronika Digital & Instrumentasi', 'credits' => 4, 'semester' => 2, 'skills' => ['Problem Solving', 'Incident Response', 'Time Management']],
+                ['name' => 'IoT & Komunikasi Nirkabel', 'credits' => 3, 'semester' => 4, 'skills' => ['Network Security', 'REST APIs', 'Linux Administration']],
+                ['name' => 'Manajemen Mutu & K3 Industri', 'credits' => 2, 'semester' => 1, 'skills' => ['Technical Writing', 'Continuous Learning', 'Stakeholder Communication']],
             ],
-            [
-                'code' => 'TI-501',
-                'name' => 'Kecerdasan Buatan & Machine Learning',
-                'semester' => 5,
-                'credits' => 3,
-                'skills' => ['LLM Fine-tuning', 'Snowflake', 'Computer Vision'],
-                'gap' => [
-                    ['skill' => 'LLM Fine-tuning', 'type' => 'under_skill', 'urgency' => 10, 'match' => 20.0, 'count' => 18],
-                    ['skill' => 'Computer Vision', 'type' => 'under_skill', 'urgency' => 7, 'match' => 65.0, 'count' => 14],
-                ]
+            'telekomunikasi' => [
+                ['name' => 'Jaringan Komputer & Routing', 'credits' => 4, 'semester' => 3, 'skills' => ['Network Security', 'Linux Administration', 'Nginx', 'SIEM']],
+                ['name' => 'Komunikasi Data & Protokol Transmisi', 'credits' => 3, 'semester' => 4, 'skills' => ['REST APIs', 'Microservices', 'GraphQL APIs', 'PostgreSQL']],
+                ['name' => 'Administrasi Server & Infra Cloud', 'credits' => 3, 'semester' => 4, 'skills' => ['Linux Administration', 'Prometheus', 'Grafana', 'Ansible']],
+                ['name' => 'Manajemen Proyek Telekomunikasi', 'credits' => 2, 'semester' => 2, 'skills' => ['Agile Project Management', 'Time Management', 'Stakeholder Communication']],
             ],
-            [
-                'code' => 'TI-403',
-                'name' => 'Pengembangan Aplikasi Mobile Terapan',
-                'semester' => 4,
-                'credits' => 3,
-                'skills' => ['Flutter', 'GraphQL APIs'],
-                'gap' => [
-                    ['skill' => 'Flutter', 'type' => 'aligned', 'urgency' => 1, 'match' => 88.0, 'count' => 32],
-                ]
+            'sains data' => [
+                ['name' => 'Pemrograman Data & Statistik', 'credits' => 4, 'semester' => 2, 'skills' => ['Python', 'Pandas', 'Scikit-learn', 'MySQL']],
+                ['name' => 'Machine Learning & Deep Learning', 'credits' => 4, 'semester' => 4, 'skills' => ['Machine Learning', 'Deep Learning', 'PyTorch / TensorFlow', 'Computer Vision']],
+                ['name' => 'Data Engineering & Big Data Warehousing', 'credits' => 3, 'semester' => 5, 'skills' => ['Data Engineering', 'Snowflake', 'Spark', 'PostgreSQL']],
+                ['name' => 'Visualisasi Data & Analytics', 'credits' => 3, 'semester' => 3, 'skills' => ['Tableau', 'Natural Language Processing', 'LLM Fine-tuning']],
+                ['name' => 'Analisis Masalah & Berpikir Kritis', 'credits' => 2, 'semester' => 1, 'skills' => ['Problem Solving', 'Technical Writing', 'Continuous Learning']],
             ],
-            [
-                'code' => 'TI-302',
-                'name' => 'Keamanan Siber & Arsitektur Jaringan',
-                'semester' => 3,
-                'credits' => 3,
-                'skills' => ['Zero Trust Architecture', 'PostgreSQL'],
-                'gap' => [
-                    ['skill' => 'Zero Trust Architecture', 'type' => 'under_skill', 'urgency' => 9, 'match' => 30.0, 'count' => 15],
-                ]
+            'sistem informasi' => [
+                ['name' => 'Analisis & Perancangan Sistem Informasi', 'credits' => 4, 'semester' => 3, 'skills' => ['Requirements Analysis', 'Stakeholder Communication', 'Agile Project Management']],
+                ['name' => 'Pengembangan Aplikasi Web Bisnis', 'credits' => 4, 'semester' => 4, 'skills' => ['Laravel', 'PHP', 'MySQL', 'HTML5', 'CSS3', 'REST APIs']],
+                ['name' => 'Business Intelligence & Data Analisis', 'credits' => 3, 'semester' => 5, 'skills' => ['Tableau', 'PostgreSQL', 'Scrum Master']],
+                ['name' => 'Desain Antarmuka Produk & UX', 'credits' => 3, 'semester' => 2, 'skills' => ['Figma', 'React.js']],
+                ['name' => 'Manajemen Proyek TI & Komunikasi Stakeholder', 'credits' => 2, 'semester' => 3, 'skills' => ['Agile Project Management', 'Stakeholder Communication', 'Problem Solving', 'Time Management']],
             ],
         ];
 
-        // 3. Seed Courses & Gap Analysis for all study programs
+        $skillsByName = Skill::all()->keyBy('nama');
         $allStudyPrograms = StudyProgram::all();
 
         foreach ($allStudyPrograms as $sp) {
             $dosens = User::role('dosen')->where('study_program_id', $sp->id)->get();
+            $nameLower = mb_strtolower($sp->nama_prodi, 'UTF-8');
 
-            foreach ($courseTemplates as $index => $tmpl) {
-                // Course Code prefix based on institution code
+            $templateKey = 'informatika';
+            if (str_contains($nameLower, 'elektronika')) {
+                $templateKey = 'elektronika';
+            } elseif (str_contains($nameLower, 'telekomunikasi')) {
+                $templateKey = 'telekomunikasi';
+            } elseif (str_contains($nameLower, 'sains data')) {
+                $templateKey = 'sains data';
+            } elseif (str_contains($nameLower, 'sistem informasi') || str_contains($nameLower, 'manajemen informatika')) {
+                $templateKey = 'sistem informasi';
+            }
+
+            $selectedTemplates = $prodiTemplates[$templateKey];
+
+            foreach ($selectedTemplates as $index => $tmpl) {
                 $prefix = match (true) {
                     str_contains($sp->nama_institusi, 'Jakarta') => 'PNJ',
                     str_contains($sp->nama_institusi, 'Bandung') || str_contains($sp->nama_institusi, 'POLBAN') => 'PLB',
@@ -123,39 +116,26 @@ class SystemDataSeeder extends Seeder
                     'status_verifikasi_ekstraksi' => true,
                 ]);
 
-                // Link Skills
                 $skillIds = [];
                 foreach ($tmpl['skills'] as $sName) {
-                    if (isset($skills[$sName])) {
-                        $skillIds[] = $skills[$sName]->id;
+                    if (isset($skillsByName[$sName])) {
+                        $skillIds[] = $skillsByName[$sName]->id;
                     }
                 }
-                if (!empty($skillIds)) {
+                if (! empty($skillIds)) {
                     $course->skills()->sync($skillIds);
                 }
 
-                // Link to a Lecturer if available
                 if ($dosens->isNotEmpty()) {
                     $assignedDosen = $dosens[$index % $dosens->count()];
                     $assignedDosen->courses()->syncWithoutDetaching([$course->id]);
                 }
-
-                // Gap Analysis for this prodi
-                foreach ($tmpl['gap'] as $gapData) {
-                    if (isset($skills[$gapData['skill']])) {
-                        GapAnalysis::create([
-                            'study_program_id' => $sp->id,
-                            'skill_id' => $skills[$gapData['skill']]->id,
-                            'tipe_mismatch' => $gapData['type'],
-                            'skor_urgensi' => $gapData['urgency'],
-                            'match_rate' => $gapData['match'],
-                            'periode_data' => '2026-08',
-                            'evidence_count' => $gapData['count'],
-                        ]);
-                    }
-                }
             }
         }
+
+        // Run gap analysis engine dynamically for seeded programs
+        $analyzer = app(\App\Services\Analysis\SkillGapAnalyzerService::class);
+        $analyzer->analyze(null, '2026-08');
 
         // 4. Seed Scraping Agents
         ScrapingAgent::create([

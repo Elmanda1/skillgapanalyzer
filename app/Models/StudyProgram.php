@@ -17,6 +17,11 @@ class StudyProgram extends Model
         return $this->hasMany(User::class);
     }
 
+    public function courses()
+    {
+        return $this->hasMany(Course::class);
+    }
+
     /**
      * Get effective sectors for the study program (from DB or smart derivation from nama_prodi).
      *
