@@ -296,9 +296,7 @@ export default function Dashboard() {
               disabled={isSyncing}
               className="btn-primary flex items-center gap-2 disabled:opacity-70 disabled:cursor-wait"
             >
-              <span className={`material-symbols-outlined text-[16px] ${isSyncing ? 'animate-spin' : ''}`}>
-                refresh
-              </span>
+              <Icon className={`text-[16px] ${isSyncing ? 'animate-spin' : ''}`} name="refresh" />
               {isSyncing ? 'Mensinkronkan...' : 'Sinkronisasi'}
             </button>
           </div>
