@@ -510,9 +510,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/competency', [\App\Http\Controllers\GapMapController::class, 'competencyMap'])->name('competency');
     Route::get('/ai-analysis', [\App\Http\Controllers\GapMapController::class, 'aiAnalysis'])->name('ai-analysis');
 
-    Route::post('/analysis/run', function (\Illuminate\Http\Request $request, \App\Services\Analysis\SkillGapAnalyzerService $analyzer) {
+    Route::post('/analysis/run', function (\Illuminate\Http\Request $request, \App\Services\Analysis\SkillGapAnalyzerService $analyzer, \App\Services\ETL\DemandTrendAggregatorService $aggregator) {
         $programId = $request->input('study_program_id') ? (int) $request->input('study_program_id') : null;
         $period = $request->input('period');
+        $aggregator->aggregate();
         $analyzer->analyze($programId, $period);
         return back();
     })->name('analysis.run.web');
