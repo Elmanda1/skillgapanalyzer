@@ -2,4 +2,9 @@ pytest==8.0.0
 spacy
 nltk
 requests
+httpx
+pydantic
+thefuzz
+rapidfuzz
 beautifulsoup4
+lxml
