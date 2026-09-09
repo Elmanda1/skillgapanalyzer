@@ -10,9 +10,62 @@ use Illuminate\Support\Facades\DB;
 
 class SkillGapAnalyzerService
 {
+    /**
+     * Bottom-up Category to Sector mapping (changesv2_extractor.md §1 & §2.2).
+     */
+    public const CATEGORY_SECTOR_MAP = [
+        'Cloud & DevOps' => 'Teknologi & TI',
+        'AI & Data Science' => 'Teknologi & TI',
+        'Frontend Dev' => 'Teknologi & TI',
+        'Backend Dev' => 'Teknologi & TI',
+        'Database' => 'Teknologi & TI',
+        'Mobile Dev' => 'Teknologi & TI',
+        'Cybersecurity' => 'Teknologi & TI',
+        'Sales & Marketing' => 'Bisnis & Manajemen',
+        'Akuntansi & Keuangan' => 'Bisnis & Manajemen',
+        'Bisnis & Manajemen' => 'Bisnis & Manajemen',
+        'Desain & Multimedia' => 'Kreatif & Desain',
+        'Teknik Sipil & Konstruksi' => 'Teknik & Rekayasa',
+        'Teknik Mesin & Manufaktur' => 'Manufaktur',
+    ];
+
     public function __construct(
         private TaxonomyClassifierService $classifier
     ) {}
+
+    /**
+     * Check if a skill is domain-relevant to the given StudyProgram (changesv2_extractor.md §2.2 & §2.3).
+     */
+    public function isDomainRelevant(Skill $skill, StudyProgram $program, float $supplyLevel = 0.0): bool
+    {
+        // 1. If taught in curriculum (Supply > 0) -> ALWAYS relevant
+        if ($supplyLevel > 0.0) {
+            return true;
+        }
+
+        // 2. Cross-discipline competence dimensions (non-hard technical) -> ALWAYS relevant
+        $dimension = $skill->dimension ?? 'hard_technical';
+        if ($dimension !== 'hard_technical') {
+            return true;
+        }
+
+        // 3. Category sector mapping (fail-open for unmapped / newly discovered categories)
+        $kategori = $skill->kategori ?? '';
+        if ($kategori === '' || $kategori === 'Umum') {
+            return true;
+        }
+
+        // If category is not in the map -> Fail-open (returns true so newly discovered skills aren't silently lost)
+        if (! isset(self::CATEGORY_SECTOR_MAP[$kategori])) {
+            return true;
+        }
+
+        $skillSector = self::CATEGORY_SECTOR_MAP[$kategori];
+        $programSectors = $program->getEffectiveSectors();
+
+        // Check if skill sector intersects with program sectors
+        return in_array($skillSector, $programSectors, true);
+    }
 
     /**
      * Run full gap analysis for one or all study programs on a given period.
@@ -76,11 +129,21 @@ class SkillGapAnalyzerService
                 }
             }
 
-            // Target skills: union of program supply skills + skills with industry demand
-            $evalSkillIds = array_unique(array_merge(
+            // Target skills: union of program supply skills + skills with industry demand, filtered by Domain Affinity Guard
+            $rawCandidateSkillIds = array_unique(array_merge(
                 array_keys($supplyScores),
                 array_keys(array_filter($demandMap, fn ($d) => $d['frequency'] >= 2 || $d['percentage'] >= 0.2))
             ));
+
+            // Apply Domain Affinity Guard at the root ($evalSkillIds) - changesv2_extractor.md §2.2
+            $evalSkillIds = array_values(array_filter($rawCandidateSkillIds, function ($skillId) use ($skills, $program, $supplyScores) {
+                $skill = $skills->get($skillId);
+                if (! $skill) {
+                    return false;
+                }
+                $supplyLevel = $supplyScores[$skillId] ?? 0.0;
+                return $this->isDomainRelevant($skill, $program, $supplyLevel);
+            }));
 
             $programMatchedWeights = 0.0;
             $programTotalDemandWeights = 0.0;
@@ -118,7 +181,6 @@ class SkillGapAnalyzerService
                 );
 
                 // Weight contribution for Program Match Rate (SDD §7)
-                // Relevance multiplier based on curriculum category
                 $isDomainRelevant = ($skill->kategori && $skill->kategori !== 'Umum') || $supplyLevel > 0;
                 $relevanceMultiplier = $isDomainRelevant ? 2.5 : 0.8;
 
@@ -138,6 +200,7 @@ class SkillGapAnalyzerService
 
                 $upsertRows[] = [
                     'study_program_id' => $program->id,
+
                     'skill_id' => $skillId,
                     'tipe_mismatch' => $type,
                     'skor_urgensi' => $result['skor_urgensi'],
