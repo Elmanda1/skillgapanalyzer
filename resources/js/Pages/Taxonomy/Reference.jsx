@@ -280,7 +280,20 @@ export default function TaxonomyReference({ skills, filters = {}, summary = {} }
                   {(sk.aliases || []).length > 0 ? (
                     <div className="flex items-center gap-1.5 flex-wrap">
                       {(sk.aliases || []).slice(0, 3).map(a => (
-                        <span key={a.id} className="text-[10px] px-2 py-0.5 bg-gray-100 rounded-full text-text-secondary">{a.alias_name}</span>
+                        <span
+                          key={a.id}
+                          title={a.min_context_required ? `Guard Proksimitas Aktif (Konteks: ${Array.isArray(a.context_keywords) ? a.context_keywords.join(', ') : ''})` : undefined}
+                          className={`text-[10px] px-2 py-0.5 rounded-full inline-flex items-center gap-1 ${
+                            a.min_context_required
+                              ? 'bg-amber-50 text-amber-800 border border-amber-200'
+                              : 'bg-gray-100 text-text-secondary'
+                          }`}
+                        >
+                          {a.alias_name}
+                          {a.min_context_required && (
+                            <Icon name="shield" className="text-[10px] text-amber-600" />
+                          )}
+                        </span>
                       ))}
                       {(sk.aliases || []).length > 3 && (
                         <span className="text-[10px] px-2 py-0.5 bg-gray-100 rounded-full text-text-secondary">
@@ -292,6 +305,7 @@ export default function TaxonomyReference({ skills, filters = {}, summary = {} }
                     <span className="text-xs text-text-muted">—</span>
                   )}
                 </td>
+
                 <td className="px-5 py-3.5 text-xs text-text-secondary">{sk.sektor_industri_terkait}</td>
               </tr>
             ))}
