@@ -44,12 +44,12 @@ class UserSeeder extends Seeder
                     ['name' => 'Hendra Wijaya, S.T., M.T.', 'email' => 'dosen3@pnj.ac.id'],
                 ],
                 'mahasiswa' => [
-                    ['name' => 'Ahmad Fauzi', 'email' => 'mahasiswa1@pnj.ac.id'],
-                    ['name' => 'Siti Nurhaliza', 'email' => 'mahasiswa2@pnj.ac.id'],
-                    ['name' => 'Budi Hartono', 'email' => 'mahasiswa3@pnj.ac.id'],
-                    ['name' => 'Putri Ayu', 'email' => 'mahasiswa4@pnj.ac.id'],
-                    ['name' => 'Rizky Pratama', 'email' => 'mahasiswa5@pnj.ac.id'],
-                    ['name' => 'Nadia Safitri', 'email' => 'mahasiswa6@pnj.ac.id'],
+                    ['name' => 'Ahmad Fauzi', 'email' => 'mahasiswa1@pnj.ac.id', 'semester' => 6],
+                    ['name' => 'Siti Nurhaliza', 'email' => 'mahasiswa2@pnj.ac.id', 'semester' => 6],
+                    ['name' => 'Budi Hartono', 'email' => 'mahasiswa3@pnj.ac.id', 'semester' => 5],
+                    ['name' => 'Putri Ayu', 'email' => 'mahasiswa4@pnj.ac.id', 'semester' => 5],
+                    ['name' => 'Rizky Pratama', 'email' => 'mahasiswa5@pnj.ac.id', 'semester' => 4],
+                    ['name' => 'Nadia Safitri', 'email' => 'mahasiswa6@pnj.ac.id', 'semester' => 4],
                 ],
             ],
             [
@@ -208,13 +208,13 @@ class UserSeeder extends Seeder
 
             // Seed Mahasiswa
             foreach ($cData['mahasiswa'] as $idx => $m) {
-                $mahasiswa = User::firstOrCreate(
+                $mahasiswa = User::updateOrCreate(
                     ['email' => $m['email']],
                     [
                         'name' => $m['name'],
                         'password' => $hashedPassword,
                         'study_program_id' => $mainProgram->id,
-                        'semester' => ($idx % 8) + 1,
+                        'semester' => $m['semester'] ?? (($idx % 8) + 1),
                     ]
                 );
                 $mahasiswa->syncRoles(['mahasiswa']);
