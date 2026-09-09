@@ -172,113 +172,124 @@ Page Content:
         """
         Rule-based heuristic fallback extractor when LLM API key is not available.
         Extracts title, company, location, salary, experience, requirements & skills using BeautifulSoup & regex.
+        Safely catches unexpected parsing exceptions to prevent pipeline crash.
         """
-        soup = BeautifulSoup(raw_html, "html.parser")
+        try:
+            soup = BeautifulSoup(raw_html or "", "html.parser")
 
-        # 1. Title Extraction
-        title = "Lowongan Pekerjaan"
-        title_tag = soup.find("h1") or soup.find("meta", property="og:title")
-        if title_tag:
-            title = title_tag.get("content") if title_tag.name == "meta" else title_tag.get_text(strip=True)
-            title = re.sub(r'\s*\|\s*.*$', '', title) # Strip site name suffix
+            # 1. Title Extraction
+            title = "Lowongan Pekerjaan"
+            title_tag = soup.find("h1") or soup.find("meta", property="og:title")
+            if title_tag:
+                title = title_tag.get("content") if title_tag.name == "meta" else title_tag.get_text(strip=True)
+                title = re.sub(r'\s*\|\s*.*$', '', title) # Strip site name suffix
 
-        # 2. Company Name
-        company = "Perusahaan"
-        comp_tag = (
-            soup.find(class_=re.compile(r'company|employer|perusahaan', re.I))
-            or soup.find("meta", property="og:site_name")
-        )
-        if comp_tag:
-            company = comp_tag.get("content") if comp_tag.name == "meta" else comp_tag.get_text(strip=True)
+            # 2. Company Name
+            company = "Perusahaan"
+            comp_tag = (
+                soup.find(class_=re.compile(r'company|employer|perusahaan', re.I))
+                or soup.find("meta", property="og:site_name")
+            )
+            if comp_tag:
+                company = comp_tag.get("content") if comp_tag.name == "meta" else comp_tag.get_text(strip=True)
 
-        # 3. Location
-        location = "Indonesia"
-        loc_tag = soup.find(class_=re.compile(r'location|lokasi|city', re.I))
-        if loc_tag:
-            location = loc_tag.get_text(strip=True)
+            # 3. Location
+            location = "Indonesia"
+            loc_tag = soup.find(class_=re.compile(r'location|lokasi|city', re.I))
+            if loc_tag:
+                location = loc_tag.get_text(strip=True)
 
-        # 4. Salary detection (BUGFIX: Enhanced regex pattern supporting Rp/IDR ranges & single figures)
-        salary_min, salary_max = None, None
-        salary_match = re.search(r'(?:Rp|IDR)\.?\s*([\d.]+)\s*[-–]\s*(?:Rp|IDR)?\.?\s*([\d.]+)', trimmed_text, re.I)
-        if salary_match:
-            try:
-                min_str = salary_match.group(1).replace('.', '')
-                max_str = salary_match.group(2).replace('.', '')
-                salary_min = int(min_str)
-                salary_max = int(max_str)
-                if salary_min < 1000:
-                    salary_min *= 1_000_000
-                if salary_max < 1000:
-                    salary_max *= 1_000_000
-            except ValueError:
-                pass
-        else:
-            single_match = re.search(r'(?:Gaji|Salary|IDR|Rp)\.?\s*([\d.]+)', trimmed_text, re.I)
-            if single_match:
+            # 4. Salary detection (BUGFIX: Enhanced regex pattern supporting Rp/IDR ranges & single figures)
+            salary_min, salary_max = None, None
+            salary_match = re.search(r'(?:Rp|IDR)\.?\s*([\d.]+)\s*[-–]\s*(?:Rp|IDR)?\.?\s*([\d.]+)', trimmed_text, re.I)
+            if salary_match:
                 try:
-                    val = int(single_match.group(1).replace('.', ''))
-                    if val > 100_000:
-                        salary_min = val
-                except ValueError:
+                    min_str = salary_match.group(1).replace('.', '')
+                    max_str = salary_match.group(2).replace('.', '')
+                    salary_min = int(min_str)
+                    salary_max = int(max_str)
+                    if salary_min < 1000:
+                        salary_min *= 1_000_000
+                    if salary_max < 1000:
+                        salary_max *= 1_000_000
+                except (ValueError, OverflowError):
                     pass
+            else:
+                single_match = re.search(r'(?:Gaji|Salary|IDR|Rp)\.?\s*([\d.]+)', trimmed_text, re.I)
+                if single_match:
+                    try:
+                        val = int(single_match.group(1).replace('.', ''))
+                        if val > 100_000:
+                            salary_min = val
+                    except (ValueError, OverflowError):
+                        pass
 
-        # 5. Remote detection
-        is_remote = bool(re.search(r'\b(remote|wfh|work from home)\b', trimmed_text, re.I))
+            # 5. Remote detection
+            is_remote = bool(re.search(r'\b(remote|wfh|work from home)\b', trimmed_text, re.I))
 
-        # 6. Job Type heuristic (BUGFIX: Populated in fallback pathway)
-        job_type = "Full-time"
-        if re.search(r'\b(internship|magang)\b', trimmed_text, re.I):
-            job_type = "Internship"
-        elif re.search(r'\b(kontrak|contract)\b', trimmed_text, re.I):
-            job_type = "Contract"
-        elif re.search(r'\b(part-time|paruh waktu)\b', trimmed_text, re.I):
-            job_type = "Part-time"
+            # 6. Job Type heuristic
+            job_type = "Full-time"
+            if re.search(r'\b(internship|magang)\b', trimmed_text, re.I):
+                job_type = "Internship"
+            elif re.search(r'\b(kontrak|contract)\b', trimmed_text, re.I):
+                job_type = "Contract"
+            elif re.search(r'\b(part-time|paruh waktu)\b', trimmed_text, re.I):
+                job_type = "Part-time"
 
-        # 7. Experience requirement heuristic (BUGFIX: Populated in fallback pathway)
-        job_exp = None
-        exp_match = re.search(r'\b(\d+\s*[-–]?\s*\d*\s*tahun|\d+\s*\+?\s*years?)\b', trimmed_text, re.I)
-        if exp_match:
-            job_exp = exp_match.group(1).strip()
+            # 7. Experience requirement heuristic
+            job_exp = None
+            exp_match = re.search(r'\b(\d+\s*[-–]?\s*\d*\s*tahun|\d+\s*\+?\s*years?)\b', trimmed_text, re.I)
+            if exp_match:
+                job_exp = exp_match.group(1).strip()
 
-        # 8. Sector heuristic (BUGFIX: Populated in fallback pathway)
-        sektor = "Umum"
-        if re.search(r'\b(developer|software|engineer|tech|ti|it|data|cyber|cloud)\b', trimmed_text, re.I):
-            sektor = "Teknologi & TI"
-        elif re.search(r'\b(finance|akuntansi|banking|keuangan)\b', trimmed_text, re.I):
-            sektor = "Keuangan"
+            # 8. Sector heuristic
+            sektor = "Umum"
+            if re.search(r'\b(developer|software|engineer|tech|ti|it|data|cyber|cloud)\b', trimmed_text, re.I):
+                sektor = "Teknologi & TI"
+            elif re.search(r'\b(finance|akuntansi|banking|keuangan)\b', trimmed_text, re.I):
+                sektor = "Keuangan"
 
-        # 9. Requirements extraction heuristic (BUGFIX: Populated in fallback pathway)
-        requirements = []
-        req_section = re.search(r'(?:kualifikasi|persyaratan|requirements|qualifications)[\s\S]{1,500}', trimmed_text, re.I)
-        if req_section:
-            lines = req_section.group(0).split('\n')[1:8]
-            for line in lines:
-                clean_line = re.sub(r'^[•\-\*1-9\.]+\s*', '', line.strip())
-                if len(clean_line) > 5 and not re.search(r'^(kualifikasi|persyaratan|requirements|qualifications)$', clean_line, re.I):
-                    requirements.append(clean_line)
+            # 9. Requirements extraction heuristic
+            requirements = []
+            req_section = re.search(r'(?:kualifikasi|persyaratan|requirements|qualifications)[\s\S]{1,500}', trimmed_text, re.I)
+            if req_section:
+                lines = req_section.group(0).split('\n')[1:8]
+                for line in lines:
+                    clean_line = re.sub(r'^[•\-\*1-9\.]+\s*', '', line.strip())
+                    if len(clean_line) > 5 and not re.search(r'^(kualifikasi|persyaratan|requirements|qualifications)$', clean_line, re.I):
+                        requirements.append(clean_line)
 
-        # 10. Skill keywords discovery from text
-        common_skills = [
-            "Python", "Docker", "Kubernetes", "React", "Node.js", "Laravel", "PHP",
-            "SQL", "PostgreSQL", "MySQL", "AWS", "CI/CD", "Git", "Figma", "Golang"
-        ]
-        discovered_skills = [s for s in common_skills if re.search(r'\b' + re.escape(s) + r'\b', trimmed_text, re.I)]
+            # 10. Skill keywords discovery from text
+            common_skills = [
+                "Python", "Docker", "Kubernetes", "React", "Node.js", "Laravel", "PHP",
+                "SQL", "PostgreSQL", "MySQL", "AWS", "CI/CD", "Git", "Figma", "Golang"
+            ]
+            discovered_skills = [s for s in common_skills if re.search(r'\b' + re.escape(s) + r'\b', trimmed_text, re.I)]
 
-        # BUGFIX: Description only gets "..." if text exceeds 500 chars
-        desc = trimmed_text[:500] + ("..." if len(trimmed_text) > 500 else "")
+            desc = trimmed_text[:500] + ("..." if len(trimmed_text) > 500 else "")
 
-        return JobExtractionSchema(
-            title=title or "Lowongan Pekerjaan",
-            company_name=company or "Perusahaan",
-            location=location or "Indonesia",
-            salary_min=salary_min,
-            salary_max=salary_max,
-            job_type=job_type,
-            job_experience=job_exp,
-            is_remote=is_remote,
-            sektor=sektor,
-            description=desc,
-            requirements=requirements,
-            skills=discovered_skills,
-            source_url=url,
-        )
+            return JobExtractionSchema(
+                title=title or "Lowongan Pekerjaan",
+                company_name=company or "Perusahaan",
+                location=location or "Indonesia",
+                salary_min=salary_min,
+                salary_max=salary_max,
+                job_type=job_type,
+                job_experience=job_exp,
+                is_remote=is_remote,
+                sektor=sektor,
+                description=desc,
+                requirements=requirements,
+                skills=discovered_skills,
+                source_url=url,
+            )
+        except Exception as e:
+            # RELIABILITY FIX: Prevent unexpected parsing errors on malformed HTML from crashing the pipeline
+            logger.error(f"Fallback parser encountered error for {url}: {e}")
+            return JobExtractionSchema(
+                title="Lowongan Pekerjaan",
+                company_name="Perusahaan",
+                location="Indonesia",
+                description=trimmed_text[:500] if trimmed_text else "Content unavailable",
+                source_url=url,
+            )

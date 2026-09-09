@@ -148,8 +148,8 @@ class HeuristicCrawler:
 
         return list(set(links))
 
-    async def fetch_page(self, client: Any, url: str, ignore_visited: bool = False) -> Optional[str]:
-        """Fetch page content asynchronously with politeness delay."""
+    async def fetch_page(self, client: Any, url: str, ignore_visited: bool = False, max_retries: int = 3) -> Optional[str]:
+        """Fetch page content asynchronously with politeness delay and exponential backoff retries."""
         # BUGFIX: Allow forcing fetch via ignore_visited if URL was visited during crawling
         if not ignore_visited and url in self.visited_urls:
             return None
@@ -157,25 +157,41 @@ class HeuristicCrawler:
         self.visited_urls.add(url)
         await asyncio.sleep(self.delay)
 
-        try:
-            if httpx is not None:
-                if isinstance(client, httpx.AsyncClient):
-                    response = await client.get(url, headers=self.headers, timeout=10.0, follow_redirects=True)
-                    if response.status_code == 200:
-                        return response.text
-                else:
-                    async with httpx.AsyncClient(headers=self.headers, follow_redirects=True) as local_client:
-                        response = await local_client.get(url, timeout=10.0)
+        for attempt in range(1, max_retries + 1):
+            try:
+                if httpx is not None:
+                    if isinstance(client, httpx.AsyncClient):
+                        response = await client.get(url, headers=self.headers, timeout=10.0, follow_redirects=True)
                         if response.status_code == 200:
                             return response.text
-            else:
-                import urllib.request
-                req = urllib.request.Request(url, headers=self.headers)
-                with urllib.request.urlopen(req, timeout=10) as resp:
-                    return resp.read().decode('utf-8', errors='ignore')
-        except Exception as e:
-            logger.warning(f"Failed to fetch {url}: {e}")
-            return None
+                        elif response.status_code in (429, 502, 503, 504) and attempt < max_retries:
+                            backoff = 0.5 * (2 ** (attempt - 1))
+                            logger.warning(f"Transient HTTP {response.status_code} for {url}. Retrying in {backoff:.1f}s (Attempt {attempt}/{max_retries})")
+                            await asyncio.sleep(backoff)
+                            continue
+                    else:
+                        async with httpx.AsyncClient(headers=self.headers, follow_redirects=True) as local_client:
+                            response = await local_client.get(url, timeout=10.0)
+                            if response.status_code == 200:
+                                return response.text
+                            elif response.status_code in (429, 502, 503, 504) and attempt < max_retries:
+                                backoff = 0.5 * (2 ** (attempt - 1))
+                                logger.warning(f"Transient HTTP {response.status_code} for {url}. Retrying in {backoff:.1f}s (Attempt {attempt}/{max_retries})")
+                                await asyncio.sleep(backoff)
+                                continue
+                else:
+                    import urllib.request
+                    req = urllib.request.Request(url, headers=self.headers)
+                    with urllib.request.urlopen(req, timeout=10) as resp:
+                        return resp.read().decode('utf-8', errors='ignore')
+            except Exception as e:
+                if attempt < max_retries:
+                    backoff = 0.5 * (2 ** (attempt - 1))
+                    logger.warning(f"Fetch error for {url}: {e}. Retrying in {backoff:.1f}s (Attempt {attempt}/{max_retries})")
+                    await asyncio.sleep(backoff)
+                else:
+                    logger.warning(f"Failed to fetch {url} after {max_retries} attempts: {e}")
+                    return None
 
         return None
 

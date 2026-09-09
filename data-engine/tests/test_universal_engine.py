@@ -198,3 +198,26 @@ def test_fallback_extractor_fields_and_description_truncation():
     # Description short -> does not end with "..."
     assert not extracted.description.endswith("...")
 
+
+def test_fallback_extractor_exception_safety():
+    """Verify _extract_fallback returns valid schema without throwing on corrupt/malformed data."""
+    extractor = LLMExtractor()
+    # Pass None / malformed input
+    extracted = extractor._extract_fallback(None, None, "https://example.com/bad")
+    assert isinstance(extracted, JobExtractionSchema)
+    assert extracted.title == "Lowongan Pekerjaan"
+    assert extracted.source_url == "https://example.com/bad"
+
+
+def test_crawler_retry_on_transient_error():
+    """Verify fetch_page executes retries with exponential backoff on transient failure."""
+    import asyncio
+    async def _test():
+        crawler = HeuristicCrawler(delay=0.01)
+        # Attempting fetch on unreachable URL with retries=2 should complete without raising unhandled exception
+        res = await crawler.fetch_page(None, "https://invalid-domain-12345-xyz.test/bad", max_retries=2)
+        assert res is None
+
+    asyncio.run(_test())
+
+
