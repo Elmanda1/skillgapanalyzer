@@ -26,10 +26,10 @@ export default function CompetencyMap({
   initialGaps = [],
   studyPrograms = [],
   selectedProgramId = 1,
-  selectedPeriod = '2026-08',
+  selectedPeriod = '',
   clusterData = [],
   trends = [],
-  availablePeriods = ['2026-08'],
+  availablePeriods = [],
 }) {
   const toast = useToast();
   const [searchQuery, setSearchQuery] = useState('');

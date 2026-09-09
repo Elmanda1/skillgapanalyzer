@@ -518,24 +518,12 @@ Route::middleware(['auth'])->group(function () {
         $programId = $request->input('study_program_id') ? (int) $request->input('study_program_id') : null;
         $period = $request->input('period');
         $aggregator->aggregate();
-        $analyzer->analyze($programId, $period);
-        return back();
+        $res = $analyzer->analyze($programId, $period);
+        $activePeriod = $res['period'] ?? $period;
+        return back()->with('status', "Re-Analisis berhasil diperbarui (Periode: {$activePeriod}).");
     })->name('analysis.run.web');
 
     Route::get('/scraping', [\App\Http\Controllers\ScrapingController::class, 'index'])->name('scraping');
-
-    Route::get('/settings', function () {
-        return inertia('Settings');
-    })->name('settings');
-
-    Route::get('/help', function () {
-        return inertia('Help');
-    })->name('help');
-
-    Route::get('/skills', function () {
-        return inertia('SkillManager');
-    })->name('skills');
-
-    Route::get('/jobs', [JobController::class, 'index'])->name('jobs');
+    Route::get('/scraping/sync-stream', [\App\Http\Controllers\ScrapingController::class, 'syncStream'])->name('scraping.sync-stream');
 
 });

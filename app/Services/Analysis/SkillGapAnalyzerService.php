@@ -83,12 +83,10 @@ class SkillGapAnalyzerService
      */
     public function analyze(?int $studyProgramId = null, ?string $period = null, string $source = 'loker.id'): array
     {
-        // 1. Determine period
-        if (! $period) {
-            $period = DemandTrend::query()
-                ->where('source', $source)
-                ->orderBy('period', 'desc')
-                ->value('period') ?? date('Y-m');
+        // 1. Determine period with fallback if requested period has no data
+        $latestPeriod = DemandTrend::query()->where('source', $source)->max('period') ?? date('Y-m');
+        if (! $period || ! DemandTrend::query()->where('period', $period)->where('source', $source)->exists()) {
+            $period = $latestPeriod;
         }
 
         // 2. Load demand data for this period

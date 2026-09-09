@@ -59,6 +59,7 @@ INDEX_PATH = OUT_DIR / "_index.json"
 AGGREGATE_PATH = OUT_DIR / "lowongan_loker_id.json"
 LIST_RAW_DIR = OUT_DIR / "_listing"
 LOGS_DIR = OUT_DIR / "_logs"
+MIN_INTERVAL = 2.0
 
 # ========================================================================
 # POLICY LOADING

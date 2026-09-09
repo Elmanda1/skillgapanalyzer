@@ -9,10 +9,10 @@ export default function AIAnalysis({
   criticalGaps = [],
   studyPrograms = [],
   selectedProgramId = 1,
-  selectedPeriod = '2026-08',
+  selectedPeriod = '',
   radarDimensions = [],
   totalEvaluated = 0,
-  availablePeriods = ['2026-08'],
+  availablePeriods = [],
 }) {
   const toast = useToast();
   const [searchQuery, setSearchQuery] = useState('');

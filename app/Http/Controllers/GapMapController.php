@@ -31,7 +31,12 @@ class GapMapController extends Controller
             ? (int) $request->query('program_id')
             : ($user->study_program_id ?? $studyPrograms->first()?->id ?? 1);
 
-        $period = $request->query('period') ?: (GapAnalysis::max('periode_data') ?? '2026-08');
+        $latestAvailablePeriod = DemandTrend::max('period') ?? GapAnalysis::max('periode_data') ?? date('Y-m');
+        $period = $request->query('period') ?: $latestAvailablePeriod;
+
+        if (! GapAnalysis::where('periode_data', $period)->exists() && ! DemandTrend::where('period', $period)->exists()) {
+            $period = $latestAvailablePeriod;
+        }
 
         // Check if gap analyses exist, if not run analyzer
         $gapsCount = GapAnalysis::where('study_program_id', $selectedProgramId)
@@ -39,7 +44,8 @@ class GapMapController extends Controller
             ->count();
 
         if ($gapsCount === 0) {
-            $this->analyzerService->analyze($selectedProgramId, $period);
+            $analysisResult = $this->analyzerService->analyze($selectedProgramId, $period);
+            $period = $analysisResult['period'] ?? $period;
         }
 
         // Fetch gap analyses with skills
@@ -127,7 +133,12 @@ class GapMapController extends Controller
             ? (int) $request->query('program_id')
             : ($user->study_program_id ?? $studyPrograms->first()?->id ?? 1);
 
-        $period = $request->query('period') ?: (GapAnalysis::max('periode_data') ?? '2026-08');
+        $latestAvailablePeriod = DemandTrend::max('period') ?? GapAnalysis::max('periode_data') ?? date('Y-m');
+        $period = $request->query('period') ?: $latestAvailablePeriod;
+
+        if (! GapAnalysis::where('periode_data', $period)->exists() && ! DemandTrend::where('period', $period)->exists()) {
+            $period = $latestAvailablePeriod;
+        }
 
         // Fetch high-urgency gaps
         $gaps = GapAnalysis::with(['skill.aliases'])
@@ -138,7 +149,8 @@ class GapMapController extends Controller
             ->get();
 
         if ($gaps->isEmpty()) {
-            $this->analyzerService->analyze($selectedProgramId, $period);
+            $analysisResult = $this->analyzerService->analyze($selectedProgramId, $period);
+            $period = $analysisResult['period'] ?? $period;
             $gaps = GapAnalysis::with(['skill.aliases'])
                 ->where('study_program_id', $selectedProgramId)
                 ->where('periode_data', $period)
