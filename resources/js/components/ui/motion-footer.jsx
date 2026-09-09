@@ -1,8 +1,8 @@
 import * as React from "react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { Link } from "@inertiajs/react";
+import { Link, router } from "@inertiajs/react";
 import { cn } from "@/lib/utils";
 import { ArrowRight, Sparkles, BookOpen, ShieldCheck } from "lucide-react";
 import BrandLogo from "@/components/BrandLogo";
@@ -337,6 +337,19 @@ export function CinematicFooter() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const scrollToSection = useCallback((sectionId) => {
+    const el = document.getElementById(sectionId);
+    if (el) {
+      const y = el.getBoundingClientRect().top + window.pageYOffset - 90;
+      window.scrollTo({
+        top: y,
+        behavior: "smooth",
+      });
+    } else {
+      window.location.href = `/#${sectionId}`;
+    }
+  }, []);
+
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: STYLES }} />
@@ -417,8 +430,9 @@ export function CinematicFooter() {
                 </MagneticButton>
 
                 <MagneticButton
-                  as="a"
-                  href="#live-demo"
+                  as="button"
+                  type="button"
+                  onClick={() => scrollToSection("live-demo")}
                   className="footer-glass-pill px-7 py-4 rounded-full font-semibold text-sm sm:text-base flex items-center gap-2.5 group"
                 >
                   Coba Simulasi Kurikulum
@@ -429,28 +443,29 @@ export function CinematicFooter() {
               <div className="flex flex-wrap justify-center gap-2 sm:gap-4 w-full mt-2">
                 <MagneticButton
                   as={Link}
-                  href="/login"
+                  href="/login?role=kaprodi"
                   className="footer-glass-pill px-5 py-2.5 rounded-full font-medium text-xs"
                 >
                   Portal Kaprodi
                 </MagneticButton>
                 <MagneticButton
                   as={Link}
-                  href="/login"
+                  href="/login?role=dosen"
                   className="footer-glass-pill px-5 py-2.5 rounded-full font-medium text-xs"
                 >
                   Portal Dosen
                 </MagneticButton>
                 <MagneticButton
                   as={Link}
-                  href="/login"
+                  href="/login?role=mahasiswa"
                   className="footer-glass-pill px-5 py-2.5 rounded-full font-medium text-xs"
                 >
                   Portal Mahasiswa
                 </MagneticButton>
                 <MagneticButton
-                  as="a"
-                  href="#faq"
+                  as="button"
+                  type="button"
+                  onClick={() => scrollToSection("faq")}
                   className="footer-glass-pill px-5 py-2.5 rounded-full font-medium text-xs"
                 >
                   Pusat Bantuan & FAQ

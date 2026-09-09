@@ -330,7 +330,7 @@ function LiveDemoSection() {
   const status = getStatus(calculatedScore);
 
   return (
-    <section id="live-demo" className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50/60 dark:bg-slate-900/90 border-y border-gray-200 dark:border-slate-800 transition-colors lazy-section">
+    <section id="live-demo" className="scroll-mt-24 py-20 px-4 sm:px-6 lg:px-8 bg-gray-50/60 dark:bg-slate-900/90 border-y border-gray-200 dark:border-slate-800 transition-colors lazy-section">
       <div className="max-w-7xl mx-auto">
         {/* Split Two-Column Container */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -704,7 +704,7 @@ function PersonaTabsSection() {
                   </div>
                   <div className="mt-5">
                     <Link
-                      href="/login"
+                      href={`/login?role=${current.id}`}
                       className="w-full py-2.5 bg-white text-emerald-950 font-bold text-xs rounded-xl flex items-center justify-center gap-2 hover:bg-emerald-50 transition-colors"
                     >
                       Buka Dashboard {current.role.split(' ')[0]}
@@ -871,7 +871,7 @@ function FAQSection() {
   ];
 
   return (
-    <section id="faq" className="py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-slate-950 transition-colors lazy-section">
+    <section id="faq" className="scroll-mt-24 py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-slate-950 transition-colors lazy-section">
       <div className="max-w-3xl mx-auto">
         <div className="text-center mb-12">
           <span className="badge badge-gray mb-3 inline-flex">Paling Sering Ditanyakan</span>
@@ -950,6 +950,27 @@ function FAQSection() {
 
 // ─── Main LandingPage ──────────────────────────────────────────────────────
 export default function LandingPage() {
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handleHashScroll = () => {
+      const hash = window.location.hash ? window.location.hash.replace('#', '') : null;
+      const params = new URLSearchParams(window.location.search);
+      const targetId = hash || params.get('scrollTo');
+      if (targetId) {
+        const el = document.getElementById(targetId);
+        if (el) {
+          setTimeout(() => {
+            const y = el.getBoundingClientRect().top + window.pageYOffset - 90;
+            window.scrollTo({ top: y, behavior: 'smooth' });
+          }, 150);
+        }
+      }
+    };
+    handleHashScroll();
+    window.addEventListener('hashchange', handleHashScroll);
+    return () => window.removeEventListener('hashchange', handleHashScroll);
+  }, []);
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans selection:bg-emerald-100 selection:text-emerald-900 overflow-x-hidden">
       {/* ── Tubelight Floating Navbar with Light Lamp ── */}

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useState, useRef, useEffect } from 'react';
-import { Link, useForm } from '@inertiajs/react';
+import { Link, useForm, usePage } from '@inertiajs/react';
 import {
   Card,
   CardHeader,
@@ -64,19 +64,53 @@ const DEMO_ROLES = [
 
 const DEMO_PASSWORD = 'password';
 
+const getRoleFromUrl = (urlStr) => {
+  try {
+    let search = '';
+    if (typeof window !== 'undefined' && window.location.search) {
+      search = window.location.search;
+    } else if (urlStr && urlStr.includes('?')) {
+      search = urlStr.substring(urlStr.indexOf('?'));
+    }
+    if (!search) return null;
+    const params = new URLSearchParams(search);
+    const roleParam = params.get('role');
+    if (!roleParam) return null;
+    return DEMO_ROLES.find((r) => r.role.toLowerCase() === roleParam.toLowerCase()) || null;
+  } catch (e) {
+    return null;
+  }
+};
+
 export default function LoginPage() {
+  const { url } = usePage();
+  const initialRole = getRoleFromUrl(url);
+
   const { resolvedTheme } = useTheme();
   const [showPassword, setShowPassword] = useState(false);
-  const [selectedRole, setSelectedRole] = useState(null);
+  const [selectedRole, setSelectedRole] = useState(() => (initialRole ? initialRole.role : null));
   const [rememberMe, setRememberMe] = useState(false);
 
   const { data, setData, post, processing, errors, reset } = useForm({
-    email: '',
-    password: '',
+    email: initialRole ? initialRole.email : '',
+    password: initialRole ? DEMO_PASSWORD : '',
     remember: false,
   });
 
   const canvasRef = useRef(null);
+
+  // Synchronize when URL changes (e.g. navigation between roles or history back/forward)
+  useEffect(() => {
+    const matchedRole = getRoleFromUrl(url);
+    if (matchedRole) {
+      setSelectedRole(matchedRole.role);
+      setData((prev) => ({
+        ...prev,
+        email: matchedRole.email,
+        password: DEMO_PASSWORD,
+      }));
+    }
+  }, [url]);
 
   // Dynamic ambient floating particle system
   useEffect(() => {
