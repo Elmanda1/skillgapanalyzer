@@ -48,7 +48,7 @@ LISTING_URL_PATTERNS = [
 SKIP_URL_PATTERNS = [
     r'/(login|register|signup|account|profile|cart|checkout|admin|auth)',
     r'\.(png|jpg|jpeg|gif|css|js|svg|ico|pdf|zip)$',
-    r'/(privacy|terms|about|contact|help|faq)',
+    r'/(privacy|terms|about|contact|help|faq|blog|news|article|articles|tag|category|author)',
 ]
 
 
@@ -107,9 +107,10 @@ class HeuristicCrawler:
             if re.search(pattern, path, re.IGNORECASE):
                 return True
 
-        # Fallback heuristic: depth >= 2 with numeric or slug ID
+        # BUGFIX: Fallback heuristic refinement - exclude non-job root paths (blog, news, etc.)
         segments = [s for s in path.split('/') if s]
-        if len(segments) >= 2 and any(char.isdigit() for char in segments[-1]):
+        non_job_roots = {"blog", "news", "article", "articles", "tag", "category", "author", "terms", "privacy", "about"}
+        if len(segments) >= 2 and segments[0].lower() not in non_job_roots and any(char.isdigit() for char in segments[-1]):
             return True
 
         return False
@@ -147,9 +148,10 @@ class HeuristicCrawler:
 
         return list(set(links))
 
-    async def fetch_page(self, client: Any, url: str) -> Optional[str]:
+    async def fetch_page(self, client: Any, url: str, ignore_visited: bool = False) -> Optional[str]:
         """Fetch page content asynchronously with politeness delay."""
-        if url in self.visited_urls:
+        # BUGFIX: Allow forcing fetch via ignore_visited if URL was visited during crawling
+        if not ignore_visited and url in self.visited_urls:
             return None
 
         self.visited_urls.add(url)
@@ -179,11 +181,13 @@ class HeuristicCrawler:
 
     async def crawl(self, seed_url: str) -> Dict[str, List[str]]:
         """
-        Main async crawl execution loop.
+        Main async crawl execution loop with concurrent batch processing and O(1) queue operations.
         Returns dict containing discovered `job_urls` and `listing_urls`.
         """
+        from collections import deque
         base_domain = urlparse(seed_url).netloc
-        queue = [(seed_url, 0)]
+        # BUGFIX: Use collections.deque for O(1) popleft/append instead of O(n) list.pop(0)
+        queue = deque([(seed_url, 0)])
         self.visited_urls.clear()
         self.discovered_job_urls.clear()
         self.discovered_listing_urls.clear()
@@ -191,30 +195,36 @@ class HeuristicCrawler:
         async with httpx.AsyncClient(headers=self.headers, follow_redirects=True) if httpx else DummyAsyncClient() as client:
             pages_crawled = 0
 
+            # BUGFIX: Utilize self.concurrency via batch gather execution
             while queue and pages_crawled < self.max_pages:
-                current_url, depth = queue.pop(0)
+                batch = []
+                while queue and len(batch) < self.concurrency and (pages_crawled + len(batch)) < self.max_pages:
+                    url, depth = queue.popleft()
+                    if url not in self.visited_urls:
+                        batch.append((url, depth))
 
-                if current_url in self.visited_urls:
+                if not batch:
                     continue
 
-                logger.info(f"Crawling [Depth {depth}]: {current_url}")
-                html = await self.fetch_page(client, current_url)
-                pages_crawled += 1
+                tasks = [self.fetch_page(client, url) for url, _ in batch]
+                results = await asyncio.gather(*tasks, return_exceptions=True)
+                pages_crawled += len(batch)
 
-                if not html:
-                    continue
+                for (current_url, depth), html in zip(batch, results):
+                    if not html or isinstance(html, Exception):
+                        continue
 
-                links = self.extract_links(current_url, html)
+                    links = self.extract_links(current_url, html)
 
-                for link in links:
-                    if self.is_job_detail_url(link):
-                        self.discovered_job_urls.add(link)
-                    elif self.is_listing_url(link):
-                        self.discovered_listing_urls.add(link)
-                        if depth + 1 <= self.max_depth and link not in self.visited_urls:
+                    for link in links:
+                        if self.is_job_detail_url(link):
+                            self.discovered_job_urls.add(link)
+                        elif self.is_listing_url(link):
+                            self.discovered_listing_urls.add(link)
+                            if depth + 1 <= self.max_depth and link not in self.visited_urls:
+                                queue.append((link, depth + 1))
+                        elif depth + 1 <= self.max_depth and link not in self.visited_urls:
                             queue.append((link, depth + 1))
-                    elif depth + 1 <= self.max_depth and link not in self.visited_urls:
-                        queue.append((link, depth + 1))
 
         return {
             "job_urls": list(self.discovered_job_urls),

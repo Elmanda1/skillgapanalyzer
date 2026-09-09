@@ -41,6 +41,17 @@ def normalize_str(text: Optional[str]) -> str:
     return re.sub(r'\s+', ' ', text)
 
 
+GENERIC_TITLES = {"lowongan pekerjaan", "job", "job vacancy", "unknown", "na", "n/a", ""}
+GENERIC_COMPANIES = {"perusahaan", "company", "unknown", "na", "n/a", ""}
+
+
+def is_generic_placeholder(title: Optional[str], company: Optional[str]) -> bool:
+    """Check if title or company name is a generic fallback placeholder."""
+    norm_title = normalize_str(title)
+    norm_comp = normalize_str(company)
+    return norm_title in GENERIC_TITLES or norm_comp in GENERIC_COMPANIES
+
+
 class MasterAggregator:
     """
     Master Aggregation & Deduplication Engine.
@@ -82,7 +93,14 @@ class MasterAggregator:
 
     def find_duplicate_index(self, new_record: Dict[str, Any]) -> Optional[int]:
         """Check if incoming job record matches an existing master record."""
+        # BUGFIX: Prevent false-positive deduplication on records with generic fallback placeholders
+        if is_generic_placeholder(new_record.get("title"), new_record.get("company_name")):
+            return None
+
         for idx, existing in enumerate(self.master_records):
+            if is_generic_placeholder(existing.get("title"), existing.get("company_name")):
+                continue
+
             score = self._compute_similarity(existing, new_record)
             if score >= self.match_threshold:
                 logger.info(

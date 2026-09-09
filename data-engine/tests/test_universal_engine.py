@@ -104,3 +104,97 @@ def test_master_aggregator_deduplication():
     assert "https://domain-a.com/job/backend-dev" in master2["source_urls"]
     assert "https://domain-b.com/careers/backend-dev" in master2["source_urls"]
     assert set(master2["skills"]) == {"Python", "PostgreSQL", "Docker"}
+
+
+def test_dedup_false_positive_prevention_on_generic_placeholders():
+    """Verify that two unrelated jobs with fallback generic titles/companies are NOT merged."""
+    aggregator = MasterAggregator(match_threshold=85)
+
+    job1 = JobExtractionSchema(
+        title="Lowongan Pekerjaan",
+        company_name="Perusahaan",
+        location="Indonesia",
+        source_url="https://site-a.com/job/1"
+    )
+    job2 = JobExtractionSchema(
+        title="Lowongan Pekerjaan",
+        company_name="Perusahaan",
+        location="Indonesia",
+        source_url="https://site-b.com/job/2"
+    )
+
+    aggregator.add_or_merge(job1)
+    aggregator.add_or_merge(job2)
+
+    # Must produce 2 separate master records, NOT false-positive merge into 1 record!
+    assert len(aggregator.master_records) == 2
+    assert aggregator.master_records[0]["source_urls"] == ["https://site-a.com/job/1"]
+    assert aggregator.master_records[1]["source_urls"] == ["https://site-b.com/job/2"]
+
+
+def test_llm_provider_auto_inference(monkeypatch):
+    """Verify provider auto-inference when only OPENAI_API_KEY is present."""
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-fake-openai-key")
+
+    extractor = LLMExtractor()
+    assert extractor.provider == "openai"
+    assert extractor.api_key == "sk-fake-openai-key"
+
+
+def test_json_markdown_cleaning():
+    """Verify clean_json_str strips markdown code block wrappers."""
+    from universal.extractor import clean_json_str
+    raw_response = "```json\n{\"title\": \"Software Engineer\"}\n```"
+    cleaned = clean_json_str(raw_response)
+    assert cleaned == '{"title": "Software Engineer"}'
+
+
+def test_fetch_page_ignore_visited():
+    """Verify ignore_visited parameter allows re-fetching seed URL."""
+    import asyncio
+    async def _test():
+        crawler = HeuristicCrawler()
+        url = "https://example.com/seed"
+        crawler.visited_urls.add(url)
+
+        # Without ignore_visited -> returns None
+        result = await crawler.fetch_page(None, url, ignore_visited=False)
+        assert result is None
+
+        # With ignore_visited=True -> allows fetch attempt
+        await crawler.fetch_page(None, url, ignore_visited=True)
+        assert url in crawler.visited_urls
+
+    asyncio.run(_test())
+
+
+def test_fallback_extractor_fields_and_description_truncation():
+    """Verify fallback extractor parses experience, job type, sector, requirements, and truncates description properly."""
+    extractor = LLMExtractor()
+    html = """
+    <html>
+        <body>
+            <h1>Fullstack Developer</h1>
+            <div class="company">PT Maju Bersama</div>
+            <p>Pengalaman minimal 2-4 tahun. Syarat: Magang / Contract</p>
+            <h3>Persyaratan:</h3>
+            <ul>
+                <li>Menguasai Laravel & React</li>
+                <li>Pengalaman dengan Docker & CI/CD</li>
+            </ul>
+            <p>Gaji Rp 12.000.000 - 18.000.000</p>
+        </body>
+    </html>
+    """
+    extracted = extractor.extract_from_html(html, "https://example.com/job/dev")
+    assert extracted.title == "Fullstack Developer"
+    assert extracted.company_name == "PT Maju Bersama"
+    assert extracted.salary_min == 12_000_000
+    assert extracted.salary_max == 18_000_000
+    assert extracted.job_experience == "2-4 tahun"
+    assert extracted.sektor == "Teknologi & TI"
+    assert len(extracted.requirements) > 0
+    # Description short -> does not end with "..."
+    assert not extracted.description.endswith("...")
+

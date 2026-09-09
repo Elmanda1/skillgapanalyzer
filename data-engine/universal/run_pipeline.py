@@ -49,45 +49,44 @@ async def run_pipeline(domain_url: str, max_pages: int = 15, max_jobs: int = 10,
     job_urls = crawl_result.get("job_urls", [])
     logger.info(f"Phase 1 Complete: Discovered {len(job_urls)} job detail URLs from {crawl_result.get('total_visited')} visited pages.")
 
+    is_fallback = False
     if not job_urls:
         logger.warning("No job detail URLs discovered. Using fallback seed URL for extraction test.")
         job_urls = [domain_url]
+        is_fallback = True
 
     job_urls = job_urls[:max_jobs]
 
     # -----------------------------------------------------------------
-    # PIPELINE 2: LLM Extraction Engine
+    # PIPELINE 2 & 3: LLM Extraction & Progressive Aggregation
     # -----------------------------------------------------------------
-    logger.info(f">>> PHASE 2: Starting LLM Extraction Engine on {len(job_urls)} job URLs...")
+    logger.info(f">>> PHASE 2 & 3: Starting Extraction & Master Aggregation on {len(job_urls)} job URLs...")
     extractor = LLMExtractor()
-    extracted_jobs = []
+    aggregator = MasterAggregator(match_threshold=85)
+    out_path = BASE_DIR.parent / "database" / "datajson" / output_file
+    extracted_count = 0
 
     for idx, url in enumerate(job_urls, 1):
         logger.info(f"Extracting [{idx}/{len(job_urls)}]: {url}")
-        html = await crawler.fetch_page(None, url)
+        # BUGFIX: Use ignore_visited=is_fallback so fallback seed URL is not skipped
+        html = await crawler.fetch_page(None, url, ignore_visited=is_fallback)
         if not html:
             continue
 
         extracted_schema = extractor.extract_from_html(html, url)
-        extracted_jobs.append(extracted_schema)
+        extracted_count += 1
         logger.info(f"Extracted: '{extracted_schema.title}' at '{extracted_schema.company_name}' (Skills: {len(extracted_schema.skills)})")
 
-    # -----------------------------------------------------------------
-    # PIPELINE 3: Master Aggregation & Deduplication Engine
-    # -----------------------------------------------------------------
-    logger.info(f">>> PHASE 3: Starting Master Aggregation & Cross-Domain Deduplication Engine...")
-    aggregator = MasterAggregator(match_threshold=85)
+        # BUGFIX: Progressive checkpointing - merge and export to disk after each item
+        aggregator.add_or_merge(extracted_schema)
+        aggregator.export_json(out_path)
 
-    for job in extracted_jobs:
-        aggregator.add_or_merge(job)
-
-    out_path = BASE_DIR.parent / "database" / "datajson" / output_file
-    total_master = aggregator.export_json(out_path)
+    total_master = len(aggregator.master_records)
 
     print(f"\n=======================================================")
     print(f" PIPELINE EXECUTION COMPLETE                           ")
     print(f" Total Discovered URLs: {len(job_urls)}                ")
-    print(f" Total Extracted:       {len(extracted_jobs)}           ")
+    print(f" Total Extracted:       {extracted_count}           ")
     print(f" Total Master Records:  {total_master}                 ")
     print(f" Output Export Path:    {out_path}                     ")
     print(f"=======================================================\n")
