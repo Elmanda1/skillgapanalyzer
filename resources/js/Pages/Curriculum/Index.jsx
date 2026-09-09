@@ -155,127 +155,130 @@ export default function CurriculumIndex({ courses, studyPrograms = [] }) {
         <p className="text-sm text-text-secondary mt-1">Kelola mata kuliah kurikulum, capaian pembelajaran, dan pemetaan skill.</p>
       </header>
 
-      <main className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+      <div className="space-y-6">
+        {/* ── Import Excel Kurikulum Card ── */}
         <ImportCard />
 
-        {/* ── Tambah Mata Kuliah ── */}
-        <section className="card p-6 lg:sticky lg:top-24">
-          <h2 className="font-display text-base font-bold text-text mb-1">Tambah Mata Kuliah</h2>
-          <p className="text-xs text-text-muted mb-5">Lengkapi data dasar mata kuliah baru.</p>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {isSuperAdmin ? (
-              <Field id="study_program_id" label={`Program Studi (${studyPrograms.length} Tersedia di DB)`} error={form.errors.study_program_id}>
-                <select
-                  id="study_program_id"
-                  required
-                  value={form.data.study_program_id}
-                  onChange={(e) => form.setData('study_program_id', e.target.value)}
-                  className={INPUT_CLASS}
-                >
-                  <option value="">-- Pilih Program Studi --</option>
-                  {studyPrograms.map((sp) => (
-                    <option key={sp.id} value={sp.id}>
-                      {sp.jenjang} {sp.nama_prodi} - {sp.nama_institusi}
-                    </option>
-                  ))}
-                </select>
-                {studyPrograms.length === 0 && (
-                  <p className="text-[11px] text-amber-600 mt-1">Belum ada program studi di database.</p>
-                )}
-              </Field>
+        <main className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+          {/* ── Daftar Mata Kuliah ── */}
+          <section className="lg:col-span-2">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-display text-base font-bold text-text">Semua Mata Kuliah</h2>
+              <span className="badge badge-gray">{courses.length} MK</span>
+            </div>
+            {courses.length === 0 ? (
+              <div className="card p-10 text-center">
+                <Icon className="text-[36px] text-text-muted mb-2" name="menu_book" />
+                <p className="text-sm text-text-secondary">Belum ada mata kuliah. Tambahkan mata kuliah pertama melalui form di samping.</p>
+              </div>
             ) : (
-              <div className="bg-brand/5 border border-brand/20 rounded-xl p-3.5">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[10px] font-bold text-brand uppercase tracking-wider">Program Studi Terkait</span>
-                  <Icon className="text-brand text-[16px]" name="domain" />
-                </div>
-                <p className="text-sm font-bold text-text">
-                  {userProdi ? `${userProdi.jenjang} ${userProdi.nama_prodi}` : 'Teknik Informatika'}
-                </p>
-                <p className="text-xs text-text-muted mt-0.5">
-                  {userProdi?.nama_institusi || 'Politeknik Negeri Jakarta'}
-                </p>
+              <div className="space-y-3">
+                {courses.map((course) => (
+                  <CourseCard key={course.id} course={course} />
+                ))}
               </div>
             )}
-            <Field id="code" label="Kode MK" error={form.errors.code}>
-              <input
-                id="code"
-                type="text"
-                value={form.data.code}
-                onChange={(e) => form.setData('code', e.target.value)}
-                placeholder="cth: TI-401"
-                className={INPUT_CLASS}
-              />
-            </Field>
-            <Field id="name" label="Nama Mata Kuliah" error={form.errors.name}>
-              <input
-                id="name"
-                type="text"
-                value={form.data.name}
-                onChange={(e) => form.setData('name', e.target.value)}
-                placeholder="cth: Pemrograman Web"
-                className={INPUT_CLASS}
-              />
-            </Field>
-            <div className="grid grid-cols-2 gap-4">
-              <Field id="semester" label="Semester" error={form.errors.semester}>
-                <input
-                  id="semester"
-                  type="number"
-                  min="1"
-                  value={form.data.semester}
-                  onChange={(e) => form.setData('semester', e.target.value)}
-                  placeholder="cth: 4"
-                  className={INPUT_CLASS}
-                />
-              </Field>
-              <Field id="credits" label="SKS" error={form.errors.credits}>
-                <input
-                  id="credits"
-                  type="number"
-                  min="1"
-                  max="12"
-                  value={form.data.credits}
-                  onChange={(e) => form.setData('credits', e.target.value)}
-                  placeholder="cth: 3"
-                  className={INPUT_CLASS}
-                />
-              </Field>
-            </div>
-            {form.errors.study_program_id && (
-              <p className="text-xs text-status-red-text">{form.errors.study_program_id}</p>
-            )}
-            <button
-              type="submit"
-              disabled={form.processing}
-              className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              <Icon className="text-[16px]" name="add" />
-              {form.processing ? 'Menyimpan...' : 'Simpan Mata Kuliah'}
-            </button>
-          </form>
-        </section>
+          </section>
 
-        {/* ── Daftar Mata Kuliah ── */}
-        <section className="lg:col-span-2">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-display text-base font-bold text-text">Semua Mata Kuliah</h2>
-            <span className="badge badge-gray">{courses.length} MK</span>
-          </div>
-          {courses.length === 0 ? (
-            <div className="card p-10 text-center">
-              <Icon className="text-[36px] text-text-muted mb-2" name="menu_book" />
-              <p className="text-sm text-text-secondary">Belum ada mata kuliah. Tambahkan mata kuliah pertama melalui form di samping.</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {courses.map((course) => (
-                <CourseCard key={course.id} course={course} />
-              ))}
-            </div>
-          )}
-        </section>
-      </main>
+          {/* ── Tambah Mata Kuliah ── */}
+          <section className="card p-6 lg:col-span-1 lg:sticky lg:top-24">
+            <h2 className="font-display text-base font-bold text-text mb-1">Tambah Mata Kuliah</h2>
+            <p className="text-xs text-text-muted mb-5">Lengkapi data dasar mata kuliah baru.</p>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {isSuperAdmin ? (
+                <Field id="study_program_id" label={`Program Studi (${studyPrograms.length} Tersedia di DB)`} error={form.errors.study_program_id}>
+                  <select
+                    id="study_program_id"
+                    required
+                    value={form.data.study_program_id}
+                    onChange={(e) => form.setData('study_program_id', e.target.value)}
+                    className={INPUT_CLASS}
+                  >
+                    <option value="">-- Pilih Program Studi --</option>
+                    {studyPrograms.map((sp) => (
+                      <option key={sp.id} value={sp.id}>
+                        {sp.jenjang} {sp.nama_prodi} - {sp.nama_institusi}
+                      </option>
+                    ))}
+                  </select>
+                  {studyPrograms.length === 0 && (
+                    <p className="text-[11px] text-amber-600 mt-1">Belum ada program studi di database.</p>
+                  )}
+                </Field>
+              ) : (
+                <div className="bg-brand/5 border border-brand/20 rounded-xl p-3.5">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[10px] font-bold text-brand uppercase tracking-wider">Program Studi Terkait</span>
+                    <Icon className="text-brand text-[16px]" name="domain" />
+                  </div>
+                  <p className="text-sm font-bold text-text">
+                    {userProdi ? `${userProdi.jenjang} ${userProdi.nama_prodi}` : 'Teknik Informatika'}
+                  </p>
+                  <p className="text-xs text-text-muted mt-0.5">
+                    {userProdi?.nama_institusi || 'Politeknik Negeri Jakarta'}
+                  </p>
+                </div>
+              )}
+              <Field id="code" label="Kode MK" error={form.errors.code}>
+                <input
+                  id="code"
+                  type="text"
+                  value={form.data.code}
+                  onChange={(e) => form.setData('code', e.target.value)}
+                  placeholder="cth: TI-401"
+                  className={INPUT_CLASS}
+                />
+              </Field>
+              <Field id="name" label="Nama Mata Kuliah" error={form.errors.name}>
+                <input
+                  id="name"
+                  type="text"
+                  value={form.data.name}
+                  onChange={(e) => form.setData('name', e.target.value)}
+                  placeholder="cth: Pemrograman Web"
+                  className={INPUT_CLASS}
+                />
+              </Field>
+              <div className="grid grid-cols-2 gap-4">
+                <Field id="semester" label="Semester" error={form.errors.semester}>
+                  <input
+                    id="semester"
+                    type="number"
+                    min="1"
+                    value={form.data.semester}
+                    onChange={(e) => form.setData('semester', e.target.value)}
+                    placeholder="cth: 4"
+                    className={INPUT_CLASS}
+                  />
+                </Field>
+                <Field id="credits" label="SKS" error={form.errors.credits}>
+                  <input
+                    id="credits"
+                    type="number"
+                    min="1"
+                    max="12"
+                    value={form.data.credits}
+                    onChange={(e) => form.setData('credits', e.target.value)}
+                    placeholder="cth: 3"
+                    className={INPUT_CLASS}
+                  />
+                </Field>
+              </div>
+              {form.errors.study_program_id && (
+                <p className="text-xs text-status-red-text">{form.errors.study_program_id}</p>
+              )}
+              <button
+                type="submit"
+                disabled={form.processing}
+                className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <Icon className="text-[16px]" name="add" />
+                {form.processing ? 'Menyimpan...' : 'Simpan Mata Kuliah'}
+              </button>
+            </form>
+          </section>
+        </main>
+      </div>
     </div>
   );
 }
