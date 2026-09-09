@@ -394,7 +394,30 @@ Route::middleware(['auth'])->group(function () {
     })->name('help');
 
     Route::get('/skills', function () {
-        return inertia('SkillManager');
+        $user = request()->user();
+
+        $courses = $user->acquiredCourses()
+            ->with('skills:id,nama')
+            ->orderBy('semester')
+            ->orderBy('code')
+            ->get()
+            ->map(fn ($c) => [
+                'id' => $c->id,
+                'code' => $c->code,
+                'name' => $c->name,
+                'semester' => $c->semester,
+                'credits' => $c->credits,
+                'status' => $c->semester < ($user->semester ?? 1) ? 'passed' : 'current',
+                'skills' => $c->skills->pluck('nama')->all(),
+            ])
+            ->values()
+            ->all();
+
+        return inertia('SkillManager', [
+            'courses' => $courses,
+            'currentSemester' => $user->semester ?? 1,
+            'studyProgram' => $user->studyProgram?->only(['id', 'nama_institusi', 'nama_prodi', 'jenjang']),
+        ]);
     })->name('skills');
 
     Route::get('/jobs', [JobController::class, 'index'])->name('jobs');
@@ -531,10 +554,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/help', function () {
         return inertia('Help');
     })->name('help');
-
-    Route::get('/skills', function () {
-        return inertia('SkillManager');
-    })->name('skills');
 
     Route::get('/jobs', [JobController::class, 'index'])->name('jobs');
 
