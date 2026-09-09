@@ -201,12 +201,13 @@ class UserSeeder extends Seeder
             }
 
             // Seed Mahasiswa
-            foreach ($cData['mahasiswa'] as $m) {
+            foreach ($cData['mahasiswa'] as $idx => $m) {
                 $mahasiswa = User::create([
                     'name' => $m['name'],
                     'email' => $m['email'],
                     'password' => $hashedPassword,
                     'study_program_id' => $mainProgram->id,
+                    'semester' => ($idx % 8) + 1,
                 ]);
                 $mahasiswa->assignRole('mahasiswa');
             }

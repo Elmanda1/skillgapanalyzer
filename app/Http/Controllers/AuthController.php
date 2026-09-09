@@ -45,13 +45,16 @@ class AuthController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')],
             'password' => ['required', 'confirmed', Password::min(8)],
+            'study_program_id' => ['nullable', 'exists:study_programs,id'],
+            'semester' => ['required', 'integer', 'min:1', 'max:14'],
         ]);
 
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => $validated['password'],
-            'study_program_id' => null,
+            'study_program_id' => $validated['study_program_id'] ?? null,
+            'semester' => $validated['semester'] ?? 1,
         ]);
 
         $user->assignRole('mahasiswa');

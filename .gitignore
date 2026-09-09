@@ -27,6 +27,7 @@ Homestead.yaml
 Thumbs.db
 /docs/superpowers/
 /graphify-out/
+.claude
 
 # Git worktrees
 /.worktrees/

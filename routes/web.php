@@ -32,7 +32,9 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::get('/register', function () {
-    return inertia('RegisterPage');
+    return inertia('RegisterPage', [
+        'studyPrograms' => StudyProgram::select('id', 'nama_institusi', 'nama_prodi', 'jenjang')->get(),
+    ]);
 })->name('register');
 Route::post('/register', [AuthController::class, 'registerStudent']);
 
@@ -179,7 +181,10 @@ Route::middleware(['auth'])->group(function () {
                     'nim' => '214172' . sprintf("%04d", $user->id),
                     'prodi' => $user->studyProgram ? ($user->studyProgram->jenjang . ' ' . $user->studyProgram->nama_prodi) : 'S1 Teknik Informatika',
                     'institusi' => $user->studyProgram ? $user->studyProgram->nama_institusi : 'Politeknik Negeri Jakarta',
-                    'semester' => 6,
+                    'semester' => $user->semester ?? 1,
+                    'totalAcquiredCourses' => $user->acquiredCourses()->count(),
+                    'totalAcquiredSkills' => $user->acquiredSkills()->count(),
+                    'acquiredSkillsList' => $user->acquiredSkills()->pluck('nama')->toArray(),
                     'ipk' => '3.78',
                     'targetRole' => 'Backend Engineer',
                 ],

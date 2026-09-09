@@ -3,12 +3,14 @@ import { Link, useForm } from '@inertiajs/react';
 import Icon from '../components/Icon.jsx';
 
 
-export default function RegisterPage() {
+export default function RegisterPage({ studyPrograms = [] }) {
   const { data, setData, post, processing, errors, reset } = useForm({
     name: '',
     email: '',
     password: '',
     password_confirmation: '',
+    study_program_id: studyPrograms[0]?.id || '',
+    semester: 1,
   });
   const [showPw, setShowPw] = useState(false);
 
@@ -19,7 +21,7 @@ export default function RegisterPage() {
     });
   };
 
-  const formError = errors.name ?? errors.email ?? errors.password ?? errors.password_confirmation;
+  const formError = errors.name ?? errors.email ?? errors.password ?? errors.password_confirmation ?? errors.study_program_id ?? errors.semester;
 
   const inputClass = (hasError) =>
     `w-full pl-11 pr-4 py-3 border rounded-xl text-sm focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/10 transition-all bg-gray-50/50 hover:bg-white focus:bg-white ${
@@ -97,6 +99,49 @@ export default function RegisterPage() {
                 />
               </div>
               {errors.email && <p className="mt-1.5 text-[11px] font-medium text-red-500">{errors.email}</p>}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-bold text-text-secondary mb-2">Program Studi / Kampus</label>
+                <div className="relative group">
+                  <Icon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors text-[20px]" name="school" />
+                  <select
+                    value={data.study_program_id}
+                    onChange={e => setData('study_program_id', e.target.value)}
+                    className={inputClass(errors.study_program_id)}
+                    required
+                  >
+                    <option value="">Pilih Program Studi...</option>
+                    {studyPrograms.map(sp => (
+                      <option key={sp.id} value={sp.id}>
+                        {sp.nama_institusi} - {sp.jenjang} {sp.nama_prodi}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {errors.study_program_id && <p className="mt-1.5 text-[11px] font-medium text-red-500">{errors.study_program_id}</p>}
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-text-secondary mb-2">Semester Saat Ini</label>
+                <div className="relative group">
+                  <Icon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors text-[20px]" name="format_list_numbered" />
+                  <select
+                    value={data.semester}
+                    onChange={e => setData('semester', parseInt(e.target.value))}
+                    className={inputClass(errors.semester)}
+                    required
+                  >
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].map(sem => (
+                      <option key={sem} value={sem}>
+                        Semester {sem}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {errors.semester && <p className="mt-1.5 text-[11px] font-medium text-red-500">{errors.semester}</p>}
+              </div>
             </div>
 
             <div>
