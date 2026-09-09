@@ -37,16 +37,18 @@ class TaxonomyClassifierService
 
         // 1. Case: Supply Absent (Supply = 0)
         if ($supplyLevel <= 0.0) {
-            if ($demandFrequency >= 10 || $demandPercentage >= 2.0) {
-                // High industry demand but completely absent from curriculum -> Skill Shortages
-                $severity = ($demandPercentage >= 5.0 || $growth > 10.0) ? 10 : 8;
+            if ($demandFrequency >= 2 || $demandPercentage >= 0.2) {
+                // Industry demand exists but completely absent from curriculum -> Skill Shortages
+                $severity = ($demandFrequency >= 10 || $demandPercentage >= 5.0 || $growth > 10.0)
+                    ? 10
+                    : (($demandFrequency >= 5 || $demandPercentage >= 1.0) ? 8 : 6);
                 $urgency = (int) round($severity * $dimWeight);
 
                 return [
                     'tipe_mismatch' => 'skill_shortages',
                     'skor_urgensi' => min(10, max(1, $urgency)),
                     'match_rate' => 0.0,
-                    'rationale' => 'Kebutuhan industri tinggi namun materi belum diajarkan dalam kurikulum.',
+                    'rationale' => 'Kebutuhan industri ada namun materi belum diajarkan dalam kurikulum.',
                 ];
             }
 
