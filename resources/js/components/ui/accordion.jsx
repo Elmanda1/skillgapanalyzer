@@ -84,14 +84,18 @@ export function AccordionTrigger({ className = '', children, ...props }) {
       type="button"
       onClick={toggle}
       aria-expanded={open}
-      className={`flex w-full items-center justify-between py-4 text-left font-display text-sm font-semibold text-gray-900 dark:text-white transition-all hover:text-emerald-700 dark:hover:text-emerald-400 cursor-pointer select-none ${className}`}
+      className={`flex w-full items-center justify-between py-5 text-left font-display text-base sm:text-lg font-bold text-gray-900 dark:text-white transition-all hover:text-emerald-800 dark:hover:text-emerald-400 cursor-pointer select-none group ${className}`}
       {...props}
     >
-      <span className="pr-4 leading-snug">{children}</span>
+      <span className={`pr-4 leading-snug transition-colors ${open ? 'text-emerald-950 dark:text-emerald-300 font-extrabold' : ''}`}>{children}</span>
       <motion.div
         animate={{ rotate: open ? 180 : 0 }}
         transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-        className="p-1 rounded-md text-gray-400 dark:text-gray-500 group-hover:text-gray-700 dark:group-hover:text-gray-200 flex-shrink-0"
+        className={`p-2 rounded-lg flex-shrink-0 transition-colors ${
+          open
+            ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-400'
+            : 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-400 group-hover:bg-gray-200 dark:group-hover:bg-slate-700'
+        }`}
       >
         <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
       </motion.div>
@@ -126,7 +130,7 @@ export function AccordionContent({ className = '', children, ...props }) {
           className="overflow-hidden"
           {...props}
         >
-          <div className={`pb-4 pt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed ${className}`}>
+          <div className={`pb-5 pt-1 text-sm sm:text-base text-gray-600 dark:text-gray-300 leading-relaxed ${className}`}>
             {children}
           </div>
         </motion.div>
