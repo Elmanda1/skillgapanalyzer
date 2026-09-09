@@ -411,7 +411,7 @@ def fetch_with_compliance(
         return None
     
     # Rate limiting
-    crawl_delay = policy.get('crawl_delay_seconds', 2.0)
+    crawl_delay = policy.get('crawl_delay_seconds', MIN_INTERVAL or 2.0)
     RATE_LIMITER.set_interval(crawl_delay)
     RATE_LIMITER.wait()
     
@@ -448,11 +448,12 @@ def fetch_with_compliance(
                 return r.text
             
             if blocked:
+                wait_time = 10 * attempt + 5
                 logger.warning(
-                    f"Blocked by anti-bot: {r.status_code}",
+                    f"[WARNING] Terdeteksi HTTP {r.status_code} (Rate Limit/Anti-Bot dari portal target). Mengistirahatkan koneksi selama {wait_time}s agar IP tidak diblokir...",
                     extra={'url': url, 'status_code': r.status_code, 'correlation_id': correlation_id}
                 )
-                time.sleep(15 * attempt + 10)
+                time.sleep(wait_time)
                 continue
             
             if r.status_code == 404:

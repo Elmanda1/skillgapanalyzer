@@ -441,6 +441,9 @@ def main():
 
     # Load policy
     policy = load_policy_from_env()
+    if args.interval is not None:
+        policy['crawl_delay_seconds'] = args.interval
+        MIN_INTERVAL = args.interval
     RATE_LIMITER.set_interval(args.interval or 0.05)
 
     logger.info(f"Starting scraper for {policy['name']} (domain: {policy['domain']})")

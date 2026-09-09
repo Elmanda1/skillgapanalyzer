@@ -153,7 +153,7 @@ class ScrapingController extends Controller
             // Route execution engine: use scrape_loker_enhanced.py for loker.id, or Universal AI Scraper for other domains
             if (str_contains($targetDomain, 'loker.id')) {
                 $scriptPath = base_path('data-engine/scrape_loker_enhanced.py');
-                $cmd = escapeshellarg($pythonBin) . ' -u ' . escapeshellarg($scriptPath) . ' --phase=all --workers=16 --interval=0.05' . ($maxPages > 0 && $maxPages < 9999 ? ' --max-pages=' . $maxPages : '') . ($maxJobs > 0 && $maxJobs < 999999 ? ' --max-jobs=' . $maxJobs : '');
+                $cmd = escapeshellarg($pythonBin) . ' -u ' . escapeshellarg($scriptPath) . ' --phase=all --workers=16 --interval=0.25' . ($maxPages > 0 && $maxPages < 9999 ? ' --max-pages=' . $maxPages : '') . ($maxJobs > 0 && $maxJobs < 999999 ? ' --max-jobs=' . $maxJobs : '');
             } else {
                 $scriptPath = base_path('data-engine/universal/run_pipeline.py');
                 $cmd = escapeshellarg($pythonBin) . ' -u ' . escapeshellarg($scriptPath) . ' --domain=' . escapeshellarg($domainUrl) . ($maxPages > 0 && $maxPages < 9999 ? ' --max-pages=' . $maxPages : '') . ($maxJobs > 0 && $maxJobs < 999999 ? ' --max-jobs=' . $maxJobs : '');
