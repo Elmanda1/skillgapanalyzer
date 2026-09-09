@@ -92,18 +92,7 @@ export default function DynamicFloatingNav({ className }) {
             className
           )}
         >
-          {/* Mini Brand Mark */}
-          <button
-            onClick={() => handleNavClick(0, 'hero')}
-            className="flex items-center gap-1.5 pl-2 pr-1.5 py-1 text-emerald-900 group cursor-pointer focus:outline-hidden"
-            title="Skill Gap Analyzer"
-          >
-            <div className="w-7 h-7 rounded-full bg-emerald-900 flex items-center justify-center text-white shadow-xs group-hover:scale-105 transition-transform">
-              <span className="font-display font-black text-xs tracking-tighter">SG</span>
-            </div>
-          </button>
 
-          <div className="h-5 w-px bg-gray-200/80 mx-0.5" />
 
           {/* Navigation Items */}
           {navItems.map((item, idx) => {

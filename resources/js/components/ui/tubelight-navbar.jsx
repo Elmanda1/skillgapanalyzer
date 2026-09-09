@@ -113,16 +113,7 @@ export function NavBar({
           className
         )}
       >
-        {/* Authentic Brand Logo - Enlarged */}
-        <button
-          onClick={() => handleTabClick({ name: 'Beranda', id: 'hero' })}
-          className="flex items-center pl-1 sm:pl-2 pr-2 sm:pr-3 py-1 group cursor-pointer focus:outline-none"
-          title="Skill Gap Analyzer"
-        >
-          <BrandLogo className="h-5 sm:h-6 md:h-7 w-auto group-hover:scale-105 transition-transform" />
-        </button>
 
-        <div className="h-6 sm:h-7 w-px bg-gray-200 dark:bg-white/10 mx-0.5 sm:mx-1" />
 
         {/* Navigation Items with Stable Tubelight Indicator - Wider & Larger */}
         <div className="flex items-center gap-1 sm:gap-1.5">
