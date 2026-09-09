@@ -55,6 +55,78 @@ function Field({ id, label, error, children }) {
 
 const INPUT_CLASS = 'w-full px-3.5 py-2.5 border border-border rounded-lg text-sm bg-white focus:outline-none focus:border-brand focus:ring-4 focus:ring-brand/10 transition-all';
 
+// ─── Import Card ────────────────────────────────────────────────────────────
+function ImportCard() {
+  const [file, setFile] = React.useState(null);
+  const [preview, setPreview] = React.useState(null);
+  const [busy, setBusy] = React.useState(false);
+
+  const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+  const send = async (dryRun) => {
+    if (!file) return;
+    setBusy(true);
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('dry_run', dryRun ? '1' : '0');
+    try {
+      const res = await fetch('/curriculum/import', {
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': csrf, Accept: 'application/json' },
+        body: fd,
+        credentials: 'same-origin',
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message || 'Import gagal');
+      setPreview(json);
+      if (json.mode === 'committed') {
+        setFile(null);
+        window.location.reload();
+      }
+    } catch (e) {
+      setPreview({ mode: 'error', errors: [{ row: '-', message: e.message }] });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <section className="card p-6 mb-6">
+      <div className="flex items-center justify-between mb-1">
+        <h2 className="font-display text-base font-bold text-text">Import Excel Kurikulum</h2>
+        <a href="/curriculum/template" className="text-xs font-bold text-brand hover:underline flex items-center gap-1">
+          <Icon className="text-[16px]" name="download" /> Template
+        </a>
+      </div>
+      <p className="text-xs text-text-muted mb-4">Kolom: kode, nama, semester, sks, versi, skills (;), cpl_text, cpl_source. Maks 1000 baris.</p>
+      <div className="flex items-center gap-3">
+        <input type="file" accept=".xlsx,.xls,.csv" onChange={(e) => setFile(e.target.files[0] || null)} className="text-sm" />
+        <button disabled={!file || busy} onClick={() => send(true)} className="btn-primary disabled:opacity-60">Preview</button>
+        {preview?.mode === 'preview' && preview.errors?.length === 0 && (
+          <button disabled={busy} onClick={() => send(false)} className="btn-primary">Konfirmasi Import ({preview.valid} valid)</button>
+        )}
+      </div>
+      {preview?.errors?.length > 0 && (
+        <ul className="mt-3 space-y-1">
+          {preview.errors.map((e, i) => (
+            <li key={i} className="text-xs text-status-red-text">Baris {e.row}: {e.message}</li>
+          ))}
+        </ul>
+      )}
+      {preview?.warnings?.length > 0 && (
+        <ul className="mt-3 space-y-1">
+          {preview.warnings.map((w, i) => (
+            <li key={i} className="text-xs text-amber-600">Baris {w.row}: skill tak dikenal: {w.skills.join(', ')}</li>
+          ))}
+        </ul>
+      )}
+      {preview?.mode === 'preview' && preview.errors?.length === 0 && (
+        <p className="mt-3 text-xs text-status-green-text">{preview.valid} baris valid, siap dikonfirmasi.</p>
+      )}
+    </section>
+  );
+}
+
 // ─── Main Curriculum Index ─────────────────────────────────────────────────
 export default function CurriculumIndex({ courses, studyPrograms = [] }) {
   const { auth } = usePage().props;
@@ -84,6 +156,8 @@ export default function CurriculumIndex({ courses, studyPrograms = [] }) {
       </header>
 
       <main className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <ImportCard />
+
         {/* ── Tambah Mata Kuliah ── */}
         <section className="card p-6 lg:sticky lg:top-24">
           <h2 className="font-display text-base font-bold text-text mb-1">Tambah Mata Kuliah</h2>
