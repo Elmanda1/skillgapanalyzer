@@ -67,10 +67,10 @@ class HeuristicCrawler:
     def __init__(
         self,
         user_agent: Optional[str] = None,
-        max_depth: int = 2,
-        max_pages: int = 20,
-        concurrency: int = 4,
-        delay: float = 0.5,
+        max_depth: int = 5,
+        max_pages: int = 9999,
+        concurrency: int = 16,
+        delay: float = 0.05,
     ):
         self.headers = dict(DEFAULT_HEADERS)
         if user_agent:

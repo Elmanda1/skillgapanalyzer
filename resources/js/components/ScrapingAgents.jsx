@@ -59,8 +59,8 @@ export default function ScrapingAgents() {
   const [formData, setFormData] = useState({
     domain_url: '',
     agent_code: '',
-    max_pages: 10,
-    max_jobs: 15,
+    max_pages: 0,
+    max_jobs: 0,
   });
 
   const logContainerRef = useRef(null);
@@ -184,7 +184,7 @@ export default function ScrapingAgents() {
 
   const handleSyncAll = () => {
     if (isSyncing) return;
-    toast.info('Sinkronisasi Ulang', 'Menghubungkan ke agen scraper Python real-time...');
+    toast.info('Sinkronisasi Ulang', 'Menghubungkan ke agen scraper Python real-time (High-Speed Mode)...');
     startStream('https://www.loker.id', 'AGENT-LOKERID-01');
   };
 
@@ -276,31 +276,34 @@ export default function ScrapingAgents() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-text-secondary uppercase mb-1.5">
-                    Maks Halaman (Pages)
+                    Maks Halaman (0 = Tanpa Batas)
                   </label>
                   <input
                     type="number"
-                    min="1"
-                    max="50"
+                    min="0"
+                    max="9999"
+                    placeholder="0 = Tanpa Batas"
                     value={formData.max_pages}
-                    onChange={e => setFormData({ ...formData, max_pages: parseInt(e.target.value) || 10 })}
-                    className="w-full px-3.5 py-2.5 border border-border rounded-xl text-sm focus:outline-none focus:border-brand transition-all bg-gray-50"
+                    onChange={e => setFormData({ ...formData, max_pages: parseInt(e.target.value) || 0 })}
+                    className="w-full px-3.5 py-2.5 border border-border rounded-xl text-sm focus:outline-none focus:border-brand transition-all bg-gray-50 font-mono"
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-text-secondary uppercase mb-1.5">
-                    Maks Lowongan (Jobs)
+                    Maks Lowongan (0 = Tanpa Batas)
                   </label>
                   <input
                     type="number"
-                    min="1"
-                    max="100"
+                    min="0"
+                    max="999999"
+                    placeholder="0 = Tanpa Batas"
                     value={formData.max_jobs}
-                    onChange={e => setFormData({ ...formData, max_jobs: parseInt(e.target.value) || 15 })}
-                    className="w-full px-3.5 py-2.5 border border-border rounded-xl text-sm focus:outline-none focus:border-brand transition-all bg-gray-50"
+                    onChange={e => setFormData({ ...formData, max_jobs: parseInt(e.target.value) || 0 })}
+                    className="w-full px-3.5 py-2.5 border border-border rounded-xl text-sm focus:outline-none focus:border-brand transition-all bg-gray-50 font-mono"
                   />
                 </div>
               </div>
+              <p className="text-[11px] text-brand font-medium mt-1">⚡ High-Speed Mode (16 Parallel Workers, Interval 0.05s) aktif untuk ekstraksi cepat tanpa limitasi.</p>
 
               <div className="pt-4 border-t border-border flex justify-end gap-3 mt-6">
                 <button
