@@ -90,6 +90,10 @@ export default function JobBrowser() {
                 <Icon className="text-[16px]" name="schedule" />
                 {job.type}
               </div>
+              <div className="flex items-center gap-2 text-[11px] text-brand font-medium pt-2 border-t border-border/40 mt-1">
+                <Icon className="text-[14px] text-brand" name="history" />
+                <span>Terakhir di-scrap: 09/09/2026 23:37:35</span>
+              </div>
             </div>
 
             <div className="mb-5">

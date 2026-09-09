@@ -177,6 +177,10 @@ export default function JobBrowser() {
                       <Icon className="text-[16px]" name="domain" />
                       {job.sektor}
                     </div>
+                    <div className="flex items-center gap-2 text-[11px] text-brand font-medium pt-2 border-t border-border/40 mt-1">
+                      <Icon className="text-[14px] text-brand" name="history" />
+                      <span>Terakhir di-scrap: {job.last_scraped_at || job.tanggal_crawl || 'Terbaru'}</span>
+                    </div>
                   </div>
 
                   {job.skills?.length > 0 && (
@@ -203,9 +207,10 @@ export default function JobBrowser() {
                         href={job.source_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex-1 btn-primary py-2 text-xs font-semibold text-center"
+                        className="flex-1 btn-primary py-2 text-xs font-semibold text-center flex items-center justify-center gap-1.5"
                       >
-                        Lihat di loker.id
+                        <Icon className="text-[14px]" name="open_in_new" />
+                        Lihat di {job.sumber || 'loker.id'}
                       </a>
                     )}
                   </div>

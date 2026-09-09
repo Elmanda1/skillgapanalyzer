@@ -34,6 +34,12 @@ class JobController extends Controller
             ->paginate(20)
             ->withQueryString();
 
+        $jobs->getCollection()->transform(function ($job) {
+            $scrapedAt = $job->updated_at ?? $job->created_at ?? $job->published_at;
+            $job->last_scraped_at = $scrapedAt ? $scrapedAt->format('d/m/Y H:i:s') : date('d/m/Y H:i:s');
+            return $job;
+        });
+
         return inertia('JobBrowser', [
             'jobs' => $jobs,
             'filters' => $request->only(['search', 'lokasi', 'sektor', 'is_remote']),
